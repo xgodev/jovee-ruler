@@ -11,7 +11,7 @@ JoVee Ruler is the two music-theory tools of this repo — the **harmonic field 
 | where | how |
 |---|---|
 | **Standalone** (`jovee-ruler` app) | Its own window. Needs nothing else running. |
-| **Inside JoVee Rig** | JoVee Rig imports the JoVee Ruler crates from GitHub and opens the ruler screens inside its own window. |
+| **Inside JoVee Rig** | JoVee Rig imports the JoVee Ruler crates from GitHub and opens the ruler from its main screen and from the Jam screen. Those buttons are JoVee Rig's work; this repo only provides the screens. |
 | **Inside JoVee Studio** | Same as inside JoVee Rig: imported as a library. |
 
 Same pattern as JoVee Jam and JoVee Tone (library inside the host, its own app outside).
@@ -74,7 +74,7 @@ same in the standalone app (where the user types the key and plays the notes) an
 
 ## Order
 
-1. Mockup of both screens, approved before any Slint.
+1. Mockup of the screens, approved before any Slint: [`mockup/index.html`](mockup/index.html).
 2. `jr-core` with tests, checked against the printed art (same notes, same chords, same shapes).
 3. `jr-gui` + the standalone app.
 4. JoVee Rig imports it.

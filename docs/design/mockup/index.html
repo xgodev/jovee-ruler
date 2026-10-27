@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JoVee Ruler mockup</title>
+<style>
+:root{--page:#0b0e12;--chrome:#12161c;--chrome2:#1a2029;--panel:#232a33;--well:#161b21;--hair:#2d343e;--fl:#353e49;
+--ink:#e8ecf1;--ink2:#aab3bf;--ink3:#7a8592;--accent:#f28c1e;--ok:#2f9a55;--bad:#c8443e;--okt:#7fdc9c;--wt:#f2a95a;--bt:#ff8a7a}
+*{box-sizing:border-box}
+body{margin:0;background:#05070a;color:var(--ink);font:18px/1.4 -apple-system,"SF Pro Text","Inter",sans-serif;padding:32px}
+.cap{font-size:18px;color:var(--ink3);margin:0 0 12px}
+.win{width:1280px;background:var(--page);border:1px solid var(--hair);border-radius:12px;overflow:hidden;margin:0 0 48px}
+.top{height:64px;background:var(--chrome);border-bottom:1px solid #07090c;display:flex;align-items:center;gap:24px;padding:0 24px}
+.brand{font-size:22px;font-weight:700}
+.tab{font-size:18px;color:var(--ink2);padding:8px 16px;border-radius:8px;cursor:pointer}
+.tab.on{background:var(--chrome2);color:var(--ink)}
+.grow{flex:1}
+.body{padding:32px}
+.h1{font-size:32px;font-weight:700;margin:0}
+.h2{font-size:20px;color:var(--ink2);margin:4px 0 0}
+.btn{background:var(--chrome2);color:var(--ink2);border:1px solid var(--fl);border-radius:8px;padding:10px 20px;font:inherit;font-size:18px;cursor:pointer}
+.btn.on{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:700}
+.pnl{background:var(--well);border:1px solid var(--hair);border-radius:12px;padding:24px}
+.legend{display:flex;gap:32px;font-size:18px;color:var(--ink2);margin-top:20px;flex-wrap:wrap}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px;vertical-align:-1px}
+</style>
+</head>
+<body>
+
+<p class="cap">1 · App sozinho — campo harmônico</p>
+<div class="win">
+  <div class="top"><span class="brand">JoVee Ruler</span><span class="tab on">Campo harmônico</span><span class="tab">Escala</span></div>
+  <div class="body" style="display:grid;grid-template-columns:480px 1fr;gap:48px;align-items:center">
+    <svg id="wheel" viewBox="0 0 480 480" width="480" height="480" style="cursor:grab;touch-action:none"></svg>
+    <div>
+      <p class="h1" id="f-title"></p><p class="h2" id="f-sub"></p>
+      <div id="chords" style="display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-top:32px"></div>
+      <div class="legend"><span><span class="dot" style="background:var(--ok)"></span>repouso</span><span><span class="dot" style="background:var(--accent)"></span>transição</span><span><span class="dot" style="background:var(--bad)"></span>tensão</span></div>
+      <p style="font-size:18px;color:var(--ink3);margin:16px 0 0">Em cima o grau no tom maior, embaixo na relativa menor. Gire a roda ou clique numa nota.</p>
+    </div>
+  </div>
+</div>
+
+<p class="cap">2 · App sozinho — escala no braço</p>
+<div class="win">
+  <div class="top"><span class="brand">JoVee Ruler</span><span class="tab">Campo harmônico</span><span class="tab on">Escala</span></div>
+  <div class="body">
+    <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:24px">
+      <div><p class="h1" id="s-title"></p><p class="h2" id="s-sub"></p></div><span class="grow"></span>
+      <span style="color:var(--ink3)">Desenho</span><span id="shapes" style="display:flex;gap:8px"></span>
+    </div>
+    <div class="pnl" style="padding:16px 8px"><svg id="neck" viewBox="0 0 1200 330" width="1200"></svg></div>
+    <div class="legend"><span>■ tônica maior</span><span>◆ tônica da relativa menor</span><span>● pentatônica</span><span>▲ graus 4 e 7</span></div>
+  </div>
+</div>
+
+<p class="cap">3 · Dentro do JoVee Jam — tocando uma música</p>
+<div class="win">
+  <div class="top"><span class="brand">JoVee Jam</span><span style="color:var(--ink2)">Música de exemplo · Sol maior</span><span class="grow"></span><button class="btn" id="play">▶ Tocar</button></div>
+  <div class="body">
+    <div id="tl" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:24px"></div>
+    <div style="display:grid;grid-template-columns:280px 1fr;gap:24px;margin-bottom:24px">
+      <div class="pnl" style="text-align:center;display:flex;flex-direction:column;justify-content:center">
+        <div style="font-size:18px;color:var(--ink3)">Agora</div>
+        <div id="j-chord" style="font-size:72px;font-weight:700;line-height:1.1"></div>
+        <div id="j-deg" style="font-size:40px;font-weight:700"></div>
+        <div id="j-fn" style="font-size:20px;margin-top:4px"></div>
+      </div>
+      <div class="pnl">
+        <div style="color:var(--ink3);margin-bottom:12px">Campo harmônico de Sol maior</div>
+        <div id="j-field" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px"></div>
+        <div id="j-msg" style="font-size:20px;margin-top:20px"></div>
+      </div>
+    </div>
+    <div class="pnl" style="padding:16px 8px"><svg id="jneck" viewBox="0 0 1200 330" width="1200"></svg></div>
+    <div class="legend"><span>anel branco: nota do acorde dentro da pentatônica</span><span style="color:var(--bt)">anel vermelho: nota do acorde fora dela</span></div>
+  </div>
+</div>
+
+<script>
+const N=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const PT={C:'Dó','C#':'Dó#',D:'Ré','D#':'Ré#',E:'Mi',F:'Fá','F#':'Fá#',G:'Sol','G#':'Sol#',A:'Lá','A#':'Lá#',B:'Si'};
+const MAJ=[0,2,4,5,7,9,11],Q=['','m','m','','','m','°'],RM=['I','ii','iii','IV','V','vi','vii°'],RN=['i','ii°','III','iv','v','VI','VII'];
+const FN=[0,1,0,1,2,0,2],FC=['#2f9a55','#f28c1e','#c8443e'],FT=['#7fdc9c','#f2a95a','#ff8a7a'],FL=['repouso','transição','tensão'];
+const FIFTHS=[0,7,2,9,4,11,6,1,8,3,10,5],TUN=[4,9,2,7,11,4],PENT=[0,2,4,7,9];
+let key=0,shape=0,ang=0;
+const $=id=>document.getElementById(id);
+const field=k=>MAJ.map((_,i)=>{const r=(k+MAJ[i])%12;return{r,notes:[r,(k+MAJ[(i+2)%7])%12,(k+MAJ[(i+4)%7])%12],name:N[r]+Q[i],i}});
+
+function wheel(){
+  const c=240;let h='<circle cx="240" cy="240" r="232" fill="#161b21" stroke="#2d343e" stroke-width="2"/><circle cx="240" cy="240" r="130" fill="#0b0e12" stroke="#2d343e" stroke-width="2"/>';
+  h+='<g transform="rotate('+ang+' 240 240)">';
+  FIFTHS.forEach((n,p)=>{const a=(p*30-90)*Math.PI/180,x=c+182*Math.cos(a),y=c+182*Math.sin(a),on=n===key;
+    h+='<g data-k="'+n+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="34" fill="'+(on?'#e8ecf1':'#1a2029')+'" stroke="'+(on?'#e8ecf1':'#353e49')+'" stroke-width="2"/><text x="'+x+'" y="'+y+'" transform="rotate('+(-ang)+' '+x+' '+y+')" text-anchor="middle" dominant-baseline="central" font-size="26" font-weight="700" fill="'+(on?'#0b0e12':'#aab3bf')+'">'+N[n]+'</text></g>'});
+  h+='</g><path d="M222 0 L258 0 L240 26 Z" fill="#f28c1e"/>';
+  h+='<text x="240" y="232" text-anchor="middle" font-size="84" font-weight="700" fill="#e8ecf1">'+N[key]+'</text><text x="240" y="290" text-anchor="middle" font-size="22" fill="#aab3bf">relativa '+N[(key+9)%12]+'m</text>';
+  $('wheel').innerHTML=h;
+}
+function chords(){
+  $('f-title').textContent=PT[N[key]]+' maior';
+  $('f-sub').textContent='Relativa: '+PT[N[(key+9)%12]]+' menor';
+  $('chords').innerHTML=field(key).map(c=>{const f=FN[c.i];return'<div style="background:'+FC[f]+'26;border:2px solid '+FC[f]+';border-radius:12px;padding:12px 6px;text-align:center"><div style="background:#e8ecf1;color:#0b0e12;border-radius:6px;font-size:18px;font-weight:700;padding:2px 0">'+RM[c.i]+'</div><div style="font-size:30px;font-weight:700;color:'+FT[f]+';margin:16px 0">'+c.name+'</div><div style="background:#07090c;color:#aab3bf;border-radius:6px;font-size:18px;padding:2px 0">'+RN[(c.i+2)%7]+'</div></div>'}).join('');
+}
+function rotateTo(k){const target=-FIFTHS.indexOf(k)*30,d=((target-ang)%360+540)%360-180,a0=ang,t0=performance.now();key=k;chords();scale();
+  (function step(t){const u=Math.min(1,(t-t0)/350);ang=a0+d*(1-Math.pow(1-u,3));wheel();if(u<1)requestAnimationFrame(step);else ang=target})(t0)}
+$('wheel').addEventListener('click',e=>{const g=e.target.closest('[data-k]');if(g&&!dragMoved)rotateTo(+g.dataset.k)});
+let drag=null,dragMoved=false;
+$('wheel').addEventListener('pointerdown',e=>{const r=$('wheel').getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;drag={cx,cy,a:Math.atan2(e.clientY-cy,e.clientX-cx),a0:ang};dragMoved=false});
+addEventListener('pointermove',e=>{if(!drag)return;const d=(Math.atan2(e.clientY-drag.cy,e.clientX-drag.cx)-drag.a)*180/Math.PI;if(Math.abs(d)>3)dragMoved=true;if(!dragMoved)return;ang=drag.a0+d;const k=FIFTHS[((Math.round(-ang/30)%12)+12)%12];if(k!==key){key=k;chords();scale()}wheel()});
+addEventListener('pointerup',()=>{if(drag&&dragMoved){ang=Math.round(ang/30)*30;wheel()}drag=null});
+
+function shapesWin(k){const r=((k-4)%12+12)%12;return[['E',-1],['D',2],['C',4],['A',7],['G',9]].map(([n,o])=>{let a=r+o;while(a<0)a+=12;while(a+3>15)a-=12;if(a<0)a+=12;return[n,a]})}
+function neck(id,k,win,active){
+  const x0=70,fw=(1190-x0)/15,y0=30,sp=50;let h='';
+  if(win!=null){const xa=win===0?8:x0+(win-1)*fw,xb=x0+(win+3)*fw;h+='<rect x="'+xa+'" y="4" width="'+(xb-xa)+'" height="'+(sp*5+52)+'" rx="10" fill="#ffffff0d" stroke="#f28c1e" stroke-width="2"/>'}
+  [3,5,7,9,15].forEach(f=>h+='<circle cx="'+(x0+(f-.5)*fw)+'" cy="'+(y0+2.5*sp)+'" r="8" fill="#2d343e"/>');
+  [1.5,3.5].forEach(s=>h+='<circle cx="'+(x0+11.5*fw)+'" cy="'+(y0+s*sp)+'" r="8" fill="#2d343e"/>');
+  for(let f=0;f<=15;f++){const x=x0+f*fw;h+='<line x1="'+x+'" x2="'+x+'" y1="'+y0+'" y2="'+(y0+5*sp)+'" stroke="'+(f?'#3a434f':'#aab3bf')+'" stroke-width="'+(f?2:6)+'"/><text x="'+(f?x-fw/2:x0/2+8)+'" y="'+(y0+5*sp+40)+'" text-anchor="middle" font-size="18" fill="#7a8592">'+f+'</text>'}
+  for(let s=0;s<6;s++){const y=y0+s*sp;h+='<line x1="'+x0+'" x2="1190" y1="'+y+'" y2="'+y+'" stroke="#8b95a3" stroke-width="'+(3.5-s*.45)+'"/><text x="14" y="'+y+'" dominant-baseline="central" font-size="18" fill="#7a8592">'+(6-s)+'</text>'}
+  for(let s=0;s<6;s++)for(let f=0;f<=15;f++){const n=(TUN[5-s]+f)%12,iv=(n-k+12)%12;if(!MAJ.includes(iv))continue;
+    const x=f?x0+(f-.5)*fw:x0/2+8,y=y0+s*sp,inW=win==null||(f>=win&&f<=win+3),pent=PENT.includes(iv),r=21;
+    let m,tc='#0b0e12',ty=y;
+    if(iv===0){m='<rect x="'+(x-r)+'" y="'+(y-r)+'" width="'+2*r+'" height="'+2*r+'" rx="4" fill="#f28c1e"/>';tc='#1a1206'}
+    else if(iv===9)m='<path d="M'+x+' '+(y-r-5)+'L'+(x+r+5)+' '+y+'L'+x+' '+(y+r+5)+'L'+(x-r-5)+' '+y+'Z" fill="#e8ecf1"/>';
+    else if(pent)m='<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#e8ecf1"/>';
+    else{m='<path d="M'+x+' '+(y-r-2)+'L'+(x+r+3)+' '+(y+r)+'L'+(x-r-3)+' '+(y+r)+'Z" fill="#7a8592"/>';ty=y+5}
+    let ring='';if(active&&active.includes(n)&&inW)ring='<circle cx="'+x+'" cy="'+y+'" r="'+(r+7)+'" fill="none" stroke="'+(pent||iv===0?'#ffffff':'#ff5d5d')+'" stroke-width="4"/>';
+    h+='<g opacity="'+(inW?1:.15)+'">'+ring+m+'<text x="'+x+'" y="'+ty+'" text-anchor="middle" dominant-baseline="central" font-size="18" font-weight="700" fill="'+tc+'">'+N[n]+'</text></g>'}
+  $(id).innerHTML=h;
+}
+function scale(){const w=shapesWin(key);$('s-title').textContent=PT[N[key]]+' maior';$('s-sub').textContent='Desenho '+w[shape][0]+', casas '+w[shape][1]+' a '+(w[shape][1]+3);
+  $('shapes').innerHTML=w.map(([n],i)=>'<button class="btn'+(i===shape?' on':'')+'" data-s="'+i+'">'+n+'</button>').join('');
+  neck('neck',key,w[shape][1],null)}
+$('shapes').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(b){shape=+b.dataset.s;scale()}});
+
+const JK=7,JF=field(JK),TL=[[7,11,2],[0,4,7],[2,6,9],[4,7,11],[5,9,0],[0,4,7]],TLN=['G','C','D','Em','F','C'];let cur=1,timer=null;
+function jam(){
+  $('tl').innerHTML=TL.map((c,i)=>'<div data-t="'+i+'" style="padding:14px 0;text-align:center;border-radius:8px;font-size:24px;font-weight:700;cursor:pointer;background:'+(i===cur?'#e8ecf1':'#1a2029')+';color:'+(i===cur?'#0b0e12':'#aab3bf')+'">'+TLN[i]+'</div>').join('');
+  const notes=TL[cur],key_=notes.slice().sort().join(),m=JF.find(c=>c.notes.slice().sort().join()===key_);
+  $('j-chord').textContent=TLN[cur];
+  $('j-deg').textContent=m?RM[m.i]:'♭VII';$('j-deg').style.color=m?FT[FN[m.i]]:'#aab3bf';
+  $('j-fn').innerHTML=m?'<span style="color:'+FT[FN[m.i]]+'">'+FL[FN[m.i]]+'</span>':'<span style="color:#aab3bf">fora do campo (emprestado)</span>';
+  $('j-field').innerHTML=JF.map(c=>{const on=m&&m.i===c.i,f=FN[c.i];return'<div style="text-align:center;padding:12px 0;border-radius:10px;border:2px solid '+(on?FT[f]:'#2d343e')+';background:'+(on?FC[f]+'40':'#1a2029')+'"><div style="font-size:18px;color:'+(on?FT[f]:'#7a8592')+';font-weight:700">'+RM[c.i]+'</div><div style="font-size:26px;font-weight:700;color:'+(on?'#e8ecf1':'#aab3bf')+'">'+c.name+'</div></div>'}).join('');
+  const out=notes.filter(n=>!PENT.includes((n-JK+12)%12)).map(n=>N[n]);
+  $('j-msg').innerHTML='Pentatônica de Sol, desenho E (casas 2 a 5)<br><span style="color:'+(out.length?'#ff8a7a':'#7fdc9c')+'">'+(out.length?out.join(' e ')+' do acorde fica fora da pentatônica':'Todas as notas do acorde estão na pentatônica')+'</span>';
+  neck('jneck',JK,2,notes);
+}
+$('tl').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b){cur=+b.dataset.t;jam()}});
+$('play').addEventListener('click',()=>{if(timer){clearInterval(timer);timer=null;$('play').textContent='▶ Tocar'}else{timer=setInterval(()=>{cur=(cur+1)%TL.length;jam()},1500);$('play').textContent='❚❚ Pausar'}});
+wheel();chords();scale();jam();
+</script>
+</body>
+</html>
