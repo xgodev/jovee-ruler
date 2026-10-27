@@ -1,5 +1,8 @@
 # Working agreement for this repo
 
+JoVee Ruler: the printed rulers plus their digital, interactive version (standalone app and library
+inside JoVee Rig / JoVee Studio). Design: `docs/design/README.md`.
+
 ## Keep the repo and the docs current — always, without being asked
 
 Any change to a `.scad`, an art generator, or `build.sh` is only finished when all of

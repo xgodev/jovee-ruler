@@ -1,6 +1,8 @@
-# music-ruler
+# JoVee Ruler
 
-Two music-theory tools for guitar, made to be 3D printed.
+Two music-theory tools for guitar, made to be 3D printed — and, next, as interactive
+screens that run standalone or inside JoVee Rig and JoVee Studio
+([design](docs/design/README.md)).
 
 Same recipe in both: **plain 3D-printed plastic + colored paper art** glued into the
 recesses. All the color and all the text come from the paper — changing the content
