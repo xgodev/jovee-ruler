@@ -54,3 +54,9 @@ understanding which failure it prevents:
 
 `scale_0-FIT-COUPON.stl` prints in ~10 minutes and tests the real cross-section. Any fit
 change goes through the coupon first.
+
+**The `.3mf` files in this repo are stale slicer projects, not build output.** `scale/scale.3mf`
+(27/08), `scale/scale_0-FIT-COUPON.3mf` (28/08) and `scale/stl/1.3mf` (28/08) all predate the
+bearing-ledge fix of 30/08, so they carry the geometry of the defect the plates fell through.
+Nothing regenerates them. Always start a fresh slicer project from the STLs in `scale/stl/`;
+opening a `.3mf` is how a 5-hour print gets thrown away.
