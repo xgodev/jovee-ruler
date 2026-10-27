@@ -32,8 +32,27 @@ What paper cannot do, the digital version adds:
 - Any tuning and any number of strings, instead of the one printed on the track.
 - Other scales and modes, not only major / relative minor / pentatonic.
 - Click a chord or a note to hear it.
-- Inside a host: follow the song. When JoVee Jam knows the key of the song that is playing, the ruler
-  turns to it by itself; when the tuner hears a note, the ruler marks it on the neck.
+- Inside a host: when the tuner hears a note, the ruler marks it on the neck.
+
+## Inside JoVee Jam: the harmonic field of the song
+
+The ruler is embedded in JoVee Jam's song screen. Jam gives it two things: the **key** of the song
+and the **notes** being played (from the tab/score, as the song advances). With those, the ruler says,
+in real time:
+
+- **Which chord of the harmonic field this is**: the notes of the current moment are matched against
+  the seven chords of the key, and the ruler shows the degree (e.g. `IV` in C = F), its function
+  (rest, transition, tension) and lights it on the wheel. A chord that is not in the field (borrowed,
+  secondary dominant) is shown as such, not forced onto the nearest degree.
+- **Which pentatonic fits**: the same input places the pentatonic of the key on the neck, with the
+  CAGED shape nearest to where the song is being played, and marks which notes of the moment are
+  inside it.
+
+Example: song in G, the tab plays G–B–D, then C–E–G, then D–F#–A: the wheel lights `I`, `IV`, `V`
+in turn, and the neck keeps the G major pentatonic in the shape around the 3rd fret.
+
+The matching (notes + key → degree, notes + key → pentatonic shape) lives in `jr-core`, so it is the
+same in the standalone app (where the user types the key and plays the notes) and inside Jam.
 
 ## Boundary
 
@@ -59,4 +78,5 @@ What paper cannot do, the digital version adds:
 2. `jr-core` with tests, checked against the printed art (same notes, same chords, same shapes).
 3. `jr-gui` + the standalone app.
 4. JoVee Rig imports it.
-5. JoVee Studio imports it; follow-the-song and the tuner link.
+5. Embedded in JoVee Jam: key + notes of the song → degree of the harmonic field and pentatonic.
+6. JoVee Studio imports it; the tuner link.
