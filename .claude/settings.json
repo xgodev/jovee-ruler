@@ -1,0 +1,14 @@
+{
+  "extraKnownMarketplaces": {
+    "xgodev": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:xgodev/claude-plugin.git"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "claude-plugin@xgodev": true
+  }
+}
