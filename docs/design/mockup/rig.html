@@ -1,0 +1,265 @@
+<title>JoVee Ruler no estilo do Rig</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* The three ruler screens redrawn in JoVee Rig's visual language (OpenRig docs/gui/visual-language.md,
+   release v0.9.0). Token values are crates/adapter-gui-ui/ui/theme.slint's; each window is the real
+   app size, 1280 x 860. */
+:root {
+  color-scheme: light;
+  --doc-bg: #c9cfd6; --doc-fg: #18202b; --doc-fg-2: #465262;
+  --page: #dde2e8; --chrome: #1a2029; --chrome-line: #10151b; --chrome-fg: #e2e7ee; --chrome-fg-2: #8b96a5;
+  --panel: #e4e8ee; --panel-hi: #eef1f5; --panel-lo: #d6dce4; --well: #cdd4dd; --field: #fbfcfd;
+  --hair: #cdd3db; --hair-2: #dbe0e6; --field-line: #c0c7d0;
+  --ink: #18202b; --ink-2: #465262; --ink-3: #75808f;
+  --accent: #f28c1e; --accent-soft: #f28c1e24; --on-accent: #1a1206;
+  --ok: #2f9a55; --warn: #d9b43a; --bad: #c8443e;
+  --ok-soft: #2f9a552e; --warn-soft: #d9b43a2e; --bad-soft: #c8443e2e;
+  /* state colours as text: darker() in the light scheme, the chrome-* inks in the dark */
+  --ok-ink: #23784a; --warn-ink: #7d6210; --bad-ink: #a8352f;
+  /* the two degree tags of the printed wheel: white = major key, black = relative minor */
+  --tag-hi: #fbfcfd; --tag-hi-ink: #18202b;
+  --display: "Bebas Neue", Impact, sans-serif;
+  --ui: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --doc-bg: #07090c; --doc-fg: #e8ecf1; --doc-fg-2: #aab3bf; color-scheme: dark; } }
+:root[data-theme="dark"] { --doc-bg: #07090c; --doc-fg: #e8ecf1; --doc-fg-2: #aab3bf; color-scheme: dark; }
+.dark {
+  --page: #0b0e12; --chrome: #12161c; --chrome-line: #07090c;
+  --panel: #232a33; --panel-hi: #2a323c; --panel-lo: #1d232b; --well: #161b21; --field: #11151a;
+  --hair: #2d343e; --hair-2: #262c35; --field-line: #353e49;
+  --ink: #e8ecf1; --ink-2: #aab3bf; --ink-3: #7a8592;
+  --ok-ink: #7fdc9c; --warn-ink: #f2d36b; --bad-ink: #ff8a7a;
+  --tag-hi: #e8ecf1; --tag-hi-ink: #0b0e12;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--doc-bg); color: var(--doc-fg); font: 400 18px/1.35 var(--ui); }
+.page { max-width: 1340px; margin: 0 auto; padding: 32px 16px 64px; display: grid; gap: 40px; }
+.sec-h h2 { font: 400 34px/1 var(--display); letter-spacing: .04em; margin: 0 0 8px; }
+.sec-h p { margin: 0; color: var(--doc-fg-2); max-width: 80ch; }
+.pair { display: grid; gap: 24px; }
+.scheme { overflow-x: auto; min-width: 0; }
+.tnum { font: 500 18px/1 var(--mono); color: var(--doc-fg-2); margin-bottom: 10px; display: block; }
+
+.win { width: 1280px; height: 860px; display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; background: var(--well); color: var(--ink); box-shadow: 0 0 0 1px var(--hair), 0 18px 48px -22px rgb(0 0 0 / .45); }
+.toolbar { flex: none; display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 46px; background: var(--chrome); color: var(--chrome-fg); border-bottom: 1px solid var(--chrome-line); }
+.toolbar svg { width: 20px; height: 20px; color: var(--accent); }
+.toolbar .title { font: 400 24px/1 var(--display); letter-spacing: .06em; }
+.toolbar .song { margin-left: 8px; font: 500 18px/1 var(--ui); color: var(--chrome-fg-2); }
+.body { flex: 1; min-height: 0; padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; align-items: center; gap: 14px; }
+.grow { flex: 1; }
+.card { border-radius: 4px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--hair); }
+.lbl { font: 400 20px/1 var(--display); letter-spacing: .14em; color: var(--ink-3); }
+
+.seg { display: inline-flex; border-radius: 3px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--field-line); }
+.seg span { font: 600 18px/1 var(--ui); padding: 9px 14px; color: var(--ink); background: var(--panel); border-left: 1px solid var(--hair); }
+.seg span:first-child { border-left: 0; }
+.seg span.on { background: var(--accent); color: var(--on-accent); }
+.seg.num span { min-width: 44px; text-align: center; font-family: var(--mono); font-weight: 500; }
+.seg.num span.w { font-family: var(--ui); font-weight: 600; }
+
+/* a chord of the field: tinted by its function, white tag = degree in the major key, dark tag = in the relative minor (as on the printed wheel) */
+.cells { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.cell { --f: var(--ok); --fs: var(--ok-soft); display: grid; justify-items: center; align-content: space-between; gap: 8px; padding: 12px 6px 10px; border-radius: 4px; background: var(--fs); box-shadow: inset 0 3px 0 var(--f), inset 0 0 0 1px var(--hair); }
+.cell.t1 { --f: var(--warn); --fs: var(--warn-soft); }
+.cell.t2 { --f: var(--bad); --fs: var(--bad-soft); }
+.cell .mj { font: 400 22px/1 var(--display); letter-spacing: .06em; color: var(--tag-hi-ink); background: var(--tag-hi); box-shadow: inset 0 0 0 1px var(--field-line); padding: 4px 0 2px; border-radius: 3px; width: 100%; max-width: 64px; text-align: center; }
+.cell .nm { font: 700 34px/1 var(--ui); color: var(--ink); }
+.cell .mn { font: 400 22px/1 var(--display); letter-spacing: .06em; color: var(--chrome-fg); background: var(--chrome); padding: 4px 0 2px; border-radius: 3px; width: 100%; max-width: 64px; text-align: center; }
+.cell.on { box-shadow: inset 0 3px 0 var(--f), inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
+.cell.on .nm { color: var(--accent); }
+.cells.sm .cell { padding: 10px 4px 8px; gap: 6px; }
+.cells.sm .cell .nm { font-size: 30px; }
+
+.key { display: inline-flex; align-items: center; gap: 8px; font: 500 18px/1 var(--ui); color: var(--ink-2); }
+.key i { width: 12px; height: 12px; border-radius: 3px; background: var(--f, var(--ok)); }
+.legend { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+.legend svg { width: 22px; height: 22px; vertical-align: -5px; margin-right: 8px; }
+
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 3px; font: 600 18px/1 var(--ui); }
+.pill i { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.pill.ok { color: var(--ok-ink); background: var(--ok-soft); }
+.pill.warn { color: var(--warn-ink); background: var(--warn-soft); }
+.pill.bad { color: var(--bad-ink); background: var(--bad-soft); }
+.pill.mute { color: var(--ink-2); background: var(--panel-lo); }
+
+/* field page */
+.field { flex: 1; min-height: 0; display: grid; grid-template-columns: 560px 1fr; gap: 14px; }
+.field .wheel { display: grid; place-items: center; }
+.field .wheel svg { width: 520px; height: 520px; }
+.field .info { padding: 28px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+.ktitle { font: 400 64px/1 var(--display); letter-spacing: .03em; margin-top: 8px; }
+.ksub { color: var(--ink-2); margin-top: 4px; }
+.cells.big .cell { height: 168px; }
+.hint { color: var(--ink-3); margin: 0; }
+
+/* scale page */
+.scale .head { display: flex; align-items: center; gap: 14px; }
+.stitle { font: 400 48px/1 var(--display); letter-spacing: .03em; }
+.ssub { color: var(--ink-2); margin-top: 4px; }
+.neckp { flex: 1; min-height: 0; display: grid; place-items: center; padding: 10px; background: var(--field); border-radius: 4px; box-shadow: inset 0 0 0 1px var(--hair); }
+.neckp svg { display: block; width: 100%; height: auto; }
+
+/* jam page */
+.chords { display: flex; height: 56px; border-radius: 4px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--field-line); background: var(--panel); }
+.chords span { flex: 1; display: grid; place-items: center; font: 700 24px/1 var(--ui); color: var(--ink); border-left: 1px solid var(--hair); }
+.chords span:first-child { border-left: 0; }
+.chords span.past { color: var(--ink-3); }
+.chords span.on { background: var(--accent); color: var(--on-accent); }
+.moment { display: grid; grid-template-columns: 300px 1fr; gap: 14px; }
+.now { border-radius: 4px; background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); padding: 14px 18px 16px; display: grid; justify-items: start; align-content: start; gap: 6px; }
+.now .lbl { color: var(--accent); }
+.now .cn { display: flex; align-items: baseline; gap: 16px; }
+.now .cn b { font: 700 72px/1 var(--ui); color: var(--ink); }
+.now .cn em .fl { font: 600 40px/1 var(--ui); }
+.now .cn em { font: 400 48px/1 var(--display); font-style: normal; letter-spacing: .04em; color: var(--ink-2); }
+.fieldp { padding: 14px 16px 16px; display: grid; gap: 12px; }
+.pent { display: flex; align-items: center; gap: 14px; }
+.pent span { font: 600 18px/1 var(--ui); color: var(--ink); }
+</style>
+<div class="page">
+  <div class="sec-h"><h2>JoVee Ruler no estilo do Rig</h2><p>As três telas da régua com o tema, as fontes e os componentes do JoVee Rig: barra escura em cima, corpo em <i>well</i>, painéis com fio de 1px, laranja só no que está escolhido, verde/amarelo/vermelho para a função do acorde. Tamanho real da janela, 1280 × 860, claro e escuro.</p></div>
+  <div class="pair">
+    <div class="scheme"><span class="tnum">R01 · claro, campo harmônico</span><div class="win" data-view="field"></div></div>
+    <div class="scheme dark"><span class="tnum">R01 · escuro, campo harmônico</span><div class="win" data-view="field"></div></div>
+    <div class="scheme"><span class="tnum">R02 · claro, escala</span><div class="win" data-view="scale"></div></div>
+    <div class="scheme dark"><span class="tnum">R02 · escuro, escala</span><div class="win" data-view="scale"></div></div>
+    <div class="scheme"><span class="tnum">R03 · claro, dentro do JoVee Jam</span><div class="win" data-view="jam"></div></div>
+    <div class="scheme dark"><span class="tnum">R03 · escuro, dentro do JoVee Jam</span><div class="win" data-view="jam"></div></div>
+    <div class="scheme dark"><span class="tnum">R03 · escuro, acorde emprestado</span><div class="win" data-view="jam2"></div></div>
+  </div>
+</div>
+<script>
+const IC = {
+  ruler: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/><path d="M12 3v4" stroke="currentColor" stroke-width="2"/></svg>',
+};
+const KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+// G major: chord, major degree, minor degree, function (0 rest, 1 transition, 2 tension)
+const FIELD = [['G', 'I', 'III', 0], ['Am', 'II', 'IV', 1], ['Bm', 'III', 'V', 0], ['C', 'IV', 'VI', 1], ['D', 'V', 'VII', 2], ['Em', 'VI', 'I', 0], ['F#°', 'VII', 'II', 2]];
+const FN = ['repouso', 'transição', 'tensão'];
+
+function toolbar(song) {
+  return `<div class="toolbar">${IC.ruler}<span class="title">JOVEE RULER</span>${song ? `<span class="song">${song}</span>` : ''}</div>`;
+}
+function tabs(on) {
+  return `<span class="seg"><span class="${on === 0 ? 'on' : ''}">Campo harmônico</span><span class="${on === 1 ? 'on' : ''}">Escala</span></span>`;
+}
+function cells(lit, cls) {
+  return `<div class="cells ${cls}">` + FIELD.map(([n, mj, mn, f], i) =>
+    `<div class="cell t${f} ${i === lit ? 'on' : ''}"><span class="mj">${mj}</span><span class="nm">${n}</span><span class="mn">${mn}</span></div>`).join('') + '</div>';
+}
+
+function wheel(sel) {
+  const c = 260, R = 250, rk = 194, ck = 34;
+  let s = `<svg viewBox="0 0 520 520">`;
+  s += `<circle cx="${c}" cy="${c}" r="${R}" fill="var(--panel-hi)" stroke="var(--hair)"/>`;
+  KEYS.forEach((k, p) => {
+    const a = (p - sel) * Math.PI / 6, x = c + rk * Math.sin(a), y = c - rk * Math.cos(a), on = p === sel;
+    s += `<circle cx="${x}" cy="${y}" r="${ck}" fill="${on ? 'var(--accent)' : 'var(--field)'}" stroke="${on ? 'none' : 'var(--field-line)'}"/>`;
+    s += `<text x="${x}" y="${y + 9}" text-anchor="middle" font-family="Barlow" font-weight="${on ? 700 : 600}" font-size="26" fill="${on ? 'var(--on-accent)' : 'var(--ink-2)'}">${k}</text>`;
+  });
+  s += `<path d="M${c - 9} 4 L${c + 9} 4 L${c} 18 Z" fill="var(--accent)"/>`;
+  s += `<circle cx="${c}" cy="${c}" r="138" fill="var(--field)" stroke="var(--hair)"/>`;
+  s += `<text x="${c}" y="${c + 30}" text-anchor="middle" font-family="Bebas Neue" font-size="128" fill="var(--ink)">${KEYS[sel]}</text>`;
+  s += `<text x="${c}" y="${c + 70}" text-anchor="middle" font-family="Bebas Neue" font-size="20" letter-spacing="2.8" fill="var(--ink-3)">RELATIVA <tspan font-family="Barlow" font-weight="600" font-size="22" letter-spacing="0" fill="var(--ink-2)">Em</tspan></text>`;
+  return s + '</svg>';
+}
+
+// ---- the neck: G major, standard tuning, 6th string on top, frets 0..15 ----
+const OPEN = [4, 9, 2, 7, 11, 4]; // E A D G B E, 6th string first
+const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const MARK = { 7: 0, 4: 1, 9: 2, 11: 2, 2: 2, 0: 3, 6: 3 }; // tonic, relative minor tonic, pentatonic, 4th/7th
+function neck({ W, sp, r, win, sounding = [] }) {
+  const x0 = 100, fw = (W - x0 - 12) / 15, y0 = r + 18, H = y0 + 5 * sp + r + 56;
+  const cx = f => f === 0 ? x0 / 2 + 14 : x0 + (f - .5) * fw, cy = s => y0 + s * sp;
+  let s = `<svg viewBox="0 0 ${W} ${H}">`;
+  if (win) {
+    const a = win[0] === 0 ? 30 : x0 + (win[0] - 1) * fw, b = x0 + win[1] * fw;
+    s += `<rect x="${a}" y="${y0 - r - 10}" width="${b - a}" height="${5 * sp + 2 * r + 20}" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>`;
+  }
+  [3, 5, 7, 9, 15].forEach(f => s += `<circle cx="${cx(f)}" cy="${cy(2.5)}" r="7" fill="var(--ink-3)" opacity=".3"/>`);
+  [1.5, 3.5].forEach(k => s += `<circle cx="${cx(12)}" cy="${cy(k)}" r="7" fill="var(--ink-3)" opacity=".3"/>`);
+  for (let f = 0; f <= 15; f++) {
+    const x = x0 + f * fw;
+    s += f === 0 ? `<rect x="${x - 2}" y="${y0}" width="4" height="${5 * sp}" fill="var(--ink-2)"/>`
+      : `<line x1="${x}" x2="${x}" y1="${y0}" y2="${y0 + 5 * sp}" stroke="var(--ink-3)" stroke-opacity=".45"/>`;
+    s += `<text x="${cx(f)}" y="${y0 + 5 * sp + r + 40}" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="var(--ink-3)">${f}</text>`;
+  }
+  for (let i = 0; i < 6; i++) {
+    s += `<line x1="${x0}" x2="${W - 12}" y1="${cy(i)}" y2="${cy(i)}" stroke="var(--ink-3)" stroke-width="${2 - i * .2}"/>`;
+    s += `<text x="4" y="${cy(i) + 6}" font-family="JetBrains Mono" font-size="18" fill="var(--ink-3)">${6 - i}</text>`;
+  }
+  for (let i = 0; i < 6; i++) for (let f = 0; f <= 15; f++) {
+    const p = (OPEN[i] + f) % 12, m = MARK[p] ?? 4, on = sounding.includes(p);
+    if (m === 4 && !on) continue;
+    const lit = !win || (f >= win[0] && f <= win[1]), x = cx(f), y = cy(i);
+    s += `<g opacity="${lit ? 1 : .18}">`;
+    if (on && lit) s += `<circle cx="${x}" cy="${y}" r="${r + 7}" fill="none" stroke="${m <= 2 ? 'var(--ok)' : 'var(--bad)'}" stroke-width="3"/>`;
+    let ink = 'var(--field)';
+    if (m === 0) { s += `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" rx="4" fill="var(--accent)"/>`; ink = 'var(--on-accent)'; }
+    if (m === 1) s += `<path d="M${x} ${y - r - 5} L${x + r + 5} ${y} L${x} ${y + r + 5} L${x - r - 5} ${y} Z" fill="var(--ink)"/>`;
+    if (m === 2) s += `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--ink)"/>`;
+    if (m === 3) s += `<path d="M${x} ${y - r - 2} L${x + r + 3} ${y + r} L${x - r - 3} ${y + r} Z" fill="var(--ink-3)"/>`;
+    if (m === 4) { s += `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--panel-lo)" stroke="var(--field-line)"/>`; ink = 'var(--ink)'; }
+    s += `<text x="${x}" y="${y + (m === 3 ? 12 : 6)}" text-anchor="middle" font-family="Barlow" font-weight="700" font-size="${r > 24 ? 20 : 18}" fill="${ink}">${NAMES[p]}</text></g>`;
+  }
+  return s + '</svg>';
+}
+function shapeLegend() {
+  const g = (d) => `<svg viewBox="0 0 22 22">${d}</svg>`;
+  return `<div class="legend">
+    <span class="key">${g('<rect x="2" y="2" width="18" height="18" rx="3" fill="var(--accent)"/>')}tônica maior</span>
+    <span class="key">${g('<path d="M11 1 L21 11 L11 21 L1 11 Z" fill="var(--ink)"/>')}tônica da relativa menor</span>
+    <span class="key">${g('<circle cx="11" cy="11" r="9" fill="var(--ink)"/>')}pentatônica</span>
+    <span class="key">${g('<path d="M11 2 L21 20 L1 20 Z" fill="var(--ink-3)"/>')}graus 4 e 7</span></div>`;
+}
+
+const VIEWS = {
+  field: () => toolbar() + `<div class="body"><div class="row">${tabs(0)}</div>
+    <div class="field"><div class="card wheel">${wheel(1)}</div>
+      <div class="card info">
+        <div><div class="lbl">TOM</div><div class="ktitle">SOL MAIOR</div><div class="ksub">Relativa: Mi menor</div></div>
+        ${cells(-1, 'big')}
+        <div class="legend">${FN.map((n, i) => `<span class="key" style="--f:var(--${['ok', 'warn', 'bad'][i]})"><i></i>${n}</span>`).join('')}</div>
+        <p class="hint">Em cima o grau no tom maior, embaixo na relativa menor. Gire a roda ou clique numa nota.</p>
+      </div></div></div>`,
+  scale: () => toolbar() + `<div class="body scale"><div class="row">${tabs(1)}</div>
+    <div class="head"><div class="grow"><div class="stitle">SOL MAIOR</div><div class="ssub">Forma 1 · 2 na relativa menor · casas 3 a 5</div></div>
+      <span class="lbl" style="align-self:center">FORMA</span>
+      <span class="seg num"><span class="on">1</span><span>2</span><span>3</span><span>4</span><span>5</span><span class="w">Braço todo</span></span></div>
+    <div class="neckp">${neck({ W: 1220, sp: 84, r: 26, win: [3, 5] })}</div>
+    ${shapeLegend()}</div>`,
+  jam: () => jam(1),
+  jam2: () => jam(4),
+};
+const SONG = ['G', 'C', 'D', 'Em', 'F', 'C'];
+function jam(now) {
+  const borrowed = now === 4;
+  const sounding = borrowed ? [5, 9, 0] : [0, 4, 7];
+  const ring = `<svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8.5" fill="none" stroke-width="3" stroke="`;
+  return toolbar('Exemplo em Sol · Sol maior') + `<div class="body">
+    <div class="chords">${SONG.map((c, i) => `<span class="${i === now ? 'on' : i < now ? 'past' : ''}">${c}</span>`).join('')}</div>
+    <div class="moment">
+      <div class="now"><span class="lbl">AGORA</span>
+        <div class="cn"><b>${SONG[now]}</b><em>${borrowed ? '<span class="fl">♭</span>VII' : 'IV'}</em></div>
+        ${borrowed ? '<span class="pill mute"><i></i>emprestado, fora do campo</span>' : '<span class="pill warn"><i></i>transição</span>'}</div>
+      <div class="card fieldp"><span class="lbl">CAMPO HARMÔNICO DE SOL MAIOR</span>${cells(borrowed ? -1 : 3, 'sm')}
+        <div class="pent"><span>Pentatônica de Sol · forma 1 · casas 3 a 5</span>
+          <span class="pill bad"><i></i>${borrowed ? 'F e C do acorde ficam fora' : 'C do acorde fica fora'}</span></div></div>
+    </div>
+    <div class="neckp">${neck({ W: 1220, sp: 62, r: 21, win: [3, 5], sounding })}</div>
+    <div class="legend"><span class="key">${ring}var(--ok)"/></svg>nota do acorde na pentatônica</span><span class="key">${ring}var(--bad)"/></svg>nota do acorde fora dela</span></div>
+  </div>`;
+}
+document.querySelectorAll('[data-view]').forEach(el => el.innerHTML = VIEWS[el.dataset.view]());
+// ?only=N shows just the Nth window at the top left, for a headless screenshot of the real size
+const only = new URLSearchParams(location.search).get('only');
+if (only !== null) {
+  document.querySelector('.sec-h').remove();
+  document.querySelectorAll('.scheme').forEach((el, i) => i == only ? el.querySelector('.tnum').remove() : el.remove());
+  document.querySelector('.page').style.cssText = 'padding:0;margin:0';
+  document.querySelector('.win').style.cssText = 'border-radius:0;box-shadow:none';
+}
+</script>

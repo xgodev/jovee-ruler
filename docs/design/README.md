@@ -78,7 +78,9 @@ always uppercase, and the shapes numbered 1–5 with the 3- and 4-fret boxes of 
 
 ## Order
 
-1. Mockup of the screens, approved before any Slint: [`mockup/index.html`](mockup/index.html).
+1. Mockup of the screens, approved before any Slint: [`mockup/index.html`](mockup/index.html). Restyled
+   in JoVee Rig's visual language (its theme tokens, fonts, tool-window bar, light and dark):
+   [`mockup/rig.html`](mockup/rig.html), waiting for approval before the Slint follows it.
 2. `jr-core` with tests, checked against the printed art (same notes, same chords, same shapes).
 3. `jr-gui` + the standalone app. Done; the song page is in place for step 5.
 4. JoVee Rig imports it.
