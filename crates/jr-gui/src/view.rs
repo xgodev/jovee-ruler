@@ -7,7 +7,7 @@ use jr_core::{
     Pc, Shape, STANDARD,
 };
 
-use crate::ui::{ChordCard, FieldCell, Moment, NoteMark, ShapeButton};
+use crate::ui::{ChordCard, Moment, NoteMark, Segment, ShapeButton};
 
 /// The neck drawn on screen: the nut to fret 15, as in the mockup.
 pub const FRETS: i32 = 15;
@@ -46,8 +46,9 @@ pub fn key_subtitle(key: Pc) -> String {
     format!("Relativa: {} menor", spoken(key, relative(key)))
 }
 
+/// The relative minor as the wheel names it under the key: "Em".
 pub fn relative_short(key: Pc) -> String {
-    format!("relativa {}", jr_core::note::minor_key_name(relative(key)))
+    jr_core::note::minor_key_name(relative(key)).to_string()
 }
 
 fn function(f: Function) -> i32 {
@@ -85,6 +86,11 @@ pub fn shape_buttons(key: Pc) -> Vec<ShapeButton> {
         .collect();
     out.push(ShapeButton { label: "Braço todo".into(), first: -1, last: -1 });
     out
+}
+
+/// The shape buttons as the segmented control draws them: the numbers in the mono face.
+pub fn shape_segments(buttons: &[ShapeButton]) -> Vec<Segment> {
+    buttons.iter().map(|b| Segment { label: b.label.clone(), mono: b.first >= 0 }).collect()
 }
 
 /// "Forma 1 · 2 na relativa menor · casas 3 a 5", or the whole neck.
@@ -135,7 +141,7 @@ pub fn neck(key: Pc, window: Option<(i32, i32)>, sounding: &[Pc]) -> Vec<NoteMar
 /// One moment of a song inside JoVee Jam, as the window shows it.
 pub struct JamMoment {
     pub moment: Moment,
-    pub field: Vec<FieldCell>,
+    pub field: Vec<ChordCard>,
     pub notes: Vec<NoteMark>,
     pub window: Shape,
 }
@@ -157,14 +163,18 @@ pub fn jam(key: Pc, chord: Option<&str>, notes: &[Pc], fret: f32) -> JamMoment {
     };
     let window = shape_near(STANDARD[0], key, fret);
     let outside: Vec<&str> = outside_pentatonic(key, notes).iter().map(|&n| name_in(key, n)).collect();
+    // the accidental of a borrowed degree is drawn apart: the title face has no ♭
+    let numeral = roman.trim_start_matches(['♭', '♯']);
     let moment = Moment {
         chord: chord.into(),
-        roman: roman.into(),
+        accidental: roman[..roman.len() - numeral.len()].into(),
+        numeral: numeral.into(),
+        roman: roman.as_str().into(),
         function: found.map_or(-1, |c| function(c.function)),
         lit: found.map_or(-1, |c| c.degree as i32 - 1),
         field_title: format!("Campo harmônico de {}", key_title(key)).into(),
         shape: format!(
-            "Pentatônica de {}, forma {} (casas {} a {})",
+            "Pentatônica de {} · forma {} · casas {} a {}",
             spoken(key, key),
             window.major,
             window.first.max(0),
@@ -174,11 +184,7 @@ pub fn jam(key: Pc, chord: Option<&str>, notes: &[Pc], fret: f32) -> JamMoment {
         outside: outside.join(" e ").into(),
         outside_count: outside.len() as i32,
     };
-    let field = harmonic_field(key)
-        .iter()
-        .map(|c| FieldCell { roman: c.roman().into(), name: c.name().into(), function: function(c.function) })
-        .collect();
-    JamMoment { moment, field, notes: neck(key, Some((window.first, window.last)), notes), window }
+    JamMoment { moment, field: chord_cards(key), notes: neck(key, Some((window.first, window.last)), notes), window }
 }
 
 #[cfg(test)]

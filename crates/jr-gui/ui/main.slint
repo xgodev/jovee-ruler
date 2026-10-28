@@ -1,12 +1,13 @@
-// The JoVee Ruler window. Standalone it has two pages, the harmonic field and the scale; a host
-// (JoVee Jam) opens it on the third, the song playing.
-import { Theme } from "theme.slint";
+// The JoVee Ruler window, drawn as one of JoVee Rig's tool windows: the dark bar on top, the body in
+// the well. Standalone it has two pages, the harmonic field and the scale; a host (JoVee Jam) opens it
+// on the third, the song playing.
+import { Theme, ThemeMode, Label, Panel, Segment, SegControl } from "theme.slint";
 import { Wheel } from "wheel.slint";
-import { FieldCards, FunctionLegend, ChordCard } from "field.slint";
+import { FieldCells, FunctionLegend, ChordCard } from "field.slint";
 import { Neck, NoteMark, MarkLegend } from "neck.slint";
-import { JamView, FieldCell, Moment } from "jam.slint";
+import { JamView, Moment } from "jam.slint";
 
-export { ChordCard, NoteMark, FieldCell, Moment }
+export { Theme, ThemeMode, ChordCard, NoteMark, Moment, Segment }
 
 export struct ShapeButton {
     label: string,
@@ -14,66 +15,66 @@ export struct ShapeButton {
     last: int,
 }
 
-component Tab inherits Rectangle {
-    in property <string> text;
-    in property <bool> on;
-    callback clicked();
-    height: 40px;
-    width: label.preferred-width + 2 * Theme.sp4;
-    border-radius: Theme.radius;
-    background: self.on ? #1a2029 : touch.has-hover ? Theme.hover : transparent;
-    label := Text {
-        text: root.text;
-        font-size: Theme.fs-body;
-        color: root.on ? Theme.text : Theme.text2;
+// The ruler's mark in the bar: a dial with its pointer.
+component Mark inherits Rectangle {
+    width: 20px;
+    height: 20px;
+    Rectangle {
+        width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        border-width: Theme.mark;
+        border-color: Theme.accent;
     }
-    touch := TouchArea {
-        clicked => { root.clicked(); }
+    Rectangle {
+        width: 7px;
+        height: 7px;
+        border-radius: 3.5px;
+        background: Theme.accent;
     }
-    accessible-role: tab;
-    accessible-label: root.text;
-    accessible-action-default => { root.clicked(); }
+    Rectangle {
+        x: 9px;
+        y: 2px;
+        width: 2px;
+        height: 4px;
+        background: Theme.accent;
+    }
 }
 
-component Choice inherits Rectangle {
-    in property <string> text;
-    in property <bool> on;
-    callback clicked();
-    height: 44px;
-    width: max(56px, label.preferred-width + 2 * Theme.sp4);
-    border-radius: Theme.radius;
-    background: self.on ? Theme.text : touch.has-hover ? Theme.s2 : #1a2029;
-    border-width: 1px;
-    border-color: self.on ? Theme.text : Theme.field-line;
-    label := Text {
-        text: root.text;
-        font-size: Theme.fs-body;
-        font-weight: root.on ? 700 : 400;
-        color: root.on ? Theme.bg : Theme.text2;
-    }
-    touch := TouchArea {
-        clicked => { root.clicked(); }
-    }
-    accessible-role: button;
-    accessible-label: root.text;
-    accessible-checked: root.on;
-    accessible-action-default => { root.clicked(); }
-}
-
-component Heading inherits VerticalLayout {
+component Toolbar inherits Rectangle {
     in property <string> title;
-    in property <string> subtitle;
-    spacing: 2px;
-    Text {
-        text: root.title;
-        font-family: Theme.display;
-        font-size: Theme.fs-title;
-        color: Theme.text;
+    in property <string> context;   // the song, inside JoVee Jam
+    height: 46px;
+    background: Theme.chrome;
+    HorizontalLayout {
+        padding-left: Theme.sp-m;
+        padding-right: Theme.sp-m;
+        spacing: Theme.sp-s;
+        alignment: start;
+        VerticalLayout {
+            alignment: center;
+            Mark { }
+        }
+        Text {
+            text: root.title;
+            vertical-alignment: center;
+            font-family: Theme.display;
+            font-size: 24px;
+            letter-spacing: 1.4px;
+            color: Theme.chrome-fg;
+        }
+        if root.context != "": Text {
+            text: root.context;
+            vertical-alignment: center;
+            font-size: Theme.min-font;
+            font-weight: 500;
+            color: Theme.chrome-fg-2;
+        }
     }
-    Text {
-        text: root.subtitle;
-        font-size: 20px;
-        color: Theme.text2;
+    Rectangle {
+        y: parent.height - Theme.line;
+        height: Theme.line;
+        background: Theme.chrome-line;
     }
 }
 
@@ -82,7 +83,8 @@ export component AppWindow inherits Window {
     preferred-width: 1280px;
     preferred-height: 860px;
     min-width: 1280px;
-    background: Theme.bg;
+    min-height: 860px;
+    background: Theme.well;
     default-font-family: Theme.sans;
 
     in-out property <int> page;           // 0 harmonic field, 1 scale, 2 the song in JoVee Jam
@@ -100,6 +102,7 @@ export component AppWindow inherits Window {
     callback key-picked(int);
 
     in property <[ShapeButton]> shapes;
+    in property <[Segment]> shape-segments;   // the same shapes, as the control draws them
     in property <int> shape;              // index into `shapes`
     in property <string> shape-subtitle;
     in property <[NoteMark]> scale-notes;
@@ -108,151 +111,146 @@ export component AppWindow inherits Window {
     in property <[string]> timeline;
     in property <int> now;
     in property <Moment> moment;
-    in property <[FieldCell]> jam-field;
+    in property <[ChordCard]> jam-field;
     in property <[NoteMark]> jam-notes;
     in property <int> jam-first;
     in property <int> jam-last;
     callback seek(int);
 
     VerticalLayout {
-        Rectangle {
-            height: 64px;
-            background: Theme.bar;
-            HorizontalLayout {
-                padding-left: Theme.sp5;
-                padding-right: Theme.sp5;
-                spacing: Theme.sp5;
+        Toolbar {
+            title: root.brand;
+            context: root.page == 2 ? root.context : "";
+        }
+
+        VerticalLayout {
+            padding: Theme.sp-m;
+            spacing: Theme.sp-m;
+            vertical-stretch: 1;
+
+            if root.page < 2: HorizontalLayout {
                 alignment: start;
-                Text {
-                    text: root.brand;
-                    vertical-alignment: center;
-                    font-family: Theme.display;
-                    font-size: 30px;
-                    color: Theme.text;
+                SegControl {
+                    items: [{ label: @tr("Campo harmônico") }, { label: @tr("Escala") }];
+                    selected: root.page;
+                    picked(i) => { root.page = i; }
                 }
-                if root.page < 2: HorizontalLayout {
-                    spacing: Theme.sp2;
-                    padding-top: Theme.sp3;
-                    padding-bottom: Theme.sp3;
-                    Tab {
-                        text: @tr("Campo harmônico");
-                        on: root.page == 0;
-                        clicked => { root.page = 0; }
-                    }
-                    Tab {
-                        text: @tr("Escala");
-                        on: root.page == 1;
-                        clicked => { root.page = 1; }
+            }
+
+            if root.page == 0: HorizontalLayout {
+                spacing: Theme.sp-m;
+                vertical-stretch: 1;
+                Panel {
+                    width: 560px;
+                    Wheel {
+                        keys: root.keys;
+                        selected: root.key-index;
+                        key-name: root.key-short;
+                        relative: root.relative-short;
+                        pick(i) => { root.key-picked(i); }
                     }
                 }
-                if root.page == 2: Text {
-                    text: root.context;
-                    vertical-alignment: center;
-                    font-size: Theme.fs-body;
-                    color: Theme.text2;
+                Panel {
+                    horizontal-stretch: 1;
+                    VerticalLayout {
+                        padding: Theme.sp-xl;
+                        spacing: Theme.sp-xl;
+                        alignment: center;
+                        VerticalLayout {
+                            spacing: 4px;
+                            Label { text: @tr("TOM"); }
+                            Text {
+                                text: root.key-title;
+                                font-family: Theme.display;
+                                font-size: 64px;
+                                letter-spacing: 1.9px;
+                                color: Theme.ink;
+                            }
+                            Text {
+                                text: root.key-subtitle;
+                                font-size: Theme.min-font;
+                                color: Theme.ink-2;
+                            }
+                        }
+                        FieldCells {
+                            chords: root.chords;
+                            cell-height: 168px;
+                        }
+                        FunctionLegend { }
+                        Text {
+                            text: @tr("Em cima o grau no tom maior, embaixo na relativa menor. Gire a roda ou clique numa nota.");
+                            font-size: Theme.min-font;
+                            color: Theme.ink-3;
+                            wrap: word-wrap;
+                        }
+                    }
                 }
             }
-            Rectangle {
-                y: parent.height - 1px;
-                height: 1px;
-                background: #07090c;
-            }
-        }
 
-        if root.page == 0: HorizontalLayout {
-            padding: Theme.sp6;
-            spacing: 48px;
-            alignment: start;
-            VerticalLayout {
-                alignment: center;
-                Wheel {
-                    keys: root.keys;
-                    selected: root.key-index;
-                    key-name: root.key-short;
-                    relative: root.relative-short;
-                    pick(i) => { root.key-picked(i); }
-                }
-            }
-            VerticalLayout {
-                alignment: center;
-                spacing: Theme.sp5;
-                horizontal-stretch: 1;
-                Heading {
-                    title: root.key-title;
-                    subtitle: root.key-subtitle;
-                }
-                Rectangle { height: Theme.sp2; }
-                FieldCards { chords: root.chords; }
-                FunctionLegend { }
-                Text {
-                    text: @tr("Em cima o grau no tom maior, embaixo na relativa menor. Gire a roda ou clique numa nota.");
-                    font-size: Theme.fs-body;
-                    color: Theme.text3;
-                    wrap: word-wrap;
-                }
-            }
-        }
-
-        if root.page == 1: VerticalLayout {
-            padding: Theme.sp6;
-            spacing: Theme.sp5;
-            alignment: start;
-            HorizontalLayout {
-                spacing: Theme.sp4;
-                Heading {
-                    title: root.key-title;
-                    subtitle: root.shape-subtitle;
-                }
-                Rectangle { horizontal-stretch: 1; }
-                Text {
-                    text: @tr("Forma");
-                    height: 44px;
-                    vertical-alignment: center;
-                    font-size: Theme.fs-body;
-                    color: Theme.text3;
-                }
+            if root.page == 1: VerticalLayout {
+                spacing: Theme.sp-m;
+                vertical-stretch: 1;
                 HorizontalLayout {
-                    spacing: Theme.sp2;
-                    alignment: center;
-                    for s[i] in root.shapes: Choice {
-                        text: s.label;
-                        on: i == root.shape;
-                        clicked => { root.shape-picked(i); }
+                    spacing: Theme.sp-m;
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        spacing: 4px;
+                        Text {
+                            text: root.key-title;
+                            font-family: Theme.display;
+                            font-size: 48px;
+                            letter-spacing: 1.4px;
+                            color: Theme.ink;
+                        }
+                        Text {
+                            text: root.shape-subtitle;
+                            font-size: Theme.min-font;
+                            color: Theme.ink-2;
+                        }
+                    }
+                    Label {
+                        text: @tr("FORMA");
+                        vertical-alignment: center;
+                    }
+                    VerticalLayout {
+                        alignment: center;
+                        SegControl {
+                            items: root.shape-segments;
+                            selected: root.shape;
+                            picked(i) => { root.shape-picked(i); }
+                        }
                     }
                 }
-            }
-            Rectangle {
-                background: Theme.well;
-                border-width: 1px;
-                border-color: Theme.line;
-                border-radius: Theme.radius-card;
-                HorizontalLayout {
-                    padding-top: Theme.sp4;
-                    padding-bottom: Theme.sp4;
-                    alignment: center;
-                    Neck {
-                        notes: root.scale-notes;
-                        window-first: root.shape < 0 ? -1 : root.shapes[root.shape].first;
-                        window-last: root.shape < 0 ? -1 : root.shapes[root.shape].last;
+                Rectangle {
+                    vertical-stretch: 1;
+                    border-radius: Theme.radius;
+                    background: Theme.field;
+                    border-width: Theme.line;
+                    border-color: Theme.hair;
+                    VerticalLayout {
+                        padding: Theme.sp-s;
+                        alignment: center;
+                        Neck {
+                            notes: root.scale-notes;
+                            window-first: root.shape < 0 ? -1 : root.shapes[root.shape].first;
+                            window-last: root.shape < 0 ? -1 : root.shapes[root.shape].last;
+                        }
                     }
                 }
+                MarkLegend { }
             }
-            MarkLegend { }
-        }
 
-        if root.page == 2: JamView {
-            padding-left: Theme.sp6;
-            padding-right: Theme.sp6;
-            padding-top: Theme.sp5;
-            padding-bottom: Theme.sp5;
-            timeline: root.timeline;
-            now: root.now;
-            moment: root.moment;
-            field: root.jam-field;
-            notes: root.jam-notes;
-            window-first: root.jam-first;
-            window-last: root.jam-last;
-            seek(i) => { root.seek(i); }
+            if root.page == 2: JamView {
+                vertical-stretch: 1;
+                timeline: root.timeline;
+                now: root.now;
+                moment: root.moment;
+                field: root.jam-field;
+                notes: root.jam-notes;
+                window-first: root.jam-first;
+                window-last: root.jam-last;
+                seek(i) => { root.seek(i); }
+            }
         }
     }
 }

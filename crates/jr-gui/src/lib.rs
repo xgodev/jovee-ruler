@@ -86,6 +86,11 @@ impl Ruler {
         &self.window
     }
 
+    /// The scheme the ruler is drawn in; a host passes its own so the ruler matches it.
+    pub fn set_theme(&self, mode: ui::ThemeMode) {
+        self.window.global::<ui::Theme>().set_mode(mode);
+    }
+
     /// Turns the wheel and the scale to a major key.
     pub fn set_key(&self, key: Pc) {
         self.state.borrow_mut().key = key % 12;
@@ -128,6 +133,7 @@ fn show_key(w: &AppWindow, s: &State) {
     w.set_shape(s.shape.min(buttons.len() - 1) as i32);
     w.set_shape_subtitle(view::shape_subtitle(key, &pick).into());
     w.set_scale_notes(model(view::neck(key, window, &[])));
+    w.set_shape_segments(model(view::shape_segments(&buttons)));
     w.set_shapes(model(buttons));
 }
 
@@ -135,7 +141,6 @@ fn show_song(w: &AppWindow, s: &State) {
     let Some(song) = &s.song else { return };
     let Some(chord) = song.chords.get(s.now.min(song.chords.len().saturating_sub(1))) else { return };
     let j = view::jam(song.key, Some(&chord.name), &chord.notes, chord.fret);
-    w.set_brand("JoVee Jam".into());
     w.set_context(format!("{} · {}", song.title, view::key_title(song.key)).into());
     w.set_timeline(model(song.chords.iter().map(|c| c.name.clone().into()).collect()));
     w.set_now(s.now as i32);

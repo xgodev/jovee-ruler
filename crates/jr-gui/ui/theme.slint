@@ -1,64 +1,208 @@
-// Design tokens of OpenRig (crates/adapter-gui/ui/theme.slint), as JoVee Tone uses them: navy-black page,
-// Bebas Neue for titles and labels, Barlow for text, JetBrains Mono for numbers, one orange accent.
+// JoVee Rig's design tokens (OpenRig crates/adapter-gui-ui/ui/theme.slint, release v0.9.0), the ones the
+// ruler draws with, so it looks native inside the Rig: a dark chrome bar in both schemes, flat surfaces
+// with 1px hairlines, one orange accent for what is chosen, ok/warn/bad for state. Barlow for text,
+// Bebas Neue for titles and labels, JetBrains Mono for numbers; no text under 18px.
+import { Palette as SystemPalette } from "std-widgets.slint";
 import "fonts/Barlow/Barlow-Regular.ttf";
 import "fonts/Barlow/Barlow-Medium.ttf";
 import "fonts/Barlow/Barlow-SemiBold.ttf";
+import "fonts/Barlow/Barlow-Bold.ttf";
 import "fonts/BebasNeue/BebasNeue-Regular.ttf";
 import "fonts/JetBrainsMono/JetBrainsMono-Medium.ttf";
 
+// `system` follows the operating system; a host sets the scheme it is drawn in.
+export enum ThemeMode { system, light, dark }
+
 export global Theme {
-    out property <color> bg: #0b0e12;
-    out property <color> bar: #12161c;      // top bar
-    out property <color> s1: #1d232b;       // card
-    out property <color> s2: #232a33;       // selected
-    out property <color> well: #161b21;     // panel the neck and the wheel sit in
-    out property <color> field-line: #353e49;
-    out property <color> line: #2d343e;
-    out property <color> hover: #ffffff0d;
-    out property <color> text: #e8ecf1;
-    out property <color> text2: #aab3bf;
-    out property <color> text3: #7a8592;
+    in property <ThemeMode> mode: ThemeMode.system;
+    out property <bool> dark: root.mode == ThemeMode.dark
+        || (root.mode == ThemeMode.system && SystemPalette.color-scheme != ColorScheme.light);
+
+    out property <length> min-font: 18px;
+
+    // the tool-window bar, dark in both schemes
+    out property <color> chrome: dark ? #12161c : #1a2029;
+    out property <color> chrome-line: dark ? #07090c : #10151b;
+    out property <color> chrome-fg: #e2e7ee;
+    out property <color> chrome-fg-2: #8b96a5;
+
+    out property <color> page: dark ? #0b0e12 : #dde2e8;
+    out property <color> panel: dark ? #232a33 : #e4e8ee;
+    out property <color> panel-hi: dark ? #2a323c : #eef1f5;
+    out property <color> panel-lo: dark ? #1d232b : #d6dce4;
+    out property <color> well: dark ? #161b21 : #cdd4dd;
+    out property <color> field: dark ? #11151a : #fbfcfd;
+
+    out property <color> hair: dark ? #2d343e : #cdd3db;
+    out property <color> hair-2: dark ? #262c35 : #dbe0e6;
+    out property <color> field-line: dark ? #353e49 : #c0c7d0;
+
+    out property <color> ink: dark ? #e8ecf1 : #18202b;
+    out property <color> ink-2: dark ? #aab3bf : #465262;
+    out property <color> ink-3: dark ? #7a8592 : #75808f;
+    out property <color> hover: dark ? #ffffff0d : #0000000a;
+
     out property <color> accent: #f28c1e;
-    out property <color> accent-ink: #1a1206;
-    out property <color> outside: #ff5d5d;   // a note of the chord outside the pentatonic
+    out property <color> accent-soft: #f28c1e24;
+    out property <color> on-accent: #1a1206;
+    out property <color> ok: #2f9a55;
+    out property <color> warn: #d9b43a;
+    out property <color> bad: #c8443e;
+    out property <color> ok-soft: #2f9a552e;
+    out property <color> warn-soft: #d9b43a2e;
+    out property <color> bad-soft: #c8443e2e;
+    // the state colours as text: darker on the light scheme, the chrome inks on the dark one
+    out property <color> ok-ink: dark ? #7fdc9c : #23784a;
+    out property <color> warn-ink: dark ? #f2d36b : #7d6210;
+    out property <color> bad-ink: dark ? #ff8a7a : #a8352f;
+
+    // the two degree tags of the printed wheel: white = the major key, black = the relative minor
+    out property <color> tag-hi: dark ? #e8ecf1 : #fbfcfd;
+    out property <color> tag-hi-ink: dark ? #0b0e12 : #18202b;
 
     out property <string> sans: "Barlow";
     out property <string> display: "Bebas Neue";
     out property <string> mono: "JetBrains Mono";
 
-    out property <length> fs-title: 40px;
-    out property <length> fs-h: 26px;
-    out property <length> fs-label: 21px;
-    out property <length> fs-body: 18px;
+    out property <length> line: 1px;
+    out property <length> mark: 2px;
+    out property <length> track: 3px;
+    out property <length> radius: 4px;
+    out property <length> radius-sm: 3px;
 
-    out property <length> radius: 8px;
-    out property <length> radius-card: 12px;
-    out property <length> sp2: 8px;
-    out property <length> sp3: 12px;
-    out property <length> sp4: 16px;
-    out property <length> sp5: 24px;
-    out property <length> sp6: 32px;
+    out property <length> sp-s: 10px;
+    out property <length> sp-m: 14px;
+    out property <length> sp-l: 20px;
+    out property <length> sp-xl: 28px;
 }
 
-// What a chord does in the key, as the printed wheel colors it: 0 rest, 1 transition, 2 tension;
+// What a chord does in the key, as the printed wheel colours it: 0 rest, 1 transition, 2 tension;
 // anything else is a chord from outside the field.
 export global Function {
-    public pure function fill(f: int) -> color {
-        if f == 0 { return #2f9a55; }
-        if f == 1 { return #f28c1e; }
-        if f == 2 { return #c8443e; }
-        return Theme.line;
+    public pure function color(f: int) -> color {
+        if f == 0 { return Theme.ok; }
+        if f == 1 { return Theme.warn; }
+        if f == 2 { return Theme.bad; }
+        return Theme.ink-3;
+    }
+    public pure function soft(f: int) -> color {
+        if f == 0 { return Theme.ok-soft; }
+        if f == 1 { return Theme.warn-soft; }
+        if f == 2 { return Theme.bad-soft; }
+        return Theme.panel-lo;
     }
     public pure function ink(f: int) -> color {
-        if f == 0 { return #7fdc9c; }
-        if f == 1 { return #f2a95a; }
-        if f == 2 { return #ff8a7a; }
-        return Theme.text2;
+        if f == 0 { return Theme.ok-ink; }
+        if f == 1 { return Theme.warn-ink; }
+        if f == 2 { return Theme.bad-ink; }
+        return Theme.ink-2;
     }
     public pure function name(f: int) -> string {
         if f == 0 { return @tr("repouso"); }
         if f == 1 { return @tr("transição"); }
         if f == 2 { return @tr("tensão"); }
-        return @tr("fora do campo");
+        return @tr("emprestado, fora do campo");
+    }
+}
+
+// A Bebas label, as the Rig captions its panels.
+export component Label inherits Text {
+    font-family: Theme.display;
+    font-size: 20px;
+    letter-spacing: 2.8px;
+    color: Theme.ink-3;
+}
+
+// A raised panel on the well: flat, a 1px hairline.
+export component Panel inherits Rectangle {
+    background: Theme.panel;
+    border-radius: Theme.radius;
+    border-width: Theme.line;
+    border-color: Theme.hair;
+}
+
+// A short fixed set of choices, one on: the Rig's segmented control.
+export struct Segment {
+    label: string,
+    mono: bool,   // a number, drawn in the mono face
+}
+
+export component SegControl inherits Rectangle {
+    in property <[Segment]> items;
+    in property <int> selected;
+    callback picked(int);
+
+    height: 36px;
+    border-radius: Theme.radius-sm;
+    border-width: Theme.line;
+    border-color: Theme.field-line;
+    background: Theme.panel;
+    clip: true;
+
+    HorizontalLayout {
+        padding: Theme.line;
+        for s[i] in root.items: seg := Rectangle {
+            private property <bool> on: i == root.selected;
+            min-width: s.mono ? 44px : 0;
+            background: self.on ? Theme.accent : touch.has-hover ? Theme.hover : transparent;
+            HorizontalLayout {
+                padding-left: 14px;
+                padding-right: 14px;
+                label := Text {
+                    text: s.label;
+                    vertical-alignment: center;
+                    horizontal-alignment: center;
+                    font-family: s.mono ? Theme.mono : Theme.sans;
+                    font-size: Theme.min-font;
+                    font-weight: s.mono ? 500 : 600;
+                    color: seg.on ? Theme.on-accent : Theme.ink;
+                }
+            }
+            if i > 0: Rectangle {
+                x: 0;
+                width: Theme.line;
+                background: Theme.hair;
+            }
+            touch := TouchArea {
+                clicked => { root.picked(i); }
+            }
+            accessible-role: button;
+            accessible-label: s.label;
+            accessible-checked: self.on;
+            accessible-action-default => { root.picked(i); }
+        }
+    }
+}
+
+// A small tinted tag with a dot: the function of a chord, or what is outside the pentatonic.
+export component Pill inherits Rectangle {
+    in property <string> text;
+    in property <color> ink;
+    in property <color> tint;
+    height: 32px;
+    width: row.preferred-width;
+    border-radius: Theme.radius-sm;
+    background: root.tint;
+    row := HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 8px;
+        alignment: start;
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 10px;
+                height: 10px;
+                border-radius: 5px;
+                background: root.ink;
+            }
+        }
+        Text {
+            text: root.text;
+            vertical-alignment: center;
+            font-size: Theme.min-font;
+            font-weight: 600;
+            color: root.ink;
+        }
     }
 }

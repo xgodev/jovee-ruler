@@ -1,5 +1,5 @@
-// The seven chords of the key as cards: degree in the major key on top, the chord, degree in the
-// relative minor below, colored by what the chord does.
+// The seven chords of the key as cells, as the printed wheel shows them: the degree in the major key on
+// a white tag, the chord, the degree in the relative minor on a dark tag; tinted by what the chord does.
 import { Theme, Function } from "theme.slint";
 
 export struct ChordCard {
@@ -9,43 +9,70 @@ export struct ChordCard {
     function: int,         // in the major key
 }
 
-component Card inherits Rectangle {
+component Tag inherits Rectangle {
+    in property <string> text;
+    in property <color> ink;
+    width: 64px;
+    height: 28px;
+    border-radius: Theme.radius-sm;
+    Text {
+        text: root.text;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        font-family: Theme.display;
+        font-size: 22px;
+        letter-spacing: 1.3px;
+        color: root.ink;
+    }
+}
+
+component Cell inherits Rectangle {
     in property <ChordCard> chord;
-    border-radius: Theme.radius-card;
-    background: Function.fill(self.chord.function).with-alpha(0.15);
-    border-width: 2px;
-    border-color: Function.fill(self.chord.function);
+    in property <bool> on;           // the chord sounding now
+    in property <bool> compact;
+    border-radius: Theme.radius;
+    background: self.on ? Theme.accent-soft : Function.soft(self.chord.function);
+    border-width: self.on ? Theme.mark : Theme.line;
+    border-color: self.on ? Theme.accent : Theme.hair;
+    clip: true;
+    Rectangle {
+        y: 0;
+        height: Theme.track;
+        background: Function.color(root.chord.function);
+    }
     VerticalLayout {
-        padding: Theme.sp3;
-        padding-left: 6px;
-        padding-right: 6px;
-        spacing: Theme.sp4;
-        Rectangle {
-            height: 30px;
-            border-radius: 6px;
-            background: Theme.text;
-            Text {
+        padding-top: root.compact ? 10px : 12px;
+        padding-bottom: root.compact ? 8px : 10px;
+        padding-left: root.compact ? 4px : 6px;
+        padding-right: root.compact ? 4px : 6px;
+        spacing: root.compact ? 6px : 8px;
+        alignment: space-between;
+        HorizontalLayout {
+            alignment: center;
+            Tag {
                 text: root.chord.roman;
-                font-size: Theme.fs-body;
-                font-weight: 700;
-                color: Theme.bg;
+                ink: Theme.tag-hi-ink;
+                background: Theme.tag-hi;
+                border-width: Theme.line;
+                border-color: Theme.field-line;
             }
         }
         Text {
+            // the cap height of the name, not its line: keeps the song page's cells as short as drawn
+            height: root.compact ? 32px : 38px;
             text: root.chord.name;
             horizontal-alignment: center;
-            font-size: 30px;
+            vertical-alignment: center;
+            font-size: root.compact ? 30px : 34px;
             font-weight: 700;
-            color: Function.ink(root.chord.function);
+            color: root.on ? Theme.accent : Theme.ink;
         }
-        Rectangle {
-            height: 30px;
-            border-radius: 6px;
-            background: #07090c;
-            Text {
+        HorizontalLayout {
+            alignment: center;
+            Tag {
                 text: root.chord.minor-roman;
-                font-size: Theme.fs-body;
-                color: Theme.text2;
+                ink: Theme.chrome-fg;
+                background: Theme.chrome;
             }
         }
     }
@@ -53,38 +80,48 @@ component Card inherits Rectangle {
     accessible-label: @tr("{} {}, {}", self.chord.roman, self.chord.name, Function.name(self.chord.function));
 }
 
-export component FieldCards inherits HorizontalLayout {
+export component FieldCells inherits HorizontalLayout {
     in property <[ChordCard]> chords;
-    spacing: Theme.sp3;
-    for c in root.chords: Card {
+    in property <int> lit: -1;        // the chord sounding, -1 for none
+    in property <bool> compact;       // the smaller cells of the song page
+    in property <length> cell-height;
+    spacing: 8px;
+    for c[i] in root.chords: Cell {
         chord: c;
+        on: i == root.lit;
+        compact: root.compact;
+        // all seven the same width, whatever the length of the name
+        preferred-width: 64px;
         horizontal-stretch: 1;
+        height: root.cell-height > 0 ? root.cell-height : self.preferred-height;
     }
 }
 
-component Dot inherits HorizontalLayout {
+component Swatch inherits HorizontalLayout {
     in property <int> function;
-    spacing: Theme.sp2;
-    alignment: start;
-    Rectangle {
-        y: (parent.height - self.height) / 2;
-        width: 14px;
-        height: 14px;
-        border-radius: 7px;
-        background: Function.fill(root.function);
+    spacing: 8px;
+    VerticalLayout {
+        alignment: center;
+        Rectangle {
+            width: 12px;
+            height: 12px;
+            border-radius: Theme.radius-sm;
+            background: Function.color(root.function);
+        }
     }
     Text {
         text: Function.name(root.function);
-        font-size: Theme.fs-body;
-        color: Theme.text2;
         vertical-alignment: center;
+        font-size: Theme.min-font;
+        font-weight: 500;
+        color: Theme.ink-2;
     }
 }
 
 export component FunctionLegend inherits HorizontalLayout {
-    spacing: Theme.sp6;
+    spacing: 24px;
     alignment: start;
-    Dot { function: 0; }
-    Dot { function: 1; }
-    Dot { function: 2; }
+    Swatch { function: 0; }
+    Swatch { function: 1; }
+    Swatch { function: 2; }
 }

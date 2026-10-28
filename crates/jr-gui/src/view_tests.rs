@@ -14,7 +14,7 @@ fn titles_in_portuguese_spelled_as_in_the_key() {
     assert_eq!(key_title(n("G")), "Sol maior");
     assert_eq!(key_subtitle(n("G")), "Relativa: Mi menor");
     assert_eq!(key_title(n("Bb")), "Sib maior");
-    assert_eq!(relative_short(n("C")), "relativa Am");
+    assert_eq!(relative_short(n("C")), "Am");
 }
 
 #[test]
@@ -72,7 +72,7 @@ fn the_jam_moment_of_the_mockup() {
     assert_eq!(j.moment.function, 1);
     assert_eq!(j.moment.lit, 3);
     assert_eq!(j.moment.outside, "C");
-    assert_eq!(j.moment.shape, "Pentatônica de Sol, forma 1 (casas 3 a 5)");
+    assert_eq!(j.moment.shape, "Pentatônica de Sol · forma 1 · casas 3 a 5");
     // C on the 5th string, fret 3: in the shape, outside the pentatonic, red ring.
     let c = j.notes.iter().find(|m| m.string == 1 && m.fret == 3).unwrap();
     assert_eq!((c.mark, c.ring), (3, 2));
@@ -88,6 +88,7 @@ fn the_jam_moment_of_the_mockup() {
 fn a_borrowed_chord_in_the_jam() {
     let j = jam(n("G"), Some("F"), &notes("F A C"), 3.0);
     assert_eq!((j.moment.roman.as_str(), j.moment.function, j.moment.lit), ("♭VII", -1, -1));
+    assert_eq!((j.moment.accidental.as_str(), j.moment.numeral.as_str()), ("♭", "VII"));
     assert_eq!((j.moment.outside.as_str(), j.moment.outside_count), ("F e C", 2));
     // F is not in G major: drawn only because it is sounding, as an outside mark with a red ring.
     let f = j.notes.iter().find(|m| m.string == 1 && m.fret == 8).unwrap();

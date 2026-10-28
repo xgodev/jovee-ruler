@@ -1,10 +1,12 @@
-//! The real window, filled by the real `Ruler`, drawn by Slint's software renderer to one PNG per page:
+//! The real window, filled by the real `Ruler`, drawn by Slint's software renderer to one PNG per page
+//! and scheme (`field-light.png`, `field-dark.png`, …):
 //! `cargo run -p jr-gui --example render -- <out dir> [page…]`.
 
 use std::path::Path;
 use std::rc::Rc;
 
 use jr_core::note::{fifths, parse};
+use jr_gui::ui::ThemeMode;
 use jr_gui::{Ruler, Song, SongChord};
 use resvg::tiny_skia::Pixmap;
 use slint::platform::software_renderer::{MinimalSoftwareWindow, RepaintBufferType, Rgb565Pixel};
@@ -69,8 +71,11 @@ fn main() {
     std::fs::create_dir_all(&out).unwrap();
     let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
     slint::platform::set_platform(Box::new(Headless(window.clone()))).unwrap();
-    for page in pages {
+    for (page, (scheme, mode)) in
+        pages.iter().flat_map(|p| [("light", ThemeMode::Light), ("dark", ThemeMode::Dark)].map(|m| (*p, m)))
+    {
         let ruler = Ruler::new().unwrap();
+        ruler.set_theme(mode);
         ruler.window().show().unwrap();
         window.set_size(PhysicalSize::new(SIZE.0, SIZE.1));
         let g = fifths().iter().position(|&k| k == parse("G").unwrap()).unwrap() as i32;
@@ -91,7 +96,7 @@ fn main() {
             }
             other => panic!("no page {other}"),
         }
-        save(&window, &out.join(format!("{page}.png")));
+        save(&window, &out.join(format!("{page}-{scheme}.png")));
         ruler.window().hide().unwrap();
     }
 }

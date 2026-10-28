@@ -12,7 +12,9 @@ cargo run -p jr-gui --release
 ```
 
 `cargo test --workspace` checks the theory against the printed art. To see every screen without a
-display, `cargo run -p jr-gui --example render -- <out dir>` writes one PNG per page.
+display, `cargo run -p jr-gui --example render -- <out dir>` writes one PNG per page,
+in the light and the dark scheme. The window follows the system's scheme; a host sets its own with
+`Ruler::set_theme`.
 
 Same recipe in both: **plain 3D-printed plastic + colored paper art** glued into the
 recesses. All the color and all the text come from the paper — changing the content

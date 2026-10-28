@@ -1,17 +1,14 @@
 // The ruler inside JoVee Jam: the host sends the key of the song and the notes sounding now, and this
 // shows which chord of the field it is, what it does, and how its notes sit on the pentatonic.
-import { Theme, Function } from "theme.slint";
-import { Neck, NoteMark } from "neck.slint";
-
-export struct FieldCell {
-    roman: string,
-    name: string,
-    function: int,
-}
+import { Theme, Function, Label, Panel, Pill } from "theme.slint";
+import { FieldCells, ChordCard } from "field.slint";
+import { Neck, NoteMark, RingLegend } from "neck.slint";
 
 export struct Moment {
     chord: string,          // the chord sounding, as the song names it
     roman: string,          // its degree, "♭VII" when it is borrowed
+    accidental: string,     // the "♭" of `roman`, drawn apart: the title face has none
+    numeral: string,        // `roman` without it
     function: int,          // -1 when it is outside the field
     lit: int,               // index of the chord in the field, -1 when outside
     field-title: string,
@@ -20,157 +17,168 @@ export struct Moment {
     outside-count: int,
 }
 
-component Panel inherits Rectangle {
-    background: Theme.well;
-    border-width: 1px;
-    border-color: Theme.line;
-    border-radius: Theme.radius-card;
-}
-
 export component JamView inherits VerticalLayout {
     in property <[string]> timeline;
     in property <int> now;
     in property <Moment> moment;
-    in property <[FieldCell]> field;
+    in property <[ChordCard]> field;
     in property <[NoteMark]> notes;
     in property <int> window-first;
     in property <int> window-last;
     callback seek(int);
 
-    spacing: Theme.sp4;
+    spacing: Theme.sp-m;
 
-    HorizontalLayout {
-        spacing: Theme.sp2;
-        for name[i] in root.timeline: Rectangle {
-            height: 56px;
-            horizontal-stretch: 1;
-            border-radius: Theme.radius;
-            background: i == root.now ? Theme.text : Theme.s1;
-            Text {
-                text: name;
-                font-size: 24px;
-                font-weight: 700;
-                color: i == root.now ? Theme.bg : Theme.text2;
+    // the chords of the song, the one sounding in the accent
+    Rectangle {
+        height: 56px;
+        border-radius: Theme.radius;
+        border-width: Theme.line;
+        border-color: Theme.field-line;
+        background: Theme.panel;
+        clip: true;
+        HorizontalLayout {
+            padding: Theme.line;
+            for name[i] in root.timeline: chord := Rectangle {
+                horizontal-stretch: 1;
+                background: i == root.now ? Theme.accent : touch.has-hover ? Theme.hover : transparent;
+                if i > 0: Rectangle {
+                    x: 0;
+                    width: Theme.line;
+                    background: Theme.hair;
+                }
+                Text {
+                    text: name;
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: i == root.now ? Theme.on-accent : i < root.now ? Theme.ink-3 : Theme.ink;
+                }
+                touch := TouchArea {
+                    clicked => { root.seek(i); }
+                }
+                accessible-role: button;
+                accessible-label: name;
+                accessible-checked: i == root.now;
+                accessible-action-default => { root.seek(i); }
             }
-            TouchArea {
-                clicked => { root.seek(i); }
-            }
-            accessible-role: button;
-            accessible-label: name;
-            accessible-action-default => { root.seek(i); }
         }
     }
 
     HorizontalLayout {
-        spacing: Theme.sp5;
-        Panel {
-            width: 280px;
+        spacing: Theme.sp-m;
+        Rectangle {
+            width: 300px;
+            border-radius: Theme.radius;
+            background: Theme.accent-soft;
+            border-width: Theme.mark;
+            border-color: Theme.accent;
             VerticalLayout {
-                alignment: center;
-                padding: Theme.sp5;
-                spacing: 2px;
-                Text {
-                    text: @tr("Agora");
-                    horizontal-alignment: center;
-                    font-size: Theme.fs-body;
-                    color: Theme.text3;
-                }
-                Text {
-                    text: root.moment.chord;
-                    horizontal-alignment: center;
-                    font-size: 72px;
-                    font-weight: 700;
-                    color: Theme.text;
-                }
-                Text {
-                    text: root.moment.roman;
-                    horizontal-alignment: center;
-                    font-size: 40px;
-                    font-weight: 700;
-                    color: Function.ink(root.moment.function);
-                }
-                Text {
-                    text: root.moment.function < 0 ? @tr("emprestado, fora do campo") : Function.name(root.moment.function);
-                    horizontal-alignment: center;
-                    wrap: word-wrap;
-                    font-size: 20px;
-                    color: Function.ink(root.moment.function);
-                }
-            }
-        }
-        Panel {
-            horizontal-stretch: 1;
-            VerticalLayout {
-                padding: Theme.sp5;
-                spacing: Theme.sp3;
-                Text {
-                    text: root.moment.field-title;
-                    font-size: Theme.fs-body;
-                    color: Theme.text3;
+                padding-top: Theme.sp-m;
+                padding-bottom: 16px;
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 6px;
+                alignment: start;
+                Label {
+                    text: @tr("AGORA");
+                    color: Theme.accent;
                 }
                 HorizontalLayout {
-                    spacing: Theme.sp2;
-                    for c[i] in root.field: cell := Rectangle {
-                        private property <bool> on: i == root.moment.lit;
-                        height: 76px;
-                        horizontal-stretch: 1;
-                        border-radius: 10px;
-                        border-width: 2px;
-                        border-color: self.on ? Function.ink(c.function) : Theme.line;
-                        background: self.on ? Function.fill(c.function).with-alpha(0.25) : Theme.s1;
-                        VerticalLayout {
-                            alignment: center;
-                            Text {
-                                text: c.roman;
-                                horizontal-alignment: center;
-                                font-size: Theme.fs-body;
-                                font-weight: 700;
-                                color: cell.on ? Function.ink(c.function) : Theme.text3;
+                    spacing: 16px;
+                    alignment: start;
+                    Text {
+                        text: root.moment.chord;
+                        font-size: 72px;
+                        font-weight: 700;
+                        color: Theme.ink;
+                    }
+                    VerticalLayout {
+                        alignment: end;
+                        padding-bottom: 6px;
+                        HorizontalLayout {
+                            alignment: start;
+                            if root.moment.accidental != "": Text {
+                                text: root.moment.accidental;
+                                vertical-alignment: bottom;
+                                font-size: 48px;
+                                font-weight: 600;
+                                color: Theme.ink-2;
                             }
                             Text {
-                                text: c.name;
-                                horizontal-alignment: center;
-                                font-size: 26px;
-                                font-weight: 700;
-                                color: cell.on ? Theme.text : Theme.text2;
+                                text: root.moment.numeral;
+                                vertical-alignment: bottom;
+                                font-family: Theme.display;
+                                font-size: 48px;
+                                letter-spacing: 1.9px;
+                                color: Theme.ink-2;
                             }
                         }
                     }
                 }
-                Rectangle { height: Theme.sp2; }
-                Text {
-                    text: root.moment.shape;
-                    font-size: 20px;
-                    color: Theme.text;
+                HorizontalLayout {
+                    alignment: start;
+                    Pill {
+                        text: Function.name(root.moment.function);
+                        ink: Function.ink(root.moment.function);
+                        tint: Function.soft(root.moment.function);
+                    }
                 }
-                Text {
-                    text: root.moment.outside-count == 0 ? @tr("Todas as notas do acorde estão na pentatônica")
-                        : root.moment.outside-count == 1 ? @tr("{} do acorde fica fora da pentatônica", root.moment.outside)
-                        : @tr("{} do acorde ficam fora da pentatônica", root.moment.outside);
-                    font-size: 20px;
-                    color: root.moment.outside == "" ? Function.ink(0) : Function.ink(2);
+            }
+        }
+        Panel {
+            horizontal-stretch: 1;
+            VerticalLayout {
+                padding-top: Theme.sp-m;
+                padding-bottom: 16px;
+                padding-left: 16px;
+                padding-right: 16px;
+                spacing: 12px;
+                Label { text: root.moment.field-title; }
+                FieldCells {
+                    chords: root.field;
+                    lit: root.moment.lit;
+                    compact: true;
+                }
+                HorizontalLayout {
+                    spacing: Theme.sp-m;
+                    alignment: start;
+                    Text {
+                        text: root.moment.shape;
+                        vertical-alignment: center;
+                        font-size: Theme.min-font;
+                        font-weight: 600;
+                        color: Theme.ink;
+                    }
+                    Pill {
+                        text: root.moment.outside-count == 0 ? @tr("todas as notas do acorde estão nela")
+                            : root.moment.outside-count == 1 ? @tr("{} do acorde fica fora", root.moment.outside)
+                            : @tr("{} do acorde ficam fora", root.moment.outside);
+                        ink: root.moment.outside-count == 0 ? Theme.ok-ink : Theme.bad-ink;
+                        tint: root.moment.outside-count == 0 ? Theme.ok-soft : Theme.bad-soft;
+                    }
                 }
             }
         }
     }
 
-    Panel {
-        HorizontalLayout {
-            padding-top: Theme.sp4;
-            padding-bottom: Theme.sp4;
+    Rectangle {
+        vertical-stretch: 1;
+        border-radius: Theme.radius;
+        background: Theme.field;
+        border-width: Theme.line;
+        border-color: Theme.hair;
+        VerticalLayout {
+            padding: Theme.sp-s;
             alignment: center;
             Neck {
                 notes: root.notes;
                 window-first: root.window-first;
                 window-last: root.window-last;
+                sp: 62px;
+                r: 21px;
             }
         }
     }
 
-    HorizontalLayout {
-        spacing: Theme.sp6;
-        alignment: start;
-        Text { text: @tr("anel branco: nota do acorde dentro da pentatônica"); font-size: Theme.fs-body; color: Theme.text2; }
-        Text { text: @tr("anel vermelho: nota do acorde fora dela"); font-size: Theme.fs-body; color: Function.ink(2); }
-    }
+    RingLegend { }
 }

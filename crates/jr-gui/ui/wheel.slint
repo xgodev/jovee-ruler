@@ -9,10 +9,11 @@ export component Wheel inherits Rectangle {
     in property <string> relative;    // its relative minor, under it
     callback pick(int);
 
-    width: 480px;
-    height: 480px;
+    width: 520px;
+    height: 520px;
 
-    private property <length> ring-r: 182px;
+    private property <length> ring-r: 194px;   // where the key chips sit
+    private property <length> disc-r: 138px;   // the window with the key
     private property <angle> turn: -root.selected * 30deg;
     private property <angle> grab-at; // pointer angle when the drag started
     private property <angle> grab-turn;
@@ -46,15 +47,15 @@ export component Wheel inherits Rectangle {
     }
 
     Rectangle {
-        width: 464px;
-        height: 464px;
+        width: 500px;
+        height: 500px;
         border-radius: self.width / 2;
-        background: Theme.well;
-        border-width: 2px;
-        border-color: Theme.line;
+        background: Theme.panel-hi;
+        border-width: Theme.line;
+        border-color: Theme.hair;
     }
 
-    for name[p] in root.keys: Rectangle {
+    for name[p] in root.keys: chip := Rectangle {
         private property <angle> a: p * 30deg + root.turn;
         private property <bool> on: p == root.selected;
         x: root.width / 2 + root.ring-r * sin(self.a) - self.width / 2;
@@ -62,52 +63,66 @@ export component Wheel inherits Rectangle {
         width: 68px;
         height: 68px;
         border-radius: self.width / 2;
-        background: self.on ? Theme.text : Theme.s1;
-        border-width: 2px;
-        border-color: self.on ? Theme.text : Theme.field-line;
+        background: self.on ? Theme.accent : Theme.field;
+        border-width: self.on ? 0 : Theme.line;
+        border-color: Theme.field-line;
         Text {
             text: name;
             font-size: 26px;
-            font-weight: 700;
-            color: parent.on ? Theme.bg : Theme.text2;
+            font-weight: chip.on ? 700 : 600;
+            color: chip.on ? Theme.on-accent : Theme.ink-2;
         }
     }
 
     Rectangle {
-        width: 260px;
-        height: 260px;
+        width: 2 * root.disc-r;
+        height: self.width;
         border-radius: self.width / 2;
-        background: Theme.bg;
-        border-width: 2px;
-        border-color: Theme.line;
+        background: Theme.field;
+        border-width: Theme.line;
+        border-color: Theme.hair;
         VerticalLayout {
             alignment: center;
-            spacing: 4px;
+            padding-top: 6px;
+            spacing: -14px;
             Text {
                 text: root.key-name;
                 horizontal-alignment: center;
-                font-size: 84px;
-                font-weight: 700;
-                color: Theme.text;
+                font-family: Theme.display;
+                font-size: 128px;
+                color: Theme.ink;
             }
-            Text {
-                text: root.relative;
-                horizontal-alignment: center;
-                font-size: 22px;
-                color: Theme.text2;
+            HorizontalLayout {
+                alignment: center;
+                spacing: 8px;
+                Text {
+                    text: @tr("RELATIVA");
+                    vertical-alignment: center;
+                    font-family: Theme.display;
+                    font-size: 20px;
+                    letter-spacing: 2.8px;
+                    color: Theme.ink-3;
+                }
+                Text {
+                    text: root.relative;
+                    vertical-alignment: center;
+                    font-size: 22px;
+                    font-weight: 600;
+                    color: Theme.ink-2;
+                }
             }
         }
     }
 
     // the pointer at the top: the key in the window
     Path {
-        x: root.width / 2 - 18px;
-        y: 0;
-        width: 36px;
-        height: 26px;
-        viewbox-width: 36;
-        viewbox-height: 26;
-        commands: "M 0 0 L 36 0 L 18 26 Z";
+        x: root.width / 2 - 9px;
+        y: 4px;
+        width: 18px;
+        height: 14px;
+        viewbox-width: 18;
+        viewbox-height: 14;
+        commands: "M 0 0 L 18 0 L 9 14 Z";
         fill: Theme.accent;
     }
 
@@ -138,7 +153,7 @@ export component Wheel inherits Rectangle {
                 let dx = self.mouse-x - root.width / 2;
                 let dy = self.mouse-y - root.height / 2;
                 let r = sqrt(dx * dx / 1px / 1px + dy * dy / 1px / 1px);
-                if r > 130 && r < 232 {
+                if r > root.disc-r / 1px && r < 250 {
                     root.pick(root.index-at(root.bearing(self.mouse-x, self.mouse-y), root.turn));
                 }
             }

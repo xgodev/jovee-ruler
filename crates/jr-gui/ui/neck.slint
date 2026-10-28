@@ -12,80 +12,81 @@ export struct NoteMark {
     ring: int,     // sounding now: 0 no, 1 inside the pentatonic, 2 outside it
 }
 
+component Dot inherits Rectangle {
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background: Theme.ink-3;
+    opacity: 0.3;
+}
+
 export component Neck inherits Rectangle {
     in property <[NoteMark]> notes;
     in property <int> frets: 15;
     in property <int> window-first: -1;   // the shape on show, both frets included; -1 = the whole neck
     in property <int> window-last: -1;
+    in property <length> sp: 84px;        // between strings
+    in property <length> r: 26px;         // of a mark
 
-    width: 1200px;
-    height: 330px;
+    height: self.y0 + 5 * self.sp + self.r + 56px;
 
-    private property <length> x0: 70px;
-    private property <length> fw: (root.width - 10px - self.x0) / root.frets;
-    private property <length> y0: 30px;
-    private property <length> sp: 50px;
-    private property <length> r: 21px;
+    private property <length> x0: 100px;
+    private property <length> fw: (root.width - 12px - self.x0) / root.frets;
+    private property <length> y0: root.r + 18px;
+    private property <length> box: 2 * root.r + 20px;   // a mark with room for its ring
 
     pure function cell-x(f: int) -> length {
-        return f == 0 ? root.x0 / 2 + 8px : root.x0 + (f - 0.5) * root.fw;
+        return f == 0 ? root.x0 / 2 + 14px : root.x0 + (f - 0.5) * root.fw;
+    }
+    // a mark outside the shape, faded into the neck; its colours are mixed, not made transparent, so the
+    // name stays readable on the faded mark
+    pure function fade(c: color, lit: bool) -> color {
+        return lit ? c : c.mix(Theme.field, 0.18);
     }
     pure function inlay(f: int) -> bool {
         return f == 3 || f == 5 || f == 7 || f == 9 || f == 15 || f == 17 || f == 19 || f == 21;
     }
 
     if root.window-first >= 0: Rectangle {
-        x: root.window-first == 0 ? 8px : root.x0 + (root.window-first - 1) * root.fw;
-        y: 4px;
+        x: root.window-first == 0 ? 30px : root.x0 + (root.window-first - 1) * root.fw;
+        y: root.y0 - root.r - 10px;
         width: root.x0 + root.window-last * root.fw - self.x;
-        height: root.sp * 5 + 52px;
-        border-radius: 10px;
-        background: Theme.hover;
-        border-width: 2px;
+        height: 5 * root.sp + 2 * root.r + 20px;
+        border-radius: Theme.radius;
+        background: Theme.accent-soft;
+        border-width: Theme.mark;
         border-color: Theme.accent;
     }
 
     for f in root.frets + 1: Rectangle {
-        if f > 0 && root.inlay(f): Rectangle {
-            x: root.cell-x(f) - 8px;
-            y: root.y0 + 2.5 * root.sp - 8px;
-            width: 16px;
-            height: 16px;
-            border-radius: 8px;
-            background: Theme.line;
+        if f > 0 && root.inlay(f): Dot {
+            x: root.cell-x(f) - 7px;
+            y: root.y0 + 2.5 * root.sp - 7px;
         }
-        if f == 12: Rectangle {
-            x: root.cell-x(f) - 8px;
-            y: root.y0 + 1.5 * root.sp - 8px;
-            width: 16px;
-            height: 16px;
-            border-radius: 8px;
-            background: Theme.line;
+        if f == 12: Dot {
+            x: root.cell-x(f) - 7px;
+            y: root.y0 + 1.5 * root.sp - 7px;
         }
-        if f == 12: Rectangle {
-            x: root.cell-x(f) - 8px;
-            y: root.y0 + 3.5 * root.sp - 8px;
-            width: 16px;
-            height: 16px;
-            border-radius: 8px;
-            background: Theme.line;
+        if f == 12: Dot {
+            x: root.cell-x(f) - 7px;
+            y: root.y0 + 3.5 * root.sp - 7px;
         }
         Rectangle {
             x: root.x0 + f * root.fw - self.width / 2;
             y: root.y0;
-            width: f == 0 ? 6px : 2px;
+            width: f == 0 ? 4px : Theme.line;
             height: 5 * root.sp;
-            background: f == 0 ? Theme.text2 : #3a434f;
+            background: f == 0 ? Theme.ink-2 : Theme.ink-3.with-alpha(0.45);
         }
         Text {
             x: root.cell-x(f) - 20px;
-            y: root.y0 + 5 * root.sp + 28px;
+            y: root.y0 + 5 * root.sp + root.r + 22px;
             width: 40px;
             text: f;
             horizontal-alignment: center;
             font-family: Theme.mono;
-            font-size: Theme.fs-body;
-            color: Theme.text3;
+            font-size: Theme.min-font;
+            color: Theme.ink-3;
         }
     }
 
@@ -93,41 +94,40 @@ export component Neck inherits Rectangle {
         Rectangle {
             x: root.x0;
             y: root.y0 + s * root.sp - self.height / 2;
-            width: root.width - 10px - root.x0;
-            height: (3.5 - s * 0.45) * 1px;
-            background: #8b95a3;
+            width: root.width - 12px - root.x0;
+            height: (2 - s * 0.2) * 1px;
+            background: Theme.ink-3;
         }
         Text {
-            x: 6px;
+            x: 4px;
             y: root.y0 + s * root.sp - 12px;
             height: 24px;
             text: 6 - s;
             vertical-alignment: center;
             font-family: Theme.mono;
-            font-size: Theme.fs-body;
-            color: Theme.text3;
+            font-size: Theme.min-font;
+            color: Theme.ink-3;
         }
     }
 
     for n in root.notes: Rectangle {
-        x: root.cell-x(n.fret) - root.r - 8px;
-        y: root.y0 + n.string * root.sp - root.r - 8px;
-        width: 2 * root.r + 16px;
-        height: 2 * root.r + 16px;
-        opacity: n.lit ? 1 : 0.15;
+        x: root.cell-x(n.fret) - root.box / 2;
+        y: root.y0 + n.string * root.sp - root.box / 2;
+        width: root.box;
+        height: root.box;
 
         if n.ring > 0: Rectangle {
-            width: 2 * root.r + 14px;
+            width: 2 * root.r + 17px;
             height: self.width;
             border-radius: self.width / 2;
-            border-width: 4px;
-            border-color: n.ring == 1 ? #ffffff : Theme.outside;
+            border-width: Theme.track;
+            border-color: n.ring == 1 ? Theme.ok : Theme.bad;
         }
         if n.mark == 0: Rectangle {
             width: 2 * root.r;
             height: self.width;
-            border-radius: 4px;
-            background: Theme.accent;
+            border-radius: Theme.radius;
+            background: root.fade(Theme.accent, n.lit);
         }
         if n.mark == 1: Path {
             width: 2 * root.r + 10px;
@@ -135,37 +135,39 @@ export component Neck inherits Rectangle {
             viewbox-width: 52;
             viewbox-height: 52;
             commands: "M 26 0 L 52 26 L 26 52 L 0 26 Z";
-            fill: Theme.text;
+            fill: root.fade(Theme.ink, n.lit);
         }
         if n.mark == 2: Rectangle {
             width: 2 * root.r;
             height: self.width;
             border-radius: self.width / 2;
-            background: Theme.text;
+            background: root.fade(Theme.ink, n.lit);
         }
         if n.mark == 3: Path {
-            y: 4px;
+            y: root.box / 2 - root.r - 2px;
             width: 2 * root.r + 6px;
             height: 2 * root.r + 2px;
             viewbox-width: 48;
             viewbox-height: 44;
             commands: "M 24 0 L 48 44 L 0 44 Z";
-            fill: Theme.text3;
+            fill: root.fade(Theme.ink-3, n.lit);
         }
         if n.mark == 4: Rectangle {
             width: 2 * root.r;
             height: self.width;
             border-radius: self.width / 2;
-            background: Theme.s2;
+            background: root.fade(Theme.panel-lo, n.lit);
+            border-width: Theme.line;
+            border-color: root.fade(Theme.field-line, n.lit);
         }
         Text {
-            y: n.mark == 3 ? 13px : 8px;
-            height: 2 * root.r;
+            y: (root.box - self.height) / 2 + (n.mark == 3 ? 6px : 0);
             text: n.name;
             vertical-alignment: center;
-            font-size: Theme.fs-body;
+            horizontal-alignment: center;
+            font-size: root.r > 24px ? 20px : 18px;
             font-weight: 700;
-            color: n.mark == 0 ? Theme.accent-ink : n.mark == 4 ? Theme.text : Theme.bg;
+            color: root.fade(n.mark == 0 ? Theme.on-accent : n.mark == 4 ? Theme.ink : Theme.field, n.lit);
         }
     }
 
@@ -173,11 +175,86 @@ export component Neck inherits Rectangle {
     accessible-label: @tr("Braço da guitarra com as notas da escala");
 }
 
+component Key inherits HorizontalLayout {
+    in property <string> text;
+    spacing: 8px;
+    @children
+    Text {
+        text: root.text;
+        vertical-alignment: center;
+        font-size: Theme.min-font;
+        font-weight: 500;
+        color: Theme.ink-2;
+    }
+}
+
 export component MarkLegend inherits HorizontalLayout {
-    spacing: Theme.sp6;
+    spacing: 24px;
     alignment: start;
-    Text { text: @tr("■ tônica maior"); font-size: Theme.fs-body; color: Theme.text2; }
-    Text { text: @tr("◆ tônica da relativa menor"); font-size: Theme.fs-body; color: Theme.text2; }
-    Text { text: @tr("● pentatônica"); font-size: Theme.fs-body; color: Theme.text2; }
-    Text { text: @tr("▲ graus 4 e 7"); font-size: Theme.fs-body; color: Theme.text2; }
+    Key {
+        text: @tr("tônica maior");
+        Rectangle {
+            width: 18px;
+            height: 18px;
+            border-radius: Theme.radius-sm;
+            background: Theme.accent;
+        }
+    }
+    Key {
+        text: @tr("tônica da relativa menor");
+        Path {
+            width: 20px;
+            height: 20px;
+            viewbox-width: 20;
+            viewbox-height: 20;
+            commands: "M 10 0 L 20 10 L 10 20 L 0 10 Z";
+            fill: Theme.ink;
+        }
+    }
+    Key {
+        text: @tr("pentatônica");
+        Rectangle {
+            width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            background: Theme.ink;
+        }
+    }
+    Key {
+        text: @tr("graus 4 e 7");
+        Path {
+            width: 20px;
+            height: 18px;
+            viewbox-width: 20;
+            viewbox-height: 18;
+            commands: "M 10 0 L 20 18 L 0 18 Z";
+            fill: Theme.ink-3;
+        }
+    }
+}
+
+// The rings of the song page: a chord note inside the pentatonic, or outside it.
+export component RingLegend inherits HorizontalLayout {
+    spacing: 24px;
+    alignment: start;
+    Key {
+        text: @tr("nota do acorde na pentatônica");
+        Rectangle {
+            width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            border-width: Theme.track;
+            border-color: Theme.ok;
+        }
+    }
+    Key {
+        text: @tr("nota do acorde fora dela");
+        Rectangle {
+            width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            border-width: Theme.track;
+            border-color: Theme.bad;
+        }
+    }
 }
