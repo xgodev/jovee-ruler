@@ -4,18 +4,9 @@ use super::*;
 fn the_wheel_reads_the_keys_in_fifths() {
     // CIRC and MIN in harmonic-field/art_field.py
     let majors: Vec<&str> = fifths().iter().map(|&k| key_name(k)).collect();
-    assert_eq!(
-        majors,
-        ["C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"]
-    );
-    let minors: Vec<String> = fifths()
-        .iter()
-        .map(|&k| minor_key_name(pc(k as i32 + 9)))
-        .collect();
-    assert_eq!(
-        minors,
-        ["Am", "Em", "Bm", "F#m", "C#m", "G#m", "Ebm", "Bbm", "Fm", "Cm", "Gm", "Dm"]
-    );
+    assert_eq!(majors, ["C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"]);
+    let minors: Vec<String> = fifths().iter().map(|&k| minor_key_name(pc(k as i32 + 9))).collect();
+    assert_eq!(minors, ["Am", "Em", "Bm", "F#m", "C#m", "G#m", "Ebm", "Bbm", "Fm", "Cm", "Gm", "Dm"]);
 }
 
 #[test]

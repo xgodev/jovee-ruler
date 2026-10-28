@@ -8,9 +8,8 @@ pub mod field;
 pub mod neck;
 pub mod note;
 
-pub use field::{harmonic_field, identify, outside_scale, Chord, Function, Quality};
+pub use field::{harmonic_field, identify, outside_scale, roman_from, triad, Chord, Function, Quality};
 pub use neck::{
-    mark, note_at, outside_pentatonic, pentatonic, scale, shape_near, shapes, tonic_fret, Mark,
-    Shape, STANDARD,
+    mark, note_at, outside_pentatonic, pentatonic, scale, shape_near, shapes, tonic_fret, Mark, Shape, STANDARD,
 };
 pub use note::Pc;

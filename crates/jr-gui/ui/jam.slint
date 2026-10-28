@@ -1,0 +1,176 @@
+// The ruler inside JoVee Jam: the host sends the key of the song and the notes sounding now, and this
+// shows which chord of the field it is, what it does, and how its notes sit on the pentatonic.
+import { Theme, Function } from "theme.slint";
+import { Neck, NoteMark } from "neck.slint";
+
+export struct FieldCell {
+    roman: string,
+    name: string,
+    function: int,
+}
+
+export struct Moment {
+    chord: string,          // the chord sounding, as the song names it
+    roman: string,          // its degree, "♭VII" when it is borrowed
+    function: int,          // -1 when it is outside the field
+    lit: int,               // index of the chord in the field, -1 when outside
+    field-title: string,
+    shape: string,          // the pentatonic shape where the hand is
+    outside: string,        // the notes of the chord outside the pentatonic, empty when none
+    outside-count: int,
+}
+
+component Panel inherits Rectangle {
+    background: Theme.well;
+    border-width: 1px;
+    border-color: Theme.line;
+    border-radius: Theme.radius-card;
+}
+
+export component JamView inherits VerticalLayout {
+    in property <[string]> timeline;
+    in property <int> now;
+    in property <Moment> moment;
+    in property <[FieldCell]> field;
+    in property <[NoteMark]> notes;
+    in property <int> window-first;
+    in property <int> window-last;
+    callback seek(int);
+
+    spacing: Theme.sp4;
+
+    HorizontalLayout {
+        spacing: Theme.sp2;
+        for name[i] in root.timeline: Rectangle {
+            height: 56px;
+            horizontal-stretch: 1;
+            border-radius: Theme.radius;
+            background: i == root.now ? Theme.text : Theme.s1;
+            Text {
+                text: name;
+                font-size: 24px;
+                font-weight: 700;
+                color: i == root.now ? Theme.bg : Theme.text2;
+            }
+            TouchArea {
+                clicked => { root.seek(i); }
+            }
+            accessible-role: button;
+            accessible-label: name;
+            accessible-action-default => { root.seek(i); }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: Theme.sp5;
+        Panel {
+            width: 280px;
+            VerticalLayout {
+                alignment: center;
+                padding: Theme.sp5;
+                spacing: 2px;
+                Text {
+                    text: @tr("Agora");
+                    horizontal-alignment: center;
+                    font-size: Theme.fs-body;
+                    color: Theme.text3;
+                }
+                Text {
+                    text: root.moment.chord;
+                    horizontal-alignment: center;
+                    font-size: 72px;
+                    font-weight: 700;
+                    color: Theme.text;
+                }
+                Text {
+                    text: root.moment.roman;
+                    horizontal-alignment: center;
+                    font-size: 40px;
+                    font-weight: 700;
+                    color: Function.ink(root.moment.function);
+                }
+                Text {
+                    text: root.moment.function < 0 ? @tr("emprestado, fora do campo") : Function.name(root.moment.function);
+                    horizontal-alignment: center;
+                    wrap: word-wrap;
+                    font-size: 20px;
+                    color: Function.ink(root.moment.function);
+                }
+            }
+        }
+        Panel {
+            horizontal-stretch: 1;
+            VerticalLayout {
+                padding: Theme.sp5;
+                spacing: Theme.sp3;
+                Text {
+                    text: root.moment.field-title;
+                    font-size: Theme.fs-body;
+                    color: Theme.text3;
+                }
+                HorizontalLayout {
+                    spacing: Theme.sp2;
+                    for c[i] in root.field: cell := Rectangle {
+                        private property <bool> on: i == root.moment.lit;
+                        height: 76px;
+                        horizontal-stretch: 1;
+                        border-radius: 10px;
+                        border-width: 2px;
+                        border-color: self.on ? Function.ink(c.function) : Theme.line;
+                        background: self.on ? Function.fill(c.function).with-alpha(0.25) : Theme.s1;
+                        VerticalLayout {
+                            alignment: center;
+                            Text {
+                                text: c.roman;
+                                horizontal-alignment: center;
+                                font-size: Theme.fs-body;
+                                font-weight: 700;
+                                color: cell.on ? Function.ink(c.function) : Theme.text3;
+                            }
+                            Text {
+                                text: c.name;
+                                horizontal-alignment: center;
+                                font-size: 26px;
+                                font-weight: 700;
+                                color: cell.on ? Theme.text : Theme.text2;
+                            }
+                        }
+                    }
+                }
+                Rectangle { height: Theme.sp2; }
+                Text {
+                    text: root.moment.shape;
+                    font-size: 20px;
+                    color: Theme.text;
+                }
+                Text {
+                    text: root.moment.outside-count == 0 ? @tr("Todas as notas do acorde estão na pentatônica")
+                        : root.moment.outside-count == 1 ? @tr("{} do acorde fica fora da pentatônica", root.moment.outside)
+                        : @tr("{} do acorde ficam fora da pentatônica", root.moment.outside);
+                    font-size: 20px;
+                    color: root.moment.outside == "" ? Function.ink(0) : Function.ink(2);
+                }
+            }
+        }
+    }
+
+    Panel {
+        HorizontalLayout {
+            padding-top: Theme.sp4;
+            padding-bottom: Theme.sp4;
+            alignment: center;
+            Neck {
+                notes: root.notes;
+                window-first: root.window-first;
+                window-last: root.window-last;
+            }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: Theme.sp6;
+        alignment: start;
+        Text { text: @tr("anel branco: nota do acorde dentro da pentatônica"); font-size: Theme.fs-body; color: Theme.text2; }
+        Text { text: @tr("anel vermelho: nota do acorde fora dela"); font-size: Theme.fs-body; color: Function.ink(2); }
+    }
+}

@@ -71,9 +71,7 @@ const MINOR_FUNCTION: [Function; 7] = {
     use Function::*;
     [Rest, Transition, Rest, Transition, Tension, Rest, Tension]
 };
-const EXTENSION: [&str; 7] = [
-    "7M(9)", "m7(9)", "m7(b9)", "7M(9)", "7(9)", "m7(9)", "m7(b5b9)",
-];
+const EXTENSION: [&str; 7] = ["7M(9)", "m7(9)", "m7(b9)", "7M(9)", "7(9)", "m7(9)", "m7(b5b9)"];
 
 impl Chord {
     pub fn roman(&self) -> &'static str {
@@ -135,11 +133,38 @@ pub fn identify(key: Pc, notes: &[Pc]) -> Option<Chord> {
     })
 }
 
+/// The triad these notes are, whatever the key: its root and quality. A chord from outside the
+/// field still has a name and a place relative to the key (see `roman_from`).
+pub fn triad(notes: &[Pc]) -> Option<(Pc, Quality)> {
+    let mut set: Vec<Pc> = notes.iter().map(|n| n % 12).collect();
+    set.sort_unstable();
+    set.dedup();
+    if set.len() != 3 {
+        return None;
+    }
+    for &root in &set {
+        for quality in [Quality::Major, Quality::Minor, Quality::Diminished] {
+            let (third, fifth) = quality.third_and_fifth();
+            let mut t = vec![root, pc(root as i32 + third), pc(root as i32 + fifth)];
+            t.sort_unstable();
+            if t == set {
+                return Some((root, quality));
+            }
+        }
+    }
+    None
+}
+
+/// The degree of any root counted from the key, with a flat when it is not in the major scale:
+/// F in G is "♭VII", Bb in C is "♭VII", Eb in C is "♭III".
+pub fn roman_from(key: Pc, root: Pc) -> String {
+    const CHROMATIC: [&str; 12] = ["I", "♭II", "II", "♭III", "III", "IV", "♭V", "V", "♭VI", "VI", "♭VII", "VII"];
+    CHROMATIC[pc(root as i32 - key as i32) as usize].to_string()
+}
+
 /// The notes that do not belong to the major scale of the key, in the order given.
 pub fn outside_scale(key: Pc, notes: &[Pc]) -> Vec<Pc> {
-    outside(notes, |n| {
-        MAJOR.contains(&(pc(n as i32 - key as i32) as i32))
-    })
+    outside(notes, |n| MAJOR.contains(&(pc(n as i32 - key as i32) as i32)))
 }
 
 pub(crate) fn outside(notes: &[Pc], inside: impl Fn(Pc) -> bool) -> Vec<Pc> {

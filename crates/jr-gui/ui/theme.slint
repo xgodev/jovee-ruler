@@ -1,0 +1,64 @@
+// Design tokens of OpenRig (crates/adapter-gui/ui/theme.slint), as JoVee Tone uses them: navy-black page,
+// Bebas Neue for titles and labels, Barlow for text, JetBrains Mono for numbers, one orange accent.
+import "fonts/Barlow/Barlow-Regular.ttf";
+import "fonts/Barlow/Barlow-Medium.ttf";
+import "fonts/Barlow/Barlow-SemiBold.ttf";
+import "fonts/BebasNeue/BebasNeue-Regular.ttf";
+import "fonts/JetBrainsMono/JetBrainsMono-Medium.ttf";
+
+export global Theme {
+    out property <color> bg: #0b0e12;
+    out property <color> bar: #12161c;      // top bar
+    out property <color> s1: #1d232b;       // card
+    out property <color> s2: #232a33;       // selected
+    out property <color> well: #161b21;     // panel the neck and the wheel sit in
+    out property <color> field-line: #353e49;
+    out property <color> line: #2d343e;
+    out property <color> hover: #ffffff0d;
+    out property <color> text: #e8ecf1;
+    out property <color> text2: #aab3bf;
+    out property <color> text3: #7a8592;
+    out property <color> accent: #f28c1e;
+    out property <color> accent-ink: #1a1206;
+    out property <color> outside: #ff5d5d;   // a note of the chord outside the pentatonic
+
+    out property <string> sans: "Barlow";
+    out property <string> display: "Bebas Neue";
+    out property <string> mono: "JetBrains Mono";
+
+    out property <length> fs-title: 40px;
+    out property <length> fs-h: 26px;
+    out property <length> fs-label: 21px;
+    out property <length> fs-body: 18px;
+
+    out property <length> radius: 8px;
+    out property <length> radius-card: 12px;
+    out property <length> sp2: 8px;
+    out property <length> sp3: 12px;
+    out property <length> sp4: 16px;
+    out property <length> sp5: 24px;
+    out property <length> sp6: 32px;
+}
+
+// What a chord does in the key, as the printed wheel colors it: 0 rest, 1 transition, 2 tension;
+// anything else is a chord from outside the field.
+export global Function {
+    public pure function fill(f: int) -> color {
+        if f == 0 { return #2f9a55; }
+        if f == 1 { return #f28c1e; }
+        if f == 2 { return #c8443e; }
+        return Theme.line;
+    }
+    public pure function ink(f: int) -> color {
+        if f == 0 { return #7fdc9c; }
+        if f == 1 { return #f2a95a; }
+        if f == 2 { return #ff8a7a; }
+        return Theme.text2;
+    }
+    public pure function name(f: int) -> string {
+        if f == 0 { return @tr("repouso"); }
+        if f == 1 { return @tr("transição"); }
+        if f == 2 { return @tr("tensão"); }
+        return @tr("fora do campo");
+    }
+}

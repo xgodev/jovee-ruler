@@ -20,31 +20,15 @@ fn c_major_matches_the_wheel() {
         ("B°", "VII", "II", "m7(b5b9)", Tension, Transition),
     ];
     for (c, w) in harmonic_field(0).iter().zip(wheel) {
-        assert_eq!(
-            (
-                c.name().as_str(),
-                c.roman(),
-                c.minor_roman(),
-                c.extension,
-                c.function,
-                c.minor_function
-            ),
-            w
-        );
+        assert_eq!((c.name().as_str(), c.roman(), c.minor_roman(), c.extension, c.function, c.minor_function), w);
     }
 }
 
 #[test]
 fn the_diminished_ring_matches_the_wheel() {
     // DIM in art_field.py: the VII° of each key, in fifths order.
-    let dim: Vec<String> = fifths()
-        .iter()
-        .map(|&k| harmonic_field(k)[6].name())
-        .collect();
-    assert_eq!(
-        dim,
-        ["B°", "F#°", "C#°", "G#°", "D#°", "A#°", "F°", "C°", "G°", "D°", "A°", "E°"]
-    );
+    let dim: Vec<String> = fifths().iter().map(|&k| harmonic_field(k)[6].name()).collect();
+    assert_eq!(dim, ["B°", "F#°", "C#°", "G#°", "D#°", "A#°", "F°", "C°", "G°", "D°", "A°", "E°"]);
 }
 
 #[test]
@@ -68,18 +52,12 @@ fn the_example_of_the_design_doc() {
 
 #[test]
 fn octaves_order_and_repeats_do_not_matter() {
-    assert_eq!(
-        identify(7, &notes("D G B G D G")).map(|c| c.degree),
-        Some(1)
-    );
+    assert_eq!(identify(7, &notes("D G B G D G")).map(|c| c.degree), Some(1));
 }
 
 #[test]
 fn power_chords_match_their_root() {
-    assert_eq!(
-        identify(7, &notes("E B")).map(|c| c.name()),
-        Some("Em".into())
-    );
+    assert_eq!(identify(7, &notes("E B")).map(|c| c.name()), Some("Em".into()));
     // B and F# is the III of G (Bm); in C the VII is B° (B D F), so there it is outside.
     assert_eq!(identify(7, &notes("B F#")).map(|c| c.degree), Some(3));
     assert_eq!(identify(0, &notes("B F#")), None);
@@ -100,4 +78,16 @@ fn chords_outside_the_key_are_not_forced_onto_a_degree() {
 fn notes_outside_the_scale() {
     assert_eq!(outside_scale(7, &notes("G B D F F")), notes("F"));
     assert!(outside_scale(0, &notes("C D E F G A B")).is_empty());
+}
+
+#[test]
+fn a_borrowed_chord_keeps_its_name_and_its_place() {
+    // The mockup's song in G plays F: the bVII, borrowed from G minor.
+    let (root, quality) = triad(&notes("F A C")).unwrap();
+    assert_eq!((root, quality), (5, Quality::Major));
+    assert_eq!(roman_from(7, root), "♭VII");
+    assert_eq!(triad(&notes("A C E")), Some((9, Quality::Minor)));
+    assert_eq!(triad(&notes("B D F")), Some((11, Quality::Diminished)));
+    assert_eq!(triad(&notes("C D E")), None);
+    assert_eq!(triad(&notes("C E")), None);
 }

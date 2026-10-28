@@ -1,0 +1,155 @@
+// The harmonic field wheel: the twelve keys in fifths around a ring, the chosen one under the pointer.
+// Drag to turn it, or click a key. The wheel only turns; which key that is comes back through `pick`.
+import { Theme } from "theme.slint";
+
+export component Wheel inherits Rectangle {
+    in property <[string]> keys;      // twelve names, in fifths order from C
+    in property <int> selected;       // index into `keys`
+    in property <string> key-name;    // the key, big in the middle
+    in property <string> relative;    // its relative minor, under it
+    callback pick(int);
+
+    width: 480px;
+    height: 480px;
+
+    private property <length> ring-r: 182px;
+    private property <angle> turn: -root.selected * 30deg;
+    private property <angle> grab-at; // pointer angle when the drag started
+    private property <angle> grab-turn;
+    private property <bool> dragged;
+
+    animate turn {
+        duration: area.pressed ? 0ms : 350ms;
+        easing: ease-out;
+    }
+
+    // -180..180, whatever sign `mod` keeps
+    pure function wrap(a: float) -> float {
+        return mod(mod(a + 180, 360) + 360, 360) - 180;
+    }
+    // the angle of a point from the center, 0 at the top and clockwise
+    pure function bearing(x: length, y: length) -> angle {
+        return atan2((x - root.width / 2) / 1px, (root.height / 2 - y) / 1px);
+    }
+    // the key sitting at an angle, given how far the wheel is turned
+    pure function index-at(a: angle, t: angle) -> int {
+        return mod(mod(round((a - t) / 30deg), 12) + 12, 12);
+    }
+    function settle() {
+        root.turn = root.turn + root.wrap(-root.selected * 30 - root.turn / 1deg) * 1deg;
+    }
+
+    changed selected => {
+        if !area.pressed {
+            root.settle();
+        }
+    }
+
+    Rectangle {
+        width: 464px;
+        height: 464px;
+        border-radius: self.width / 2;
+        background: Theme.well;
+        border-width: 2px;
+        border-color: Theme.line;
+    }
+
+    for name[p] in root.keys: Rectangle {
+        private property <angle> a: p * 30deg + root.turn;
+        private property <bool> on: p == root.selected;
+        x: root.width / 2 + root.ring-r * sin(self.a) - self.width / 2;
+        y: root.height / 2 - root.ring-r * cos(self.a) - self.height / 2;
+        width: 68px;
+        height: 68px;
+        border-radius: self.width / 2;
+        background: self.on ? Theme.text : Theme.s1;
+        border-width: 2px;
+        border-color: self.on ? Theme.text : Theme.field-line;
+        Text {
+            text: name;
+            font-size: 26px;
+            font-weight: 700;
+            color: parent.on ? Theme.bg : Theme.text2;
+        }
+    }
+
+    Rectangle {
+        width: 260px;
+        height: 260px;
+        border-radius: self.width / 2;
+        background: Theme.bg;
+        border-width: 2px;
+        border-color: Theme.line;
+        VerticalLayout {
+            alignment: center;
+            spacing: 4px;
+            Text {
+                text: root.key-name;
+                horizontal-alignment: center;
+                font-size: 84px;
+                font-weight: 700;
+                color: Theme.text;
+            }
+            Text {
+                text: root.relative;
+                horizontal-alignment: center;
+                font-size: 22px;
+                color: Theme.text2;
+            }
+        }
+    }
+
+    // the pointer at the top: the key in the window
+    Path {
+        x: root.width / 2 - 18px;
+        y: 0;
+        width: 36px;
+        height: 26px;
+        viewbox-width: 36;
+        viewbox-height: 26;
+        commands: "M 0 0 L 36 0 L 18 26 Z";
+        fill: Theme.accent;
+    }
+
+    area := TouchArea {
+        mouse-cursor: self.pressed ? grabbing : grab;
+        pointer-event(e) => {
+            if e.kind == PointerEventKind.down {
+                root.grab-at = root.bearing(self.mouse-x, self.mouse-y);
+                root.grab-turn = root.turn;
+                root.dragged = false;
+            }
+        }
+        moved => {
+            let d = root.wrap((root.bearing(self.mouse-x, self.mouse-y) - root.grab-at) / 1deg);
+            if abs(d) > 3 {
+                root.dragged = true;
+            }
+            if root.dragged {
+                root.turn = root.grab-turn + d * 1deg;
+                let k = root.index-at(0deg, root.turn);
+                if k != root.selected {
+                    root.pick(k);
+                }
+            }
+        }
+        clicked => {
+            if !root.dragged {
+                let dx = self.mouse-x - root.width / 2;
+                let dy = self.mouse-y - root.height / 2;
+                let r = sqrt(dx * dx / 1px / 1px + dy * dy / 1px / 1px);
+                if r > 130 && r < 232 {
+                    root.pick(root.index-at(root.bearing(self.mouse-x, self.mouse-y), root.turn));
+                }
+            }
+        }
+        changed pressed => {
+            if !self.pressed {
+                root.settle();
+            }
+        }
+    }
+
+    accessible-role: list;
+    accessible-label: @tr("Roda do campo harmônico: {}", root.key-name);
+}

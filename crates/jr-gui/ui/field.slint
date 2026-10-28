@@ -1,0 +1,90 @@
+// The seven chords of the key as cards: degree in the major key on top, the chord, degree in the
+// relative minor below, colored by what the chord does.
+import { Theme, Function } from "theme.slint";
+
+export struct ChordCard {
+    roman: string,         // degree in the major key
+    name: string,
+    minor-roman: string,   // degree in the relative minor
+    function: int,         // in the major key
+}
+
+component Card inherits Rectangle {
+    in property <ChordCard> chord;
+    border-radius: Theme.radius-card;
+    background: Function.fill(self.chord.function).with-alpha(0.15);
+    border-width: 2px;
+    border-color: Function.fill(self.chord.function);
+    VerticalLayout {
+        padding: Theme.sp3;
+        padding-left: 6px;
+        padding-right: 6px;
+        spacing: Theme.sp4;
+        Rectangle {
+            height: 30px;
+            border-radius: 6px;
+            background: Theme.text;
+            Text {
+                text: root.chord.roman;
+                font-size: Theme.fs-body;
+                font-weight: 700;
+                color: Theme.bg;
+            }
+        }
+        Text {
+            text: root.chord.name;
+            horizontal-alignment: center;
+            font-size: 30px;
+            font-weight: 700;
+            color: Function.ink(root.chord.function);
+        }
+        Rectangle {
+            height: 30px;
+            border-radius: 6px;
+            background: #07090c;
+            Text {
+                text: root.chord.minor-roman;
+                font-size: Theme.fs-body;
+                color: Theme.text2;
+            }
+        }
+    }
+    accessible-role: text;
+    accessible-label: @tr("{} {}, {}", self.chord.roman, self.chord.name, Function.name(self.chord.function));
+}
+
+export component FieldCards inherits HorizontalLayout {
+    in property <[ChordCard]> chords;
+    spacing: Theme.sp3;
+    for c in root.chords: Card {
+        chord: c;
+        horizontal-stretch: 1;
+    }
+}
+
+component Dot inherits HorizontalLayout {
+    in property <int> function;
+    spacing: Theme.sp2;
+    alignment: start;
+    Rectangle {
+        y: (parent.height - self.height) / 2;
+        width: 14px;
+        height: 14px;
+        border-radius: 7px;
+        background: Function.fill(root.function);
+    }
+    Text {
+        text: Function.name(root.function);
+        font-size: Theme.fs-body;
+        color: Theme.text2;
+        vertical-alignment: center;
+    }
+}
+
+export component FunctionLegend inherits HorizontalLayout {
+    spacing: Theme.sp6;
+    alignment: start;
+    Dot { function: 0; }
+    Dot { function: 1; }
+    Dot { function: 2; }
+}

@@ -1,8 +1,18 @@
 # JoVee Ruler
 
-Two music-theory tools for guitar, made to be 3D printed — and, next, as interactive
+Two music-theory tools for guitar, made to be 3D printed — and as interactive
 screens that run standalone or inside JoVee Rig and JoVee Studio
 ([design](docs/design/README.md)).
+
+The interactive version is a Rust workspace: `crates/jr-core` holds the theory, `crates/jr-gui`
+holds the Slint window and the `jovee-ruler` app.
+
+```bash
+cargo run -p jr-gui --release
+```
+
+`cargo test --workspace` checks the theory against the printed art. To see every screen without a
+display, `cargo run -p jr-gui --example render -- <out dir>` writes one PNG per page.
 
 Same recipe in both: **plain 3D-printed plastic + colored paper art** glued into the
 recesses. All the color and all the text come from the paper — changing the content

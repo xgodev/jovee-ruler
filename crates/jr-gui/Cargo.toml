@@ -1,0 +1,27 @@
+[package]
+name = "jr-gui"
+description = "The JoVee Ruler window: the harmonic field wheel, the scale on the neck and the song in JoVee Jam"
+edition.workspace = true
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "jovee-ruler"
+path = "src/main.rs"
+
+[dependencies]
+jr-core.workspace = true
+slint.workspace = true
+
+[[example]]
+name = "render"
+
+[dev-dependencies]
+resvg.workspace = true
+slint = { workspace = true, features = ["renderer-software"] }
+i-slint-backend-testing.workspace = true
+
+[build-dependencies]
+slint-build.workspace = true

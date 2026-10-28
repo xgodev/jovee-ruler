@@ -98,12 +98,7 @@ pub fn shapes(lowest: Pc, key: Pc, frets: i32) -> Vec<Shape> {
             let first = tonic + 12 * octave + EDGES[n];
             let last = tonic + 12 * octave + EDGES[n + 1];
             if last >= 0 && first <= frets {
-                out.push(Shape {
-                    major: n as u8 + 1,
-                    minor: ((n + 1) % 5) as u8 + 1,
-                    first,
-                    last,
-                });
+                out.push(Shape { major: n as u8 + 1, minor: ((n + 1) % 5) as u8 + 1, first, last });
             }
         }
     }
@@ -116,16 +111,9 @@ pub fn shape_near(lowest: Pc, key: Pc, fret: f32) -> Shape {
     let all = shapes(lowest, key, fret.ceil().max(0.0) as i32 + 12);
     let on_neck = all.iter().filter(|s| s.first >= 0);
     let pick = |it: &mut dyn Iterator<Item = &Shape>| {
-        it.min_by(|a, b| {
-            (a.middle() - fret)
-                .abs()
-                .total_cmp(&(b.middle() - fret).abs())
-        })
-        .copied()
+        it.min_by(|a, b| (a.middle() - fret).abs().total_cmp(&(b.middle() - fret).abs())).copied()
     };
-    pick(&mut on_neck.clone())
-        .or_else(|| pick(&mut all.iter()))
-        .expect("there is always a shape")
+    pick(&mut on_neck.clone()).or_else(|| pick(&mut all.iter())).expect("there is always a shape")
 }
 
 #[cfg(test)]

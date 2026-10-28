@@ -68,15 +68,19 @@ same in the standalone app (where the user types the key and plays the notes) an
 ## Layout
 
 - `crates/jr-core`: the theory, with its tests.
-- `crates/jr-gui`: the Slint screens.
-- `apps/jovee-ruler`: the standalone app.
+- `crates/jr-gui`: the Slint screens, `Ruler` (the window plus the code that fills it, which a host
+  embeds) and the `jovee-ruler` binary, the standalone app. A host follows a song with
+  `Ruler::follow_song` and moves it on with `Ruler::at`.
 - `harmonic-field/`, `scale/`: the printed pieces, as today.
+
+Where the mockup and the printed art disagree, the screens follow the printed art: roman numerals
+always uppercase, and the shapes numbered 1–5 with the 3- and 4-fret boxes of the slider.
 
 ## Order
 
 1. Mockup of the screens, approved before any Slint: [`mockup/index.html`](mockup/index.html).
 2. `jr-core` with tests, checked against the printed art (same notes, same chords, same shapes).
-3. `jr-gui` + the standalone app.
+3. `jr-gui` + the standalone app. Done; the song page is in place for step 5.
 4. JoVee Rig imports it.
 5. Embedded in JoVee Jam: key + notes of the song → degree of the harmonic field and pentatonic.
 6. JoVee Studio imports it; the tuner link.

@@ -3,12 +3,8 @@
 /// A pitch class: 0 = C, 1 = C#/Db … 11 = B.
 pub type Pc = u8;
 
-const SHARP: [&str; 12] = [
-    "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
-];
-const FLAT: [&str; 12] = [
-    "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B",
-];
+const SHARP: [&str; 12] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const FLAT: [&str; 12] = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
 /// Major keys spelled with flats: F, Bb, Eb, Ab, Db. The wheel prints them that way.
 const FLAT_KEYS: [Pc; 5] = [5, 10, 3, 8, 1];

@@ -34,11 +34,7 @@ fn every_hole_of_the_slider_in_every_key() {
                     5 | 11 => Mark::Scale,
                     _ => Mark::Outside,
                 };
-                assert_eq!(
-                    mark(key, note_at(open, f0 + c)),
-                    printed,
-                    "slider at {f0}, string {i}, column {c}"
-                );
+                assert_eq!(mark(key, note_at(open, f0 + c)), printed, "slider at {f0}, string {i}, column {c}");
             }
         }
     }
@@ -48,10 +44,7 @@ fn every_hole_of_the_slider_in_every_key() {
 fn the_pentatonic_of_g() {
     assert_eq!(pentatonic(n("G")), ["G", "A", "B", "D", "E"].map(n));
     assert_eq!(scale(n("G")), ["G", "A", "B", "C", "D", "E", "F#"].map(n));
-    assert_eq!(
-        outside_pentatonic(n("G"), &["G", "C", "B", "F#", "C"].map(n)),
-        ["C", "F#"].map(n)
-    );
+    assert_eq!(outside_pentatonic(n("G"), &["G", "C", "B", "F#", "C"].map(n)), ["C", "F#"].map(n));
 }
 
 #[test]
@@ -62,16 +55,7 @@ fn the_shapes_of_g_match_the_label() {
         .filter(|s| s.first >= 3 && s.last <= 15)
         .map(|s| (s.major, s.minor, s.first, s.last))
         .collect();
-    assert_eq!(
-        in_first_octave,
-        [
-            (1, 2, 3, 5),
-            (2, 3, 5, 7),
-            (3, 4, 7, 10),
-            (4, 5, 10, 12),
-            (5, 1, 12, 15)
-        ]
-    );
+    assert_eq!(in_first_octave, [(1, 2, 3, 5), (2, 3, 5, 7), (3, 4, 7, 10), (4, 5, 10, 12), (5, 1, 12, 15)]);
 }
 
 #[test]
@@ -87,11 +71,8 @@ fn only_shapes_3_and_5_fill_the_four_fret_window() {
 #[test]
 fn shape_1_of_a_minor_is_on_fret_5_and_17() {
     // how-to-use.md: Am (key C), shape 1 of the minor starts on fret 5, and again on 17.
-    let starts: Vec<i32> = shapes(STANDARD[0], n("C"), 24)
-        .into_iter()
-        .filter(|s| s.minor == 1 && s.first >= 0)
-        .map(|s| s.first)
-        .collect();
+    let starts: Vec<i32> =
+        shapes(STANDARD[0], n("C"), 24).into_iter().filter(|s| s.minor == 1 && s.first >= 0).map(|s| s.first).collect();
     assert_eq!(starts, [5, 17]);
 }
 
@@ -99,19 +80,10 @@ fn shape_1_of_a_minor_is_on_fret_5_and_17() {
 fn shapes_cover_the_whole_neck_and_join_up() {
     for key in 0..12 {
         let all = shapes(STANDARD[0], key, 24);
-        assert!(
-            all.first().unwrap().first <= 0,
-            "key {key}: nothing at the nut"
-        );
-        assert!(
-            all.last().unwrap().last >= 24,
-            "key {key}: nothing at fret 24"
-        );
+        assert!(all.first().unwrap().first <= 0, "key {key}: nothing at the nut");
+        assert!(all.last().unwrap().last >= 24, "key {key}: nothing at fret 24");
         for pair in all.windows(2) {
-            assert_eq!(
-                pair[0].last, pair[1].first,
-                "key {key}: boxes do not share a fret"
-            );
+            assert_eq!(pair[0].last, pair[1].first, "key {key}: boxes do not share a fret");
         }
     }
 }

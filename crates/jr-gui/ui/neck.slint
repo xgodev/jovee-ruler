@@ -1,0 +1,183 @@
+// The neck from the nut to fret 15, 6th string on top as on the printed ruler, with the slider's marks
+// over the notes of the scale: square = tonic, diamond = tonic of the relative minor, circle = pentatonic,
+// triangle = the 4th and 7th. Outside the chosen shape the marks fade, as the cassette darkens them.
+import { Theme } from "theme.slint";
+
+export struct NoteMark {
+    string: int,   // 0 = 6th string, drawn on top
+    fret: int,     // 0 = open
+    name: string,
+    mark: int,     // 0 tonic, 1 tonic of the relative minor, 2 pentatonic, 3 scale, 4 outside the scale
+    lit: bool,     // inside the shape on show
+    ring: int,     // sounding now: 0 no, 1 inside the pentatonic, 2 outside it
+}
+
+export component Neck inherits Rectangle {
+    in property <[NoteMark]> notes;
+    in property <int> frets: 15;
+    in property <int> window-first: -1;   // the shape on show, both frets included; -1 = the whole neck
+    in property <int> window-last: -1;
+
+    width: 1200px;
+    height: 330px;
+
+    private property <length> x0: 70px;
+    private property <length> fw: (root.width - 10px - self.x0) / root.frets;
+    private property <length> y0: 30px;
+    private property <length> sp: 50px;
+    private property <length> r: 21px;
+
+    pure function cell-x(f: int) -> length {
+        return f == 0 ? root.x0 / 2 + 8px : root.x0 + (f - 0.5) * root.fw;
+    }
+    pure function inlay(f: int) -> bool {
+        return f == 3 || f == 5 || f == 7 || f == 9 || f == 15 || f == 17 || f == 19 || f == 21;
+    }
+
+    if root.window-first >= 0: Rectangle {
+        x: root.window-first == 0 ? 8px : root.x0 + (root.window-first - 1) * root.fw;
+        y: 4px;
+        width: root.x0 + root.window-last * root.fw - self.x;
+        height: root.sp * 5 + 52px;
+        border-radius: 10px;
+        background: Theme.hover;
+        border-width: 2px;
+        border-color: Theme.accent;
+    }
+
+    for f in root.frets + 1: Rectangle {
+        if f > 0 && root.inlay(f): Rectangle {
+            x: root.cell-x(f) - 8px;
+            y: root.y0 + 2.5 * root.sp - 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background: Theme.line;
+        }
+        if f == 12: Rectangle {
+            x: root.cell-x(f) - 8px;
+            y: root.y0 + 1.5 * root.sp - 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background: Theme.line;
+        }
+        if f == 12: Rectangle {
+            x: root.cell-x(f) - 8px;
+            y: root.y0 + 3.5 * root.sp - 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background: Theme.line;
+        }
+        Rectangle {
+            x: root.x0 + f * root.fw - self.width / 2;
+            y: root.y0;
+            width: f == 0 ? 6px : 2px;
+            height: 5 * root.sp;
+            background: f == 0 ? Theme.text2 : #3a434f;
+        }
+        Text {
+            x: root.cell-x(f) - 20px;
+            y: root.y0 + 5 * root.sp + 28px;
+            width: 40px;
+            text: f;
+            horizontal-alignment: center;
+            font-family: Theme.mono;
+            font-size: Theme.fs-body;
+            color: Theme.text3;
+        }
+    }
+
+    for s in 6: Rectangle {
+        Rectangle {
+            x: root.x0;
+            y: root.y0 + s * root.sp - self.height / 2;
+            width: root.width - 10px - root.x0;
+            height: (3.5 - s * 0.45) * 1px;
+            background: #8b95a3;
+        }
+        Text {
+            x: 6px;
+            y: root.y0 + s * root.sp - 12px;
+            height: 24px;
+            text: 6 - s;
+            vertical-alignment: center;
+            font-family: Theme.mono;
+            font-size: Theme.fs-body;
+            color: Theme.text3;
+        }
+    }
+
+    for n in root.notes: Rectangle {
+        x: root.cell-x(n.fret) - root.r - 8px;
+        y: root.y0 + n.string * root.sp - root.r - 8px;
+        width: 2 * root.r + 16px;
+        height: 2 * root.r + 16px;
+        opacity: n.lit ? 1 : 0.15;
+
+        if n.ring > 0: Rectangle {
+            width: 2 * root.r + 14px;
+            height: self.width;
+            border-radius: self.width / 2;
+            border-width: 4px;
+            border-color: n.ring == 1 ? #ffffff : Theme.outside;
+        }
+        if n.mark == 0: Rectangle {
+            width: 2 * root.r;
+            height: self.width;
+            border-radius: 4px;
+            background: Theme.accent;
+        }
+        if n.mark == 1: Path {
+            width: 2 * root.r + 10px;
+            height: self.width;
+            viewbox-width: 52;
+            viewbox-height: 52;
+            commands: "M 26 0 L 52 26 L 26 52 L 0 26 Z";
+            fill: Theme.text;
+        }
+        if n.mark == 2: Rectangle {
+            width: 2 * root.r;
+            height: self.width;
+            border-radius: self.width / 2;
+            background: Theme.text;
+        }
+        if n.mark == 3: Path {
+            y: 4px;
+            width: 2 * root.r + 6px;
+            height: 2 * root.r + 2px;
+            viewbox-width: 48;
+            viewbox-height: 44;
+            commands: "M 24 0 L 48 44 L 0 44 Z";
+            fill: Theme.text3;
+        }
+        if n.mark == 4: Rectangle {
+            width: 2 * root.r;
+            height: self.width;
+            border-radius: self.width / 2;
+            background: Theme.s2;
+        }
+        Text {
+            y: n.mark == 3 ? 13px : 8px;
+            height: 2 * root.r;
+            text: n.name;
+            vertical-alignment: center;
+            font-size: Theme.fs-body;
+            font-weight: 700;
+            color: n.mark == 0 ? Theme.accent-ink : n.mark == 4 ? Theme.text : Theme.bg;
+        }
+    }
+
+    accessible-role: image;
+    accessible-label: @tr("Braço da guitarra com as notas da escala");
+}
+
+export component MarkLegend inherits HorizontalLayout {
+    spacing: Theme.sp6;
+    alignment: start;
+    Text { text: @tr("■ tônica maior"); font-size: Theme.fs-body; color: Theme.text2; }
+    Text { text: @tr("◆ tônica da relativa menor"); font-size: Theme.fs-body; color: Theme.text2; }
+    Text { text: @tr("● pentatônica"); font-size: Theme.fs-body; color: Theme.text2; }
+    Text { text: @tr("▲ graus 4 e 7"); font-size: Theme.fs-body; color: Theme.text2; }
+}
