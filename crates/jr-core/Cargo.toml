@@ -1,0 +1,10 @@
+[package]
+name = "jr-core"
+description = "The theory behind JoVee Ruler: notes, the harmonic field, the pentatonic and its five shapes on the neck"
+edition.workspace = true
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

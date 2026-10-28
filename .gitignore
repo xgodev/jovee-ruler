@@ -4,3 +4,6 @@
 __pycache__/
 .DS_Store
 .dev-rules/
+
+# Rust build output (the shared target-dir normally lives elsewhere)
+/target/
