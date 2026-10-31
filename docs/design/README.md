@@ -12,9 +12,11 @@ JoVee Ruler is the two music-theory tools of this repo — the **harmonic field 
 |---|---|
 | **Standalone** (`jovee-ruler` app) | Its own window. Needs nothing else running. |
 | **Inside JoVee Rig** | JoVee Rig imports the JoVee Ruler crates from GitHub and opens the ruler from its main screen and from the Jam screen. Those buttons are JoVee Rig's work; this repo only provides the screens. |
-| **Inside JoVee Studio** | Same as inside JoVee Rig: imported as a library. |
+| **Inside JoVee Studio** | Same as inside JoVee Rig: imported as a library, with its own button on the main screen. |
 
 Same pattern as JoVee Jam and JoVee Tone (library inside the host, its own app outside).
+
+Every host can open the plain ruler, with no song involved: the harmonic field and the scale, the key picked by hand, exactly as in the standalone app. The song page is an extra that appears only when the ruler is opened from a song in Jam.
 
 ## What the digital version does
 
