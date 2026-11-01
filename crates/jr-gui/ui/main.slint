@@ -2,84 +2,23 @@
 // it. Standalone it has two pages, the harmonic field and the scale; a host (JoVee Jam) opens it on the
 // third, the song playing.
 import { Theme } from "@jovee-theme/theme.slint";
-import { Look, Label, Panel, Well, Segment, SegControl } from "theme.slint";
+import { Card } from "@jovee-theme/card.slint";
+import { FieldCaption } from "@jovee-theme/field_caption.slint";
+import { Segmented } from "@jovee-theme/segmented.slint";
+import { WindowHeader } from "@jovee-theme/window_header.slint";
+import { Well } from "theme.slint";
 import { Wheel } from "wheel.slint";
 import { FieldCells, FunctionLegend, ChordCard } from "field.slint";
 import { Neck, NoteMark, MarkLegend } from "neck.slint";
 import { JamView, Moment } from "jam.slint";
 
 export { Theme } from "@jovee-theme/theme.slint";
-export { ChordCard, NoteMark, Moment, Segment }
+export { ChordCard, NoteMark, Moment }
 
 export struct ShapeButton {
     label: string,
     first: int,
     last: int,
-}
-
-// The ruler's mark in the header: a dial with its pointer.
-component Mark inherits Rectangle {
-    width: 22px;
-    height: 22px;
-    Rectangle {
-        width: 20px;
-        height: 20px;
-        border-radius: 10px;
-        border-width: Look.mark;
-        border-color: Theme.accent;
-    }
-    Rectangle {
-        width: 8px;
-        height: 8px;
-        border-radius: 4px;
-        background: Theme.accent;
-        drop-shadow-blur: Theme.is-classic ? 0 : 5px;
-        drop-shadow-color: Look.halo-color;
-    }
-    Rectangle {
-        x: 10px;
-        y: 2px;
-        width: 2px;
-        height: 4px;
-        background: Theme.accent;
-    }
-}
-
-component Toolbar inherits Rectangle {
-    in property <string> title;
-    in property <string> context;   // the song, inside JoVee Jam
-    height: 60px;
-    background: Theme.is-rack ? Theme.window-bg : Theme.hdr;
-    HorizontalLayout {
-        padding-left: 20px;
-        padding-right: 20px;
-        spacing: Theme.sp3;
-        alignment: start;
-        VerticalLayout {
-            alignment: center;
-            Mark { }
-        }
-        Text {
-            text: root.title;
-            vertical-alignment: center;
-            font-family: Theme.display;
-            font-size: Theme.fs-head;
-            letter-spacing: 1.6px;
-            color: Theme.ink;
-        }
-        if root.context != "": Text {
-            text: root.context;
-            vertical-alignment: center;
-            font-size: Theme.fs-body;
-            font-weight: 500;
-            color: Theme.ink-2;
-        }
-    }
-    Rectangle {
-        y: parent.height - Look.hair;
-        height: Look.hair;
-        background: Theme.is-rack ? Colors.black : Theme.is-neon ? Theme.line-soft : Theme.well-2;
-    }
 }
 
 export component AppWindow inherits Window {
@@ -106,7 +45,7 @@ export component AppWindow inherits Window {
     callback key-picked(int);
 
     in property <[ShapeButton]> shapes;
-    in property <[Segment]> shape-segments;   // the same shapes, as the control draws them
+    in property <[string]> shape-options;   // the same shapes, as the control takes them
     in property <int> shape;              // index into `shapes`
     in property <string> shape-subtitle;
     in property <[NoteMark]> scale-notes;
@@ -123,9 +62,16 @@ export component AppWindow inherits Window {
     callback seek(int);
 
     VerticalLayout {
-        Toolbar {
+        WindowHeader {
+            icon: @image-url("icons/mark.svg");
             title: root.brand;
-            context: root.page == 2 ? root.context : "";
+            if root.page == 2 && root.context != "": Text {
+                text: root.context;
+                vertical-alignment: center;
+                font-size: Theme.fs-body;
+                font-weight: 500;
+                color: Theme.ink-2;
+            }
         }
 
         VerticalLayout {
@@ -135,9 +81,10 @@ export component AppWindow inherits Window {
 
             if root.page < 2: HorizontalLayout {
                 alignment: start;
-                SegControl {
-                    items: [{ label: @tr("Campo harmônico") }, { label: @tr("Escala") }];
-                    selected: root.page;
+                Segmented {
+                    label: @tr("Página");
+                    options: [@tr("Campo harmônico"), @tr("Escala")];
+                    current: root.page;
                     picked(i) => { root.page = i; }
                 }
             }
@@ -145,25 +92,34 @@ export component AppWindow inherits Window {
             if root.page == 0: HorizontalLayout {
                 spacing: Theme.sp4;
                 vertical-stretch: 1;
-                Panel {
+                Card {
                     width: 560px;
-                    Wheel {
-                        keys: root.keys;
-                        selected: root.key-index;
-                        key-name: root.key-short;
-                        relative: root.relative-short;
-                        pick(i) => { root.key-picked(i); }
+                    // centred, not stretched: the wheel's fixed size must not cap the height of the row
+                    VerticalLayout {
+                        alignment: center;
+                        vertical-stretch: 1;
+                        HorizontalLayout {
+                            alignment: center;
+                            Wheel {
+                                keys: root.keys;
+                                selected: root.key-index;
+                                key-name: root.key-short;
+                                relative: root.relative-short;
+                                pick(i) => { root.key-picked(i); }
+                            }
+                        }
                     }
                 }
-                Panel {
+                Card {
                     horizontal-stretch: 1;
                     VerticalLayout {
-                        padding: 28px;
+                        padding: Theme.sp2;
                         spacing: 28px;
                         alignment: center;
+                        vertical-stretch: 1;
                         VerticalLayout {
                             spacing: Theme.sp1;
-                            Label { text: @tr("TOM"); }
+                            FieldCaption { text: @tr("Tom"); }
                             Text {
                                 text: root.key-title;
                                 font-family: Theme.display;
@@ -213,15 +169,16 @@ export component AppWindow inherits Window {
                             color: Theme.ink-2;
                         }
                     }
-                    Label {
-                        text: @tr("FORMA");
-                        vertical-alignment: center;
+                    VerticalLayout {
+                        alignment: center;
+                        FieldCaption { text: @tr("Forma"); }
                     }
                     VerticalLayout {
                         alignment: center;
-                        SegControl {
-                            items: root.shape-segments;
-                            selected: root.shape;
+                        Segmented {
+                            label: @tr("Forma");
+                            options: root.shape-options;
+                            current: root.shape;
                             picked(i) => { root.shape-picked(i); }
                         }
                     }

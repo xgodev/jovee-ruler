@@ -10,7 +10,8 @@ export struct ChordCard {
     function: int,         // in the major key
 }
 
-component Tag inherits Rectangle {
+// The degree as the printed wheel prints it.
+component Degree inherits Rectangle {
     in property <string> text;
     in property <color> ink;
     width: 64px;
@@ -58,7 +59,7 @@ component Cell inherits Rectangle {
         alignment: space-between;
         HorizontalLayout {
             alignment: center;
-            Tag {
+            Degree {
                 text: root.chord.roman;
                 ink: Theme.page;
                 background: Theme.ink;
@@ -75,7 +76,7 @@ component Cell inherits Rectangle {
         }
         HorizontalLayout {
             alignment: center;
-            Tag {
+            Degree {
                 text: root.chord.minor-roman;
                 ink: Theme.ink;
                 background: Theme.well;

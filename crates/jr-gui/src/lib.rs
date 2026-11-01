@@ -148,7 +148,7 @@ fn show_key(w: &AppWindow, s: &State) {
     w.set_shape(s.shape.min(buttons.len() - 1) as i32);
     w.set_shape_subtitle(view::shape_subtitle(key, &pick).into());
     w.set_scale_notes(model(view::neck(key, window, &[])));
-    w.set_shape_segments(model(view::shape_segments(&buttons)));
+    w.set_shape_options(model(view::shape_options(&buttons)));
     w.set_shapes(model(buttons));
 }
 

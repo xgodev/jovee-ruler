@@ -3,6 +3,14 @@
 JoVee Ruler: the printed rulers plus their digital, interactive version (standalone app and library
 inside JoVee Rig / JoVee Studio). Design: `docs/design/README.md`.
 
+## Screens use the jovee-theme controls
+
+Before drawing or changing a control in `crates/jr-gui/ui/`, run `cargo update -p jovee-theme` and read
+its `ui/` and `docs/patterns.md`. What it has (card, window header, segmented, caption, tag…) is imported,
+never redrawn: a local variant is a bug. The ruler's `theme.slint` holds only what is the ruler's own.
+**Why:** the theme gained shared controls while the ruler kept its own Panel, SegControl and Pill on an old
+pin, so it looked different from the other JoVee programs until the owner pointed it out.
+
 ## Keep the repo and the docs current — always, without being asked
 
 Any change to a `.scad`, an art generator, or `build.sh` is only finished when all of

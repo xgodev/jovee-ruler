@@ -1,7 +1,10 @@
 // The ruler inside JoVee Jam: the host sends the key of the song and the notes sounding now, and this
 // shows which chord of the field it is, what it does, and how its notes sit on the pentatonic.
 import { Theme } from "@jovee-theme/theme.slint";
-import { Look, Function, Label, LitText, Panel, Pill, Well } from "theme.slint";
+import { Card } from "@jovee-theme/card.slint";
+import { ElidedText } from "@jovee-theme/elided_text.slint";
+import { FieldCaption } from "@jovee-theme/field_caption.slint";
+import { Look, Function, DotTag, LitText, Well } from "theme.slint";
 import { FieldCells, ChordCard } from "field.slint";
 import { Neck, NoteMark, RingLegend } from "neck.slint";
 
@@ -96,9 +99,12 @@ export component JamView inherits VerticalLayout {
                 padding-right: 18px;
                 spacing: 6px;
                 alignment: start;
-                Label {
+                // a field caption, in the accent: it marks what is sounding
+                ElidedText {
                     text: @tr("AGORA");
                     color: Theme.accent;
+                    font-weight: 600;
+                    letter-spacing: 1.6px;
                 }
                 HorizontalLayout {
                     spacing: Theme.sp4;
@@ -109,7 +115,7 @@ export component JamView inherits VerticalLayout {
                         text: root.moment.chord;
                         // the card is narrow, and a song can write "F#m7(onC#)": the name takes what the
                         // degree leaves on the 264px inside the card, with 2px to spare for rounding
-                        font-size: min(72px, (264px - 2px - Theme.sp4 - degree.preferred-width) / chord-at-full.preferred-width * 72px);
+                        font-size: max(Theme.fs-body, min(72px, (264px - 2px - Theme.sp4 - degree.preferred-width) / chord-at-full.preferred-width * 72px));
                         font-weight: 700;
                         ink: Theme.is-rack ? Theme.accent : Theme.ink;
                         lit: Theme.is-rack;
@@ -137,26 +143,17 @@ export component JamView inherits VerticalLayout {
                         }
                     }
                 }
-                HorizontalLayout {
-                    alignment: start;
-                    Pill {
-                        text: Function.name(root.moment.function);
-                        ink: Function.ink(root.moment.function);
-                        tint: Function.soft(root.moment.function);
-                        edge: root.moment.function < 0 ? Theme.line : transparent;
-                    }
+                DotTag {
+                    text: Function.name(root.moment.function);
+                    dot: Function.color(root.moment.function);
                 }
             }
         }
-        Panel {
+        Card {
             horizontal-stretch: 1;
             VerticalLayout {
-                padding-top: 12px;
-                padding-bottom: 18px;
-                padding-left: Theme.is-rack ? 28px : Theme.sp4;
-                padding-right: Theme.is-rack ? 28px : Theme.sp4;
                 spacing: 10px;
-                Label { text: root.moment.field-title.to-uppercase(); }
+                FieldCaption { text: root.moment.field-title; }
                 FieldCells {
                     chords: root.field;
                     lit: root.moment.lit;
@@ -172,12 +169,11 @@ export component JamView inherits VerticalLayout {
                         font-weight: 600;
                         color: Theme.ink;
                     }
-                    Pill {
+                    DotTag {
                         text: root.moment.outside-count == 0 ? @tr("todas as notas do acorde estão nela")
                             : root.moment.outside-count == 1 ? @tr("{} do acorde fica fora", root.moment.outside)
                             : @tr("{} do acorde ficam fora", root.moment.outside);
-                        ink: Function.ink(root.moment.outside-count == 0 ? 0 : 2);
-                        tint: Function.soft(root.moment.outside-count == 0 ? 0 : 2);
+                        dot: Function.color(root.moment.outside-count == 0 ? 0 : 2);
                     }
                 }
             }

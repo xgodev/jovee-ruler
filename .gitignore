@@ -1,6 +1,7 @@
 # intermediate output of the art generators
 *.svg
 !docs/*.svg
+!crates/jr-gui/ui/icons/*.svg
 __pycache__/
 .DS_Store
 .dev-rules/

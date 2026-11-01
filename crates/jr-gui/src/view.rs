@@ -7,7 +7,7 @@ use jr_core::{
     Pc, Shape, STANDARD,
 };
 
-use crate::ui::{ChordCard, Moment, NoteMark, Segment, ShapeButton};
+use crate::ui::{ChordCard, Moment, NoteMark, ShapeButton};
 
 /// The neck drawn on screen: the nut to fret 15, as in the mockup.
 pub const FRETS: i32 = 15;
@@ -88,9 +88,9 @@ pub fn shape_buttons(key: Pc) -> Vec<ShapeButton> {
     out
 }
 
-/// The shape buttons as the segmented control draws them: the numbers in the mono face.
-pub fn shape_segments(buttons: &[ShapeButton]) -> Vec<Segment> {
-    buttons.iter().map(|b| Segment { label: b.label.clone(), mono: b.first >= 0 }).collect()
+/// The shape buttons as the segmented control takes them: their labels.
+pub fn shape_options(buttons: &[ShapeButton]) -> Vec<slint::SharedString> {
+    buttons.iter().map(|b| b.label.clone()).collect()
 }
 
 /// "Forma 1 · 2 na relativa menor · casas 3 a 5", or the whole neck.

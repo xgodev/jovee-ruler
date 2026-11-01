@@ -61,8 +61,8 @@ same in the standalone app (where the user types the key and plays the notes) an
 - One core crate holds the theory: notes, intervals, scales, harmonic field, CAGED shapes, tunings.
   It has no UI and no host types. The printed art can later be generated from it too, which ends the
   duplicated `CW`/`RS`/`TUNING` between `scale/scale.scad` and `scale/art_scale.py`.
-- Screens are Slint, on the shared `xgodev/jovee-theme` tokens and fonts, so they look native inside
-  every JoVee program. One layout, three looks (Neon, Rack, Classic): the standalone app takes the one
+- Screens are Slint, on the shared `xgodev/jovee-theme` tokens, fonts and controls (card, header,
+  segmented, caption, tag), so they look native inside every JoVee program. One layout, three looks (Neon, Rack, Classic): the standalone app takes the one
   saved for JoVee, a host picks with `Ruler::set_theme(ThemeId)`. `jovee-theme` is a private repository,
   so building the screens needs access to it.
 - Talking to a host (song key, tuner note, playing a note) goes through one trait. Standalone has a
