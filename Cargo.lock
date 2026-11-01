@@ -2366,6 +2366,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "jovee-theme"
+version = "0.1.0"
+source = "git+ssh://git@github.com/xgodev/jovee-theme.git?branch=main#0c9befec72e0176563a15d4610f381df30dd5341"
+
+[[package]]
 name = "jr-core"
 version = "0.1.0"
 
@@ -2374,6 +2379,7 @@ name = "jr-gui"
 version = "0.1.0"
 dependencies = [
  "i-slint-backend-testing",
+ "jovee-theme",
  "jr-core",
  "resvg",
  "slint",

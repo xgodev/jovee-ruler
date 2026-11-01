@@ -1,6 +1,7 @@
 // The harmonic field wheel: the twelve keys in fifths around a ring, the chosen one under the pointer.
 // Drag to turn it, or click a key. The wheel only turns; which key that is comes back through `pick`.
-import { Theme } from "theme.slint";
+import { Theme } from "@jovee-theme/theme.slint";
+import { Look } from "theme.slint";
 
 export component Wheel inherits Rectangle {
     in property <[string]> keys;      // twelve names, in fifths order from C
@@ -50,9 +51,9 @@ export component Wheel inherits Rectangle {
         width: 500px;
         height: 500px;
         border-radius: self.width / 2;
-        background: Theme.panel-hi;
-        border-width: Theme.line;
-        border-color: Theme.hair;
+        background: Theme.surf;
+        border-width: Look.hair;
+        border-color: Theme.line;
     }
 
     for name[p] in root.keys: chip := Rectangle {
@@ -63,14 +64,16 @@ export component Wheel inherits Rectangle {
         width: 68px;
         height: 68px;
         border-radius: self.width / 2;
-        background: self.on ? Theme.accent : Theme.field;
-        border-width: self.on ? 0 : Theme.line;
-        border-color: Theme.field-line;
+        background: self.on ? Theme.accent : Theme.well;
+        border-width: self.on ? 0 : Look.hair;
+        border-color: Theme.line;
+        drop-shadow-blur: self.on ? Look.halo : 0;
+        drop-shadow-color: Look.halo-color;
         Text {
             text: name;
             font-size: 26px;
             font-weight: chip.on ? 700 : 600;
-            color: chip.on ? Theme.on-accent : Theme.ink-2;
+            color: chip.on ? Look.on-accent : Theme.ink-2;
         }
     }
 
@@ -78,9 +81,9 @@ export component Wheel inherits Rectangle {
         width: 2 * root.disc-r;
         height: self.width;
         border-radius: self.width / 2;
-        background: Theme.field;
-        border-width: Theme.line;
-        border-color: Theme.hair;
+        background: Theme.well;
+        border-width: Look.hair;
+        border-color: Theme.line;
         VerticalLayout {
             alignment: center;
             padding-top: 6px;

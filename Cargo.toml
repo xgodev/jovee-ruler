@@ -12,6 +12,7 @@ repository = "https://github.com/xgodev/jovee-ruler"
 [workspace.dependencies]
 jr-core = { path = "crates/jr-core" }
 jr-gui = { path = "crates/jr-gui" }
+jovee-theme = { git = "ssh://git@github.com/xgodev/jovee-theme.git", branch = "main" }
 slint = "=1.18.1"
 resvg = { version = "=0.48.1", default-features = false }
 slint-build = "=1.18.1"

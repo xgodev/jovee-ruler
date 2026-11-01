@@ -1,13 +1,15 @@
-// The JoVee Ruler window, drawn as one of JoVee Rig's tool windows: the dark bar on top, the body in
-// the well. Standalone it has two pages, the harmonic field and the scale; a host (JoVee Jam) opens it
-// on the third, the song playing.
-import { Theme, ThemeMode, Label, Panel, Segment, SegControl } from "theme.slint";
+// The JoVee Ruler window, in whichever JoVee look `Theme.index` picks: the header on top, the body under
+// it. Standalone it has two pages, the harmonic field and the scale; a host (JoVee Jam) opens it on the
+// third, the song playing.
+import { Theme } from "@jovee-theme/theme.slint";
+import { Look, Label, Panel, Well, Segment, SegControl } from "theme.slint";
 import { Wheel } from "wheel.slint";
 import { FieldCells, FunctionLegend, ChordCard } from "field.slint";
 import { Neck, NoteMark, MarkLegend } from "neck.slint";
 import { JamView, Moment } from "jam.slint";
 
-export { Theme, ThemeMode, ChordCard, NoteMark, Moment, Segment }
+export { Theme } from "@jovee-theme/theme.slint";
+export { ChordCard, NoteMark, Moment, Segment }
 
 export struct ShapeButton {
     label: string,
@@ -15,25 +17,27 @@ export struct ShapeButton {
     last: int,
 }
 
-// The ruler's mark in the bar: a dial with its pointer.
+// The ruler's mark in the header: a dial with its pointer.
 component Mark inherits Rectangle {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     Rectangle {
-        width: 18px;
-        height: 18px;
-        border-radius: 9px;
-        border-width: Theme.mark;
+        width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        border-width: Look.mark;
         border-color: Theme.accent;
     }
     Rectangle {
-        width: 7px;
-        height: 7px;
-        border-radius: 3.5px;
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
         background: Theme.accent;
+        drop-shadow-blur: Theme.is-classic ? 0 : 5px;
+        drop-shadow-color: Look.halo-color;
     }
     Rectangle {
-        x: 9px;
+        x: 10px;
         y: 2px;
         width: 2px;
         height: 4px;
@@ -44,12 +48,12 @@ component Mark inherits Rectangle {
 component Toolbar inherits Rectangle {
     in property <string> title;
     in property <string> context;   // the song, inside JoVee Jam
-    height: 46px;
-    background: Theme.chrome;
+    height: 60px;
+    background: Theme.is-rack ? Theme.window-bg : Theme.hdr;
     HorizontalLayout {
-        padding-left: Theme.sp-m;
-        padding-right: Theme.sp-m;
-        spacing: Theme.sp-s;
+        padding-left: 20px;
+        padding-right: 20px;
+        spacing: Theme.sp3;
         alignment: start;
         VerticalLayout {
             alignment: center;
@@ -59,22 +63,22 @@ component Toolbar inherits Rectangle {
             text: root.title;
             vertical-alignment: center;
             font-family: Theme.display;
-            font-size: 24px;
-            letter-spacing: 1.4px;
-            color: Theme.chrome-fg;
+            font-size: Theme.fs-head;
+            letter-spacing: 1.6px;
+            color: Theme.ink;
         }
         if root.context != "": Text {
             text: root.context;
             vertical-alignment: center;
-            font-size: Theme.min-font;
+            font-size: Theme.fs-body;
             font-weight: 500;
-            color: Theme.chrome-fg-2;
+            color: Theme.ink-2;
         }
     }
     Rectangle {
-        y: parent.height - Theme.line;
-        height: Theme.line;
-        background: Theme.chrome-line;
+        y: parent.height - Look.hair;
+        height: Look.hair;
+        background: Theme.is-rack ? Colors.black : Theme.is-neon ? Theme.line-soft : Theme.well-2;
     }
 }
 
@@ -84,7 +88,7 @@ export component AppWindow inherits Window {
     preferred-height: 860px;
     min-width: 1280px;
     min-height: 860px;
-    background: Theme.well;
+    background: Theme.window-bg;
     default-font-family: Theme.sans;
 
     in-out property <int> page;           // 0 harmonic field, 1 scale, 2 the song in JoVee Jam
@@ -124,8 +128,8 @@ export component AppWindow inherits Window {
         }
 
         VerticalLayout {
-            padding: Theme.sp-m;
-            spacing: Theme.sp-m;
+            padding: Theme.sp4;
+            spacing: Theme.sp4;
             vertical-stretch: 1;
 
             if root.page < 2: HorizontalLayout {
@@ -138,7 +142,7 @@ export component AppWindow inherits Window {
             }
 
             if root.page == 0: HorizontalLayout {
-                spacing: Theme.sp-m;
+                spacing: Theme.sp4;
                 vertical-stretch: 1;
                 Panel {
                     width: 560px;
@@ -153,11 +157,11 @@ export component AppWindow inherits Window {
                 Panel {
                     horizontal-stretch: 1;
                     VerticalLayout {
-                        padding: Theme.sp-xl;
-                        spacing: Theme.sp-xl;
+                        padding: 28px;
+                        spacing: 28px;
                         alignment: center;
                         VerticalLayout {
-                            spacing: 4px;
+                            spacing: Theme.sp1;
                             Label { text: @tr("TOM"); }
                             Text {
                                 text: root.key-title;
@@ -168,7 +172,7 @@ export component AppWindow inherits Window {
                             }
                             Text {
                                 text: root.key-subtitle;
-                                font-size: Theme.min-font;
+                                font-size: Theme.fs-body;
                                 color: Theme.ink-2;
                             }
                         }
@@ -179,7 +183,7 @@ export component AppWindow inherits Window {
                         FunctionLegend { }
                         Text {
                             text: @tr("Em cima o grau no tom maior, embaixo na relativa menor. Gire a roda ou clique numa nota.");
-                            font-size: Theme.min-font;
+                            font-size: Theme.fs-body;
                             color: Theme.ink-3;
                             wrap: word-wrap;
                         }
@@ -188,13 +192,13 @@ export component AppWindow inherits Window {
             }
 
             if root.page == 1: VerticalLayout {
-                spacing: Theme.sp-m;
+                spacing: Theme.sp4;
                 vertical-stretch: 1;
                 HorizontalLayout {
-                    spacing: Theme.sp-m;
+                    spacing: Theme.sp4;
                     VerticalLayout {
                         horizontal-stretch: 1;
-                        spacing: 4px;
+                        spacing: Theme.sp1;
                         Text {
                             text: root.key-title;
                             font-family: Theme.display;
@@ -204,7 +208,7 @@ export component AppWindow inherits Window {
                         }
                         Text {
                             text: root.shape-subtitle;
-                            font-size: Theme.min-font;
+                            font-size: Theme.fs-body;
                             color: Theme.ink-2;
                         }
                     }
@@ -221,14 +225,10 @@ export component AppWindow inherits Window {
                         }
                     }
                 }
-                Rectangle {
+                Well {
                     vertical-stretch: 1;
-                    border-radius: Theme.radius;
-                    background: Theme.field;
-                    border-width: Theme.line;
-                    border-color: Theme.hair;
                     VerticalLayout {
-                        padding: Theme.sp-s;
+                        padding: 10px;
                         alignment: center;
                         Neck {
                             notes: root.scale-notes;

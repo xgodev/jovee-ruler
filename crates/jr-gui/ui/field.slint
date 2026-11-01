@@ -1,6 +1,7 @@
 // The seven chords of the key as cells, as the printed wheel shows them: the degree in the major key on
-// a white tag, the chord, the degree in the relative minor on a dark tag; tinted by what the chord does.
-import { Theme, Function } from "theme.slint";
+// a light tag, the chord, the degree in the relative minor on a dark tag; marked by what the chord does.
+import { Theme } from "@jovee-theme/theme.slint";
+import { Look, Function, LitText } from "theme.slint";
 
 export struct ChordCard {
     roman: string,         // degree in the major key
@@ -30,15 +31,23 @@ component Cell inherits Rectangle {
     in property <ChordCard> chord;
     in property <bool> on;           // the chord sounding now
     in property <bool> compact;
-    border-radius: Theme.radius;
-    background: self.on ? Theme.accent-soft : Function.soft(self.chord.function);
-    border-width: self.on ? Theme.mark : Theme.line;
-    border-color: self.on ? Theme.accent : Theme.hair;
-    clip: true;
+    border-radius: Theme.is-rack ? Theme.radius-sm : Theme.radius;
+    background: self.on ? (Theme.is-rack ? Look.display : Look.accent-soft)
+        : Theme.is-rack ? Theme.well : Function.soft(self.chord.function);
+    border-width: self.on ? Look.chosen : Look.hair;
+    border-color: self.on ? Theme.accent
+        : Theme.is-rack ? Colors.black : Theme.is-neon ? Theme.line : Theme.line-soft;
+    drop-shadow-blur: self.on ? Look.halo : 0;
+    drop-shadow-color: Look.halo-color;
+    // inside a child, so the stripe follows the rounded corners without clipping the glow
     Rectangle {
-        y: 0;
-        height: Theme.track;
-        background: Function.color(root.chord.function);
+        border-radius: root.border-radius;
+        clip: true;
+        if !root.on || Theme.is-classic: Rectangle {
+            y: 0;
+            height: Theme.is-neon ? Look.mark : Look.track;
+            background: Function.color(root.chord.function);
+        }
     }
     VerticalLayout {
         padding-top: root.compact ? 10px : 12px;
@@ -51,28 +60,27 @@ component Cell inherits Rectangle {
             alignment: center;
             Tag {
                 text: root.chord.roman;
-                ink: Theme.tag-hi-ink;
-                background: Theme.tag-hi;
-                border-width: Theme.line;
-                border-color: Theme.field-line;
+                ink: Theme.page;
+                background: Theme.ink;
             }
         }
-        Text {
+        LitText {
             // the cap height of the name, not its line: keeps the song page's cells as short as drawn
-            height: root.compact ? 32px : 38px;
+            height: root.compact ? 30px : 38px;
             text: root.chord.name;
-            horizontal-alignment: center;
-            vertical-alignment: center;
             font-size: root.compact ? 30px : 34px;
             font-weight: 700;
-            color: root.on ? Theme.accent : Theme.ink;
+            ink: root.on ? Theme.accent : Theme.ink;
+            lit: root.on && Theme.is-rack;
         }
         HorizontalLayout {
             alignment: center;
             Tag {
                 text: root.chord.minor-roman;
-                ink: Theme.chrome-fg;
-                background: Theme.chrome;
+                ink: Theme.ink;
+                background: Theme.well;
+                border-width: Look.hair;
+                border-color: Theme.line;
             }
         }
     }
@@ -85,7 +93,7 @@ export component FieldCells inherits HorizontalLayout {
     in property <int> lit: -1;        // the chord sounding, -1 for none
     in property <bool> compact;       // the smaller cells of the song page
     in property <length> cell-height;
-    spacing: 8px;
+    spacing: Theme.sp2;
     for c[i] in root.chords: Cell {
         chord: c;
         on: i == root.lit;
@@ -99,7 +107,7 @@ export component FieldCells inherits HorizontalLayout {
 
 component Swatch inherits HorizontalLayout {
     in property <int> function;
-    spacing: 8px;
+    spacing: Theme.sp2;
     VerticalLayout {
         alignment: center;
         Rectangle {
@@ -112,14 +120,14 @@ component Swatch inherits HorizontalLayout {
     Text {
         text: Function.name(root.function);
         vertical-alignment: center;
-        font-size: Theme.min-font;
+        font-size: Theme.fs-body;
         font-weight: 500;
         color: Theme.ink-2;
     }
 }
 
 export component FunctionLegend inherits HorizontalLayout {
-    spacing: 24px;
+    spacing: Theme.sp5;
     alignment: start;
     Swatch { function: 0; }
     Swatch { function: 1; }

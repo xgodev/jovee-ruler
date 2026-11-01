@@ -61,9 +61,10 @@ same in the standalone app (where the user types the key and plays the notes) an
 - One core crate holds the theory: notes, intervals, scales, harmonic field, CAGED shapes, tunings.
   It has no UI and no host types. The printed art can later be generated from it too, which ends the
   duplicated `CW`/`RS`/`TUNING` between `scale/scale.scad` and `scale/art_scale.py`.
-- Screens are Slint, with JoVee Rig's theme tokens, fonts and components (copied from OpenRig's
-  `adapter-gui-ui/ui/theme.slint`), so they look native inside JoVee Rig and JoVee Studio. Light and
-  dark follow the system, or the host through `Ruler::set_theme`.
+- Screens are Slint, on the shared `xgodev/jovee-theme` tokens and fonts, so they look native inside
+  every JoVee program. One layout, three looks (Neon, Rack, Classic): the standalone app takes the one
+  saved for JoVee, a host picks with `Ruler::set_theme(ThemeId)`. `jovee-theme` is a private repository,
+  so building the screens needs access to it.
 - Talking to a host (song key, tuner note, playing a note) goes through one trait. Standalone has a
   version that does nothing but play notes on its own output; nothing in the ruler depends on a host
   being there.
@@ -83,7 +84,8 @@ always uppercase, and the shapes numbered 1–5 with the 3- and 4-fret boxes of 
 
 1. Mockup of the screens, approved before any Slint: [`mockup/index.html`](mockup/index.html). Restyled
    in JoVee Rig's visual language (its theme tokens, fonts, tool-window bar, light and dark):
-   [`mockup/rig.html`](mockup/rig.html), approved and applied to the screens.
+   [`mockup/rig.html`](mockup/rig.html), superseded by the three JoVee looks:
+   [`mockup/themes.html`](mockup/themes.html), approved and applied to the screens.
 2. `jr-core` with tests, checked against the printed art (same notes, same chords, same shapes).
 3. `jr-gui` + the standalone app. Done; the song page is in place for step 5.
 4. JoVee Rig imports it.

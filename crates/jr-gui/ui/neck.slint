@@ -1,7 +1,8 @@
 // The neck from the nut to fret 15, 6th string on top as on the printed ruler, with the slider's marks
 // over the notes of the scale: square = tonic, diamond = tonic of the relative minor, circle = pentatonic,
 // triangle = the 4th and 7th. Outside the chosen shape the marks fade, as the cassette darkens them.
-import { Theme } from "theme.slint";
+import { Theme } from "@jovee-theme/theme.slint";
+import { Look } from "theme.slint";
 
 export struct NoteMark {
     string: int,   // 0 = 6th string, drawn on top
@@ -28,11 +29,11 @@ export component Neck inherits Rectangle {
     in property <length> sp: 84px;        // between strings
     in property <length> r: 26px;         // of a mark
 
-    height: self.y0 + 5 * self.sp + self.r + 56px;
+    height: self.y0 + 5 * self.sp + self.r + 46px;
 
     private property <length> x0: 100px;
     private property <length> fw: (root.width - 12px - self.x0) / root.frets;
-    private property <length> y0: root.r + 18px;
+    private property <length> y0: root.r + 10px;
     private property <length> box: 2 * root.r + 20px;   // a mark with room for its ring
 
     pure function cell-x(f: int) -> length {
@@ -41,7 +42,7 @@ export component Neck inherits Rectangle {
     // a mark outside the shape, faded into the neck; its colours are mixed, not made transparent, so the
     // name stays readable on the faded mark
     pure function fade(c: color, lit: bool) -> color {
-        return lit ? c : c.mix(Theme.field, 0.18);
+        return lit ? c : c.mix(Theme.well, 0.18);
     }
     pure function inlay(f: int) -> bool {
         return f == 3 || f == 5 || f == 7 || f == 9 || f == 15 || f == 17 || f == 19 || f == 21;
@@ -52,9 +53,9 @@ export component Neck inherits Rectangle {
         y: root.y0 - root.r - 10px;
         width: root.x0 + root.window-last * root.fw - self.x;
         height: 5 * root.sp + 2 * root.r + 20px;
-        border-radius: Theme.radius;
-        background: Theme.accent-soft;
-        border-width: Theme.mark;
+        border-radius: Theme.radius-sm;
+        background: Look.accent-soft;
+        border-width: Look.mark;
         border-color: Theme.accent;
     }
 
@@ -74,7 +75,7 @@ export component Neck inherits Rectangle {
         Rectangle {
             x: root.x0 + f * root.fw - self.width / 2;
             y: root.y0;
-            width: f == 0 ? 4px : Theme.line;
+            width: f == 0 ? 4px : Look.hair;
             height: 5 * root.sp;
             background: f == 0 ? Theme.ink-2 : Theme.ink-3.with-alpha(0.45);
         }
@@ -85,7 +86,7 @@ export component Neck inherits Rectangle {
             text: f;
             horizontal-alignment: center;
             font-family: Theme.mono;
-            font-size: Theme.min-font;
+            font-size: Theme.fs-body;
             color: Theme.ink-3;
         }
     }
@@ -105,7 +106,7 @@ export component Neck inherits Rectangle {
             text: 6 - s;
             vertical-alignment: center;
             font-family: Theme.mono;
-            font-size: Theme.min-font;
+            font-size: Theme.fs-body;
             color: Theme.ink-3;
         }
     }
@@ -120,13 +121,13 @@ export component Neck inherits Rectangle {
             width: 2 * root.r + 17px;
             height: self.width;
             border-radius: self.width / 2;
-            border-width: Theme.track;
+            border-width: Look.track;
             border-color: n.ring == 1 ? Theme.ok : Theme.bad;
         }
         if n.mark == 0: Rectangle {
             width: 2 * root.r;
             height: self.width;
-            border-radius: Theme.radius;
+            border-radius: Theme.radius-sm;
             background: root.fade(Theme.accent, n.lit);
         }
         if n.mark == 1: Path {
@@ -156,9 +157,9 @@ export component Neck inherits Rectangle {
             width: 2 * root.r;
             height: self.width;
             border-radius: self.width / 2;
-            background: root.fade(Theme.panel-lo, n.lit);
-            border-width: Theme.line;
-            border-color: root.fade(Theme.field-line, n.lit);
+            background: root.fade(Theme.surf-hi, n.lit);
+            border-width: Look.hair;
+            border-color: root.fade(Theme.line, n.lit);
         }
         Text {
             y: (root.box - self.height) / 2 + (n.mark == 3 ? 6px : 0);
@@ -167,7 +168,7 @@ export component Neck inherits Rectangle {
             horizontal-alignment: center;
             font-size: root.r > 24px ? 20px : 18px;
             font-weight: 700;
-            color: root.fade(n.mark == 0 ? Theme.on-accent : n.mark == 4 ? Theme.ink : Theme.field, n.lit);
+            color: root.fade(n.mark == 0 ? Look.on-accent : n.mark == 4 ? Theme.ink : Theme.well, n.lit);
         }
     }
 
@@ -177,12 +178,12 @@ export component Neck inherits Rectangle {
 
 component Key inherits HorizontalLayout {
     in property <string> text;
-    spacing: 8px;
+    spacing: Theme.sp2;
     @children
     Text {
         text: root.text;
         vertical-alignment: center;
-        font-size: Theme.min-font;
+        font-size: Theme.fs-body;
         font-weight: 500;
         color: Theme.ink-2;
     }
@@ -243,7 +244,7 @@ export component RingLegend inherits HorizontalLayout {
             width: 20px;
             height: 20px;
             border-radius: 10px;
-            border-width: Theme.track;
+            border-width: Look.track;
             border-color: Theme.ok;
         }
     }
@@ -253,7 +254,7 @@ export component RingLegend inherits HorizontalLayout {
             width: 20px;
             height: 20px;
             border-radius: 10px;
-            border-width: Theme.track;
+            border-width: Look.track;
             border-color: Theme.bad;
         }
     }

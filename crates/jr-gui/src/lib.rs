@@ -13,6 +13,7 @@ pub mod ui {
 }
 pub mod view;
 
+pub use jovee_theme::ThemeId;
 use ui::AppWindow;
 
 /// One chord of a song: its name as the song writes it, the notes sounding and the fret the hand
@@ -93,9 +94,10 @@ impl Ruler {
         &self.window
     }
 
-    /// The scheme the ruler is drawn in; a host passes its own so the ruler matches it.
-    pub fn set_theme(&self, mode: ui::ThemeMode) {
-        self.window.global::<ui::Theme>().set_mode(mode);
+    /// The look the ruler is drawn in. A host passes its own when it opens the ruler and again when the
+    /// user switches; the change shows at once.
+    pub fn set_theme(&self, look: ThemeId) {
+        self.window.global::<ui::Theme>().set_index(look.index());
     }
 
     /// Turns the wheel and the scale to a major key.

@@ -12,6 +12,7 @@ name = "jovee-ruler"
 path = "src/main.rs"
 
 [dependencies]
+jovee-theme.workspace = true
 jr-core.workspace = true
 slint.workspace = true
 
@@ -24,4 +25,5 @@ slint = { workspace = true, features = ["renderer-software"] }
 i-slint-backend-testing.workspace = true
 
 [build-dependencies]
+jovee-theme.workspace = true
 slint-build.workspace = true

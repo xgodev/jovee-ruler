@@ -1,6 +1,7 @@
 // The ruler inside JoVee Jam: the host sends the key of the song and the notes sounding now, and this
 // shows which chord of the field it is, what it does, and how its notes sit on the pentatonic.
-import { Theme, Function, Label, Panel, Pill } from "theme.slint";
+import { Theme } from "@jovee-theme/theme.slint";
+import { Look, Function, Label, LitText, Panel, Pill, Well } from "theme.slint";
 import { FieldCells, ChordCard } from "field.slint";
 import { Neck, NoteMark, RingLegend } from "neck.slint";
 
@@ -27,31 +28,34 @@ export component JamView inherits VerticalLayout {
     in property <int> window-last;
     callback seek(int);
 
-    spacing: Theme.sp-m;
+    spacing: Theme.sp4;
 
     // the chords of the song, the one sounding in the accent
-    Rectangle {
+    Well {
         height: 56px;
-        border-radius: Theme.radius;
-        border-width: Theme.line;
-        border-color: Theme.field-line;
-        background: Theme.panel;
+        classic: Theme.surf-hi;
         clip: true;
         HorizontalLayout {
-            padding: Theme.line;
+            padding: Look.hair;
             for name[i] in root.timeline: chord := Rectangle {
+                private property <bool> on: i == root.now;
                 horizontal-stretch: 1;
-                background: i == root.now ? Theme.accent : touch.has-hover ? Theme.hover : transparent;
+                background: !self.on ? (touch.has-hover ? Look.hover : transparent)
+                    : Theme.is-rack ? Look.display : Theme.accent;
+                border-width: self.on && Theme.is-rack ? Look.hair : 0;
+                border-color: Look.display-edge;
                 if i > 0: Rectangle {
                     x: 0;
-                    width: Theme.line;
-                    background: Theme.hair;
+                    width: Look.hair;
+                    background: Theme.line-soft;
                 }
-                Text {
+                LitText {
                     text: name;
                     font-size: 24px;
                     font-weight: 700;
-                    color: i == root.now ? Theme.on-accent : i < root.now ? Theme.ink-3 : Theme.ink;
+                    ink: !chord.on ? (i < root.now ? Theme.ink-3 : Theme.ink)
+                        : Theme.is-rack ? Theme.accent : Look.on-accent;
+                    lit: chord.on && Theme.is-rack;
                 }
                 touch := TouchArea {
                     clicked => { root.seek(i); }
@@ -65,16 +69,18 @@ export component JamView inherits VerticalLayout {
     }
 
     HorizontalLayout {
-        spacing: Theme.sp-m;
+        spacing: Theme.sp4;
         Rectangle {
             width: 300px;
-            border-radius: Theme.radius;
-            background: Theme.accent-soft;
-            border-width: Theme.mark;
-            border-color: Theme.accent;
+            border-radius: Theme.is-rack ? Theme.radius : Theme.radius-card;
+            background: Theme.is-rack ? Theme.well : Look.accent-soft;
+            border-width: Theme.is-rack ? Look.hair : Look.chosen;
+            border-color: Theme.is-rack ? Colors.black : Theme.accent;
+            drop-shadow-blur: Theme.is-neon ? Look.halo : 0;
+            drop-shadow-color: Look.halo-color;
             VerticalLayout {
-                padding-top: Theme.sp-m;
-                padding-bottom: 16px;
+                padding-top: 14px;
+                padding-bottom: Theme.sp4;
                 padding-left: 18px;
                 padding-right: 18px;
                 spacing: 6px;
@@ -84,13 +90,14 @@ export component JamView inherits VerticalLayout {
                     color: Theme.accent;
                 }
                 HorizontalLayout {
-                    spacing: 16px;
+                    spacing: Theme.sp4;
                     alignment: start;
-                    Text {
+                    LitText {
                         text: root.moment.chord;
                         font-size: 72px;
                         font-weight: 700;
-                        color: Theme.ink;
+                        ink: Theme.is-rack ? Theme.accent : Theme.ink;
+                        lit: Theme.is-rack;
                     }
                     VerticalLayout {
                         alignment: end;
@@ -100,7 +107,7 @@ export component JamView inherits VerticalLayout {
                             if root.moment.accidental != "": Text {
                                 text: root.moment.accidental;
                                 vertical-alignment: bottom;
-                                font-size: 48px;
+                                font-size: 40px;
                                 font-weight: 600;
                                 color: Theme.ink-2;
                             }
@@ -121,6 +128,7 @@ export component JamView inherits VerticalLayout {
                         text: Function.name(root.moment.function);
                         ink: Function.ink(root.moment.function);
                         tint: Function.soft(root.moment.function);
+                        edge: root.moment.function < 0 ? Theme.line : transparent;
                     }
                 }
             }
@@ -128,24 +136,24 @@ export component JamView inherits VerticalLayout {
         Panel {
             horizontal-stretch: 1;
             VerticalLayout {
-                padding-top: Theme.sp-m;
-                padding-bottom: 16px;
-                padding-left: 16px;
-                padding-right: 16px;
-                spacing: 12px;
-                Label { text: root.moment.field-title; }
+                padding-top: 12px;
+                padding-bottom: 18px;
+                padding-left: Theme.is-rack ? 28px : Theme.sp4;
+                padding-right: Theme.is-rack ? 28px : Theme.sp4;
+                spacing: 10px;
+                Label { text: root.moment.field-title.to-uppercase(); }
                 FieldCells {
                     chords: root.field;
                     lit: root.moment.lit;
                     compact: true;
                 }
                 HorizontalLayout {
-                    spacing: Theme.sp-m;
+                    spacing: Theme.sp4;
                     alignment: start;
                     Text {
                         text: root.moment.shape;
                         vertical-alignment: center;
-                        font-size: Theme.min-font;
+                        font-size: Theme.fs-body;
                         font-weight: 600;
                         color: Theme.ink;
                     }
@@ -153,22 +161,21 @@ export component JamView inherits VerticalLayout {
                         text: root.moment.outside-count == 0 ? @tr("todas as notas do acorde estão nela")
                             : root.moment.outside-count == 1 ? @tr("{} do acorde fica fora", root.moment.outside)
                             : @tr("{} do acorde ficam fora", root.moment.outside);
-                        ink: root.moment.outside-count == 0 ? Theme.ok-ink : Theme.bad-ink;
-                        tint: root.moment.outside-count == 0 ? Theme.ok-soft : Theme.bad-soft;
+                        ink: Function.ink(root.moment.outside-count == 0 ? 0 : 2);
+                        tint: Function.soft(root.moment.outside-count == 0 ? 0 : 2);
                     }
                 }
             }
         }
     }
 
-    Rectangle {
+    Well {
         vertical-stretch: 1;
-        border-radius: Theme.radius;
-        background: Theme.field;
-        border-width: Theme.line;
-        border-color: Theme.hair;
         VerticalLayout {
-            padding: Theme.sp-s;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 6px;
+            padding-bottom: 6px;
             alignment: center;
             Neck {
                 notes: root.notes;

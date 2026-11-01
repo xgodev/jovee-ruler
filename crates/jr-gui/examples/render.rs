@@ -1,17 +1,16 @@
 //! The real window, filled by the real `Ruler`, drawn by Slint's software renderer to one PNG per page
-//! and scheme (`field-light.png`, `field-dark.png`, …):
+//! and look (`field-neon.png`, `field-rack.png`, `field-classic.png`, …):
 //! `cargo run -p jr-gui --example render -- <out dir> [page…]`.
 
 use std::path::Path;
 use std::rc::Rc;
 
 use jr_core::note::{fifths, parse};
-use jr_gui::ui::ThemeMode;
-use jr_gui::{Ruler, Song, SongChord};
+use jr_gui::{Ruler, Song, SongChord, ThemeId};
 use resvg::tiny_skia::Pixmap;
-use slint::platform::software_renderer::{MinimalSoftwareWindow, RepaintBufferType, Rgb565Pixel};
+use slint::platform::software_renderer::{MinimalSoftwareWindow, RepaintBufferType};
 use slint::platform::{Platform, PlatformError, WindowAdapter};
-use slint::{ComponentHandle, PhysicalSize};
+use slint::{ComponentHandle, PhysicalSize, Rgb8Pixel};
 
 const PAGES: [&str; 5] = ["field", "field-g", "scale", "jam", "jam-borrowed"];
 const SIZE: (u32, u32) = (1280, 860);
@@ -26,7 +25,7 @@ impl Platform for Headless {
 
 fn save(window: &MinimalSoftwareWindow, out: &Path) {
     let (w, h) = SIZE;
-    let mut buffer = vec![Rgb565Pixel(0); (w * h) as usize];
+    let mut buffer = vec![Rgb8Pixel { r: 0, g: 0, b: 0 }; (w * h) as usize];
     for _ in 0..3 {
         slint::platform::update_timers_and_animations();
         window.request_redraw();
@@ -36,8 +35,7 @@ fn save(window: &MinimalSoftwareWindow, out: &Path) {
     }
     let mut pixmap = Pixmap::new(w, h).unwrap();
     for (px, rgba) in buffer.iter().zip(pixmap.data_mut().chunks_exact_mut(4)) {
-        let (r, g, b) = ((px.0 >> 11) & 0x1f, (px.0 >> 5) & 0x3f, px.0 & 0x1f);
-        rgba.copy_from_slice(&[(r * 255 / 31) as u8, (g * 255 / 63) as u8, (b * 255 / 31) as u8, 255]);
+        rgba.copy_from_slice(&[px.r, px.g, px.b, 255]);
     }
     std::fs::write(out, pixmap.encode_png().unwrap()).unwrap();
     eprintln!("{}", out.display());
@@ -71,11 +69,9 @@ fn main() {
     std::fs::create_dir_all(&out).unwrap();
     let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
     slint::platform::set_platform(Box::new(Headless(window.clone()))).unwrap();
-    for (page, (scheme, mode)) in
-        pages.iter().flat_map(|p| [("light", ThemeMode::Light), ("dark", ThemeMode::Dark)].map(|m| (*p, m)))
-    {
+    for (page, look) in pages.iter().flat_map(|p| ThemeId::ALL.map(|look| (*p, look))) {
         let ruler = Ruler::new().unwrap();
-        ruler.set_theme(mode);
+        ruler.set_theme(look);
         ruler.window().show().unwrap();
         window.set_size(PhysicalSize::new(SIZE.0, SIZE.1));
         let g = fifths().iter().position(|&k| k == parse("G").unwrap()).unwrap() as i32;
@@ -96,7 +92,7 @@ fn main() {
             }
             other => panic!("no page {other}"),
         }
-        save(&window, &out.join(format!("{page}-{scheme}.png")));
+        save(&window, &out.join(format!("{page}-{}.png", look.name())));
         ruler.window().hide().unwrap();
     }
 }

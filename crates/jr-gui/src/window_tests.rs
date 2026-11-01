@@ -32,6 +32,16 @@ fn picking_a_shape_fades_the_rest_of_the_neck() {
     assert!(notes.iter().filter(|m| m.lit).all(|m| (3..=5).contains(&m.fret)));
 }
 
+#[test]
+fn the_host_picks_any_of_the_three_looks() {
+    init();
+    let r = Ruler::new().unwrap();
+    for look in ThemeId::ALL {
+        r.set_theme(look);
+        assert_eq!(r.window().global::<ui::Theme>().get_index(), look.index());
+    }
+}
+
 fn song() -> Song {
     let chord = |name: &str, notes: &str| SongChord {
         name: name.into(),

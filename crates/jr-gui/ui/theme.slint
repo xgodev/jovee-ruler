@@ -1,79 +1,24 @@
-// JoVee Rig's design tokens (OpenRig crates/adapter-gui-ui/ui/theme.slint, release v0.9.0), the ones the
-// ruler draws with, so it looks native inside the Rig: a dark chrome bar in both schemes, flat surfaces
-// with 1px hairlines, one orange accent for what is chosen, ok/warn/bad for state. Barlow for text,
-// Bebas Neue for titles and labels, JetBrains Mono for numbers; no text under 18px.
-import { Palette as SystemPalette } from "std-widgets.slint";
-import "fonts/Barlow/Barlow-Regular.ttf";
-import "fonts/Barlow/Barlow-Medium.ttf";
-import "fonts/Barlow/Barlow-SemiBold.ttf";
-import "fonts/Barlow/Barlow-Bold.ttf";
-import "fonts/BebasNeue/BebasNeue-Regular.ttf";
-import "fonts/JetBrainsMono/JetBrainsMono-Medium.ttf";
+// What the ruler adds to the JoVee looks (`@jovee-theme`, picked by `Theme.index`): the tints it derives
+// from their tokens, the colours of a chord's function, and the few controls it draws. One layout for
+// the three looks; what only one look draws (Rack screws and displays, Neon outlines) asks `Theme.is-*`.
+import { Theme } from "@jovee-theme/theme.slint";
 
-// `system` follows the operating system; a host sets the scheme it is drawn in.
-export enum ThemeMode { system, light, dark }
-
-export global Theme {
-    in property <ThemeMode> mode: ThemeMode.system;
-    out property <bool> dark: root.mode == ThemeMode.dark
-        || (root.mode == ThemeMode.system && SystemPalette.color-scheme != ColorScheme.light);
-
-    out property <length> min-font: 18px;
-
-    // the tool-window bar, dark in both schemes
-    out property <color> chrome: dark ? #12161c : #1a2029;
-    out property <color> chrome-line: dark ? #07090c : #10151b;
-    out property <color> chrome-fg: #e2e7ee;
-    out property <color> chrome-fg-2: #8b96a5;
-
-    out property <color> page: dark ? #0b0e12 : #dde2e8;
-    out property <color> panel: dark ? #232a33 : #e4e8ee;
-    out property <color> panel-hi: dark ? #2a323c : #eef1f5;
-    out property <color> panel-lo: dark ? #1d232b : #d6dce4;
-    out property <color> well: dark ? #161b21 : #cdd4dd;
-    out property <color> field: dark ? #11151a : #fbfcfd;
-
-    out property <color> hair: dark ? #2d343e : #cdd3db;
-    out property <color> hair-2: dark ? #262c35 : #dbe0e6;
-    out property <color> field-line: dark ? #353e49 : #c0c7d0;
-
-    out property <color> ink: dark ? #e8ecf1 : #18202b;
-    out property <color> ink-2: dark ? #aab3bf : #465262;
-    out property <color> ink-3: dark ? #7a8592 : #75808f;
-    out property <color> hover: dark ? #ffffff0d : #0000000a;
-
-    out property <color> accent: #f28c1e;
-    out property <color> accent-soft: #f28c1e24;
-    out property <color> on-accent: #1a1206;
-    out property <color> ok: #2f9a55;
-    out property <color> warn: #d9b43a;
-    out property <color> bad: #c8443e;
-    out property <color> ok-soft: #2f9a552e;
-    out property <color> warn-soft: #d9b43a2e;
-    out property <color> bad-soft: #c8443e2e;
-    // the state colours as text: darker on the light scheme, the chrome inks on the dark one
-    out property <color> ok-ink: dark ? #7fdc9c : #23784a;
-    out property <color> warn-ink: dark ? #f2d36b : #7d6210;
-    out property <color> bad-ink: dark ? #ff8a7a : #a8352f;
-
-    // the two degree tags of the printed wheel: white = the major key, black = the relative minor
-    out property <color> tag-hi: dark ? #e8ecf1 : #fbfcfd;
-    out property <color> tag-hi-ink: dark ? #0b0e12 : #18202b;
-
-    out property <string> sans: "Barlow";
-    out property <string> display: "Bebas Neue";
-    out property <string> mono: "JetBrains Mono";
-
-    out property <length> line: 1px;
+export global Look {
+    out property <color> on-accent: Theme.well-2;
+    out property <color> accent-soft: Theme.accent.with-alpha(0.14);
+    out property <color> hover: Theme.ink.with-alpha(0.05);
+    // Rack's amber display: a dark well with the accent barely in it, and its edge
+    out property <color> display: Theme.accent.mix(Theme.well, 0.06);
+    out property <color> display-edge: Theme.accent.mix(Theme.well, 0.25);
+    // the outline of what is chosen, thinner where it glows
+    out property <length> chosen: Theme.is-classic ? 2px : Theme.is-neon ? 1.5px : 1px;
+    // the blur and colour of that glow
+    out property <length> halo: Theme.is-neon ? 18px : Theme.is-rack ? 12px : 0px;
+    out property <color> halo-color: Theme.is-classic ? transparent : Theme.accent.with-alpha(0.45);
+    // hairlines and the thicker marks
+    out property <length> hair: 1px;
     out property <length> mark: 2px;
     out property <length> track: 3px;
-    out property <length> radius: 4px;
-    out property <length> radius-sm: 3px;
-
-    out property <length> sp-s: 10px;
-    out property <length> sp-m: 14px;
-    out property <length> sp-l: 20px;
-    out property <length> sp-xl: 28px;
 }
 
 // What a chord does in the key, as the printed wheel colours it: 0 rest, 1 transition, 2 tension;
@@ -86,15 +31,13 @@ export global Function {
         return Theme.ink-3;
     }
     public pure function soft(f: int) -> color {
-        if f == 0 { return Theme.ok-soft; }
-        if f == 1 { return Theme.warn-soft; }
-        if f == 2 { return Theme.bad-soft; }
-        return Theme.panel-lo;
+        if f == 0 || f == 1 || f == 2 { return Function.color(f).with-alpha(0.16); }
+        return Theme.well;
     }
     public pure function ink(f: int) -> color {
-        if f == 0 { return Theme.ok-ink; }
-        if f == 1 { return Theme.warn-ink; }
-        if f == 2 { return Theme.bad-ink; }
+        if f == 0 { return Theme.ok.mix(Colors.white, 0.55); }
+        if f == 1 { return Theme.warn.mix(Colors.white, 0.65); }
+        if f == 2 { return Theme.bad.mix(Colors.white, 0.55); }
         return Theme.ink-2;
     }
     public pure function name(f: int) -> string {
@@ -105,23 +48,94 @@ export global Function {
     }
 }
 
-// A Bebas label, as the Rig captions its panels.
+// A caption: uppercase Barlow, as JoVee captions a panel.
 export component Label inherits Text {
-    font-family: Theme.display;
-    font-size: 20px;
-    letter-spacing: 2.8px;
+    font-family: Theme.sans;
+    font-size: Theme.fs-body;
+    font-weight: 600;
+    letter-spacing: 1.6px;
     color: Theme.ink-3;
 }
 
-// A raised panel on the well: flat, a 1px hairline.
-export component Panel inherits Rectangle {
-    background: Theme.panel;
-    border-radius: Theme.radius;
-    border-width: Theme.line;
-    border-color: Theme.hair;
+// Text that can light up like an amber display. Slint has no text shadow, so the halo is the same text
+// repeated faintly around it.
+export component LitText inherits Rectangle {
+    in property <string> text;
+    in property <length> font-size;
+    in property <int> font-weight;
+    in property <color> ink;
+    in property <bool> lit;
+
+    preferred-width: main.preferred-width;
+    preferred-height: main.preferred-height;
+
+    if root.lit: Rectangle {
+        for o in [
+            { dx: -2px, dy: 0px }, { dx: 2px, dy: 0px }, { dx: 0px, dy: -2px }, { dx: 0px, dy: 2px },
+            { dx: -1px, dy: -1px }, { dx: 1px, dy: -1px }, { dx: -1px, dy: 1px }, { dx: 1px, dy: 1px },
+        ]: Text {
+            x: (root.width - self.width) / 2 + o.dx;
+            y: (root.height - self.height) / 2 + o.dy;
+            text: root.text;
+            font-size: root.font-size;
+            font-weight: root.font-weight;
+            color: root.ink.with-alpha(0.14);
+        }
+    }
+    main := Text {
+        text: root.text;
+        font-size: root.font-size;
+        font-weight: root.font-weight;
+        color: root.ink;
+    }
 }
 
-// A short fixed set of choices, one on: the Rig's segmented control.
+// A Rack panel's screw.
+component Screw inherits Rectangle {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: Theme.g-top;
+    border-width: Look.hair;
+    border-color: Colors.black;
+}
+
+// A card: flat slate (Classic), an outline in the dark (Neon), a metal panel with screws (Rack).
+export component Panel inherits Rectangle {
+    background: Theme.is-rack ? Theme.window-bg : Theme.is-neon ? Theme.ink.with-alpha(0.02) : Theme.surf-hi;
+    border-radius: Theme.is-rack ? Theme.radius : Theme.radius-card;
+    border-width: Look.hair;
+    border-color: Theme.is-rack ? Colors.black : Theme.is-neon ? Theme.line : Theme.line-soft;
+
+    if Theme.is-rack: Rectangle {
+        Screw { x: 7px; y: 7px; }
+        Screw { x: parent.width - 15px; y: 7px; }
+        Screw { x: 7px; y: parent.height - 15px; }
+        Screw { x: parent.width - 15px; y: parent.height - 15px; }
+    }
+    @children
+}
+
+// What sits sunk into the panel: the neck, the song's chords. On Rack it is a recess, darker at the top.
+export component Well inherits Rectangle {
+    in property <color> classic: Theme.well;
+    background: Theme.is-rack ? Theme.well : Theme.is-neon ? Theme.ink.with-alpha(0.02) : root.classic;
+    border-radius: Theme.is-rack ? Theme.radius : Theme.radius-card;
+    border-width: Look.hair;
+    border-color: Theme.is-rack ? Colors.black : Theme.line;
+
+    @children
+    if Theme.is-rack: Rectangle {
+        y: 1px;
+        x: 1px;
+        width: parent.width - 2px;
+        height: 10px;
+        border-radius: Theme.radius;
+        background: @linear-gradient(180deg, Colors.black.with-alpha(0.7) 0%, Colors.black.with-alpha(0) 100%);
+    }
+}
+
+// A short fixed set of choices, one on: JoVee's rounded segmented control.
 export struct Segment {
     label: string,
     mono: bool,   // a number, drawn in the mono face
@@ -132,36 +146,38 @@ export component SegControl inherits Rectangle {
     in property <int> selected;
     callback picked(int);
 
-    height: 36px;
-    border-radius: Theme.radius-sm;
-    border-width: Theme.line;
-    border-color: Theme.field-line;
-    background: Theme.panel;
-    clip: true;
+    height: 34px;
+    border-radius: 17px;
+    border-width: Look.hair;
+    border-color: Theme.is-rack ? Colors.black : Theme.line;
+    background: Theme.well-2;
 
     HorizontalLayout {
-        padding: Theme.line;
+        padding: 3px;
         for s[i] in root.items: seg := Rectangle {
             private property <bool> on: i == root.selected;
             min-width: s.mono ? 44px : 0;
-            background: self.on ? Theme.accent : touch.has-hover ? Theme.hover : transparent;
+            border-radius: 14px;
+            background: !self.on ? (touch.has-hover ? Look.hover : transparent)
+                : Theme.is-neon ? Theme.accent.with-alpha(0.1)
+                : Theme.is-rack ? Look.display : Theme.g-bot;
+            border-width: self.on && !Theme.is-classic ? Look.chosen : 0;
+            border-color: Theme.is-rack ? Look.display-edge : Theme.accent;
+            drop-shadow-blur: self.on && Theme.is-neon ? 12px : 0;
+            drop-shadow-color: Look.halo-color;
             HorizontalLayout {
                 padding-left: 14px;
                 padding-right: 14px;
-                label := Text {
-                    text: s.label;
+                Text {
+                    text: s.label.to-uppercase();
                     vertical-alignment: center;
                     horizontal-alignment: center;
                     font-family: s.mono ? Theme.mono : Theme.sans;
-                    font-size: Theme.min-font;
+                    font-size: Theme.fs-body;
                     font-weight: s.mono ? 500 : 600;
-                    color: seg.on ? Theme.on-accent : Theme.ink;
+                    letter-spacing: s.mono ? 0 : 1px;
+                    color: !seg.on ? Theme.ink-3 : Theme.is-classic ? Theme.ink : Theme.accent;
                 }
-            }
-            if i > 0: Rectangle {
-                x: 0;
-                width: Theme.line;
-                background: Theme.hair;
             }
             touch := TouchArea {
                 clicked => { root.picked(i); }
@@ -179,10 +195,13 @@ export component Pill inherits Rectangle {
     in property <string> text;
     in property <color> ink;
     in property <color> tint;
+    in property <color> edge: transparent;
     height: 32px;
     width: row.preferred-width;
-    border-radius: Theme.radius-sm;
+    border-radius: 16px;
     background: root.tint;
+    border-width: Look.hair;
+    border-color: root.edge;
     row := HorizontalLayout {
         padding-left: 12px;
         padding-right: 12px;
@@ -200,7 +219,7 @@ export component Pill inherits Rectangle {
         Text {
             text: root.text;
             vertical-alignment: center;
-            font-size: Theme.min-font;
+            font-size: Theme.fs-body;
             font-weight: 600;
             color: root.ink;
         }
