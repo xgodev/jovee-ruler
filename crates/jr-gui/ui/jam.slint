@@ -82,6 +82,13 @@ export component JamView inherits VerticalLayout {
             border-color: Theme.is-rack ? Colors.black : Theme.accent;
             drop-shadow-blur: Theme.is-neon ? Look.halo : 0;
             drop-shadow-color: Look.halo-color;
+            // the name at its largest, never shown: how wide it is says how much it must shrink to fit
+            chord-at-full := Text {
+                text: root.moment.chord;
+                font-size: 72px;
+                font-weight: 700;
+                color: transparent;
+            }
             VerticalLayout {
                 padding-top: 14px;
                 padding-bottom: Theme.sp4;
@@ -100,10 +107,9 @@ export component JamView inherits VerticalLayout {
                         // the height of the largest size: a long name must not move what is under it
                         height: 86px;
                         text: root.moment.chord;
-                        // the card is narrow, and a song can write "F#m7(onC#)"
-                        font-size: self.text.character-count <= 4 ? 72px
-                            : self.text.character-count <= 5 ? 56px
-                            : self.text.character-count <= 7 ? 40px : 30px;
+                        // the card is narrow, and a song can write "F#m7(onC#)": the name takes what the
+                        // degree leaves on the 264px inside the card, with 2px to spare for rounding
+                        font-size: min(72px, (264px - 2px - Theme.sp4 - degree.preferred-width) / chord-at-full.preferred-width * 72px);
                         font-weight: 700;
                         ink: Theme.is-rack ? Theme.accent : Theme.ink;
                         lit: Theme.is-rack;
@@ -111,7 +117,7 @@ export component JamView inherits VerticalLayout {
                     VerticalLayout {
                         alignment: end;
                         padding-bottom: 6px;
-                        HorizontalLayout {
+                        degree := HorizontalLayout {
                             alignment: start;
                             if root.moment.accidental != "": Text {
                                 text: root.moment.accidental;

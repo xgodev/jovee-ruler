@@ -105,6 +105,18 @@ fn main() {
                 ruler.follow_song(long_song());
                 ruler.at(97); // the longest name of the song
             }
+            // the "Agora" card at its tightest, a wide name next to the widest degree: one per step of the name's size
+            tight if tight.starts_with("tight-") => {
+                ruler.follow_song(Song {
+                    title: "Nome e grau".into(),
+                    key: parse("G").unwrap(),
+                    chords: vec![SongChord {
+                        name: tight["tight-".len()..].into(),
+                        notes: ["F", "A", "C"].iter().map(|n| parse(n).unwrap()).collect(),
+                        fret: 3.0,
+                    }],
+                });
+            }
             other => panic!("no page {other}"),
         }
         save(&window, &out.join(format!("{page}-{}.png", look.name())));
