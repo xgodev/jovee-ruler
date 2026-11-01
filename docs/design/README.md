@@ -73,7 +73,7 @@ same in the standalone app (where the user types the key and plays the notes) an
 - `crates/jr-core`: the theory, with its tests.
 - `crates/jr-gui`: the Slint screens, `Ruler` (the window plus the code that fills it, which a host
   embeds) and the `jovee-ruler` binary, the standalone app. A host follows a song with
-  `Ruler::follow_song` and moves it on with `Ruler::at`.
+  `Ruler::follow_song`, moves it on with `Ruler::at`, and hears a click on a chord through `Ruler::on_seek`.
 - `harmonic-field/`, `scale/`: the printed pieces, as today.
 
 Where the mockup and the printed art disagree, the screens follow the printed art: roman numerals

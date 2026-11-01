@@ -38,6 +38,7 @@ struct State {
     shape: usize,
     song: Option<Song>,
     now: usize,
+    on_seek: Option<Rc<dyn Fn(usize)>>,
 }
 
 pub struct Ruler {
@@ -72,9 +73,15 @@ impl Ruler {
         });
         let (w, s) = (window.as_weak(), state.clone());
         window.on_seek(move |i| {
-            s.borrow_mut().now = i.max(0) as usize;
+            let index = i.max(0) as usize;
+            s.borrow_mut().now = index;
             if let Some(w) = w.upgrade() {
                 show_song(&w, &s.borrow());
+            }
+            // Taken out of the state first: the host may answer by calling back into the ruler.
+            let host = s.borrow().on_seek.clone();
+            if let Some(host) = host {
+                host(index);
             }
         });
 
@@ -109,6 +116,12 @@ impl Ruler {
         show_key(&self.window, &s);
         show_song(&self.window, &s);
         self.window.set_page(2);
+    }
+
+    /// The user clicked chord `index` of the song: the ruler already shows it, and the host takes the
+    /// song there. A closure that keeps the `Ruler` should hold it weakly, since the ruler keeps the closure.
+    pub fn on_seek(&self, host: impl Fn(usize) + 'static) {
+        self.state.borrow_mut().on_seek = Some(Rc::new(host));
     }
 
     /// The song moved on to chord `index`.

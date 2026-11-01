@@ -32,20 +32,50 @@ fn picking_a_shape_fades_the_rest_of_the_neck() {
     assert!(notes.iter().filter(|m| m.lit).all(|m| (3..=5).contains(&m.fret)));
 }
 
-#[test]
-fn a_song_opens_on_its_page_and_follows_the_chords() {
-    init();
-    let r = Ruler::new().unwrap();
+fn song() -> Song {
     let chord = |name: &str, notes: &str| SongChord {
         name: name.into(),
         notes: notes.split_whitespace().map(|n| parse(n).unwrap()).collect(),
         fret: 3.0,
     };
-    r.follow_song(Song {
+    Song {
         title: "Exemplo".into(),
         key: parse("G").unwrap(),
         chords: vec![chord("G", "G B D"), chord("C", "C E G"), chord("F", "F A C")],
-    });
+    }
+}
+
+#[test]
+fn clicking_a_chord_tells_the_host_which_one() {
+    init();
+    let r = Ruler::new().unwrap();
+    r.follow_song(song());
+    let heard = Rc::new(RefCell::new(Vec::new()));
+    let h = heard.clone();
+    r.on_seek(move |i| h.borrow_mut().push(i));
+    r.window().invoke_seek(2);
+    r.window().invoke_seek(0);
+    assert_eq!(*heard.borrow(), [2, 0]);
+    assert_eq!(r.window().get_now(), 0);
+}
+
+#[test]
+fn the_host_can_answer_a_click_by_moving_the_ruler() {
+    init();
+    let r = Rc::new(Ruler::new().unwrap());
+    r.follow_song(song());
+    let host = r.clone();
+    r.on_seek(move |i| host.at(i + 1)); // the song lands on the next chord, not the one clicked
+    r.window().invoke_seek(0);
+    assert_eq!(r.window().get_now(), 1);
+    assert_eq!(r.window().get_moment().roman, "IV");
+}
+
+#[test]
+fn a_song_opens_on_its_page_and_follows_the_chords() {
+    init();
+    let r = Ruler::new().unwrap();
+    r.follow_song(song());
     let w = r.window();
     assert_eq!(w.get_page(), 2);
     assert_eq!(w.get_moment().roman, "I");
