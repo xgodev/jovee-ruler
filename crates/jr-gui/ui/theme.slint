@@ -76,6 +76,8 @@ export component LitText inherits Rectangle {
         ]: Text {
             x: (root.width - self.width) / 2 + o.dx;
             y: (root.height - self.height) / 2 + o.dy;
+            width: min(self.preferred-width, root.width);
+            overflow: elide;
             text: root.text;
             font-size: root.font-size;
             font-weight: root.font-weight;
@@ -83,6 +85,8 @@ export component LitText inherits Rectangle {
         }
     }
     main := Text {
+        width: min(self.preferred-width, root.width);
+        overflow: elide;
         text: root.text;
         font-size: root.font-size;
         font-weight: root.font-weight;

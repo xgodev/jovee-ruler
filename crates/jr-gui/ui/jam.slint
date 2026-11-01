@@ -20,6 +20,7 @@ export struct Moment {
 
 export component JamView inherits VerticalLayout {
     in property <[string]> timeline;
+    in property <int> first;      // the place of `timeline[0]` in the song; `now` and `seek` count from the song's start
     in property <int> now;
     in property <Moment> moment;
     in property <[ChordCard]> field;
@@ -30,7 +31,7 @@ export component JamView inherits VerticalLayout {
 
     spacing: Theme.sp4;
 
-    // the chords of the song, the one sounding in the accent
+    // the chords around the one sounding, which is in the accent
     Well {
         height: 56px;
         classic: Theme.surf-hi;
@@ -38,7 +39,10 @@ export component JamView inherits VerticalLayout {
         HorizontalLayout {
             padding: Look.hair;
             for name[i] in root.timeline: chord := Rectangle {
-                private property <bool> on: i == root.now;
+                private property <int> place: root.first + i;
+                private property <bool> on: self.place == root.now;
+                // all the same width, whatever the names: the strip must not shift as the song moves
+                preferred-width: 64px;
                 horizontal-stretch: 1;
                 background: !self.on ? (touch.has-hover ? Look.hover : transparent)
                     : Theme.is-rack ? Look.display : Theme.accent;
@@ -53,17 +57,17 @@ export component JamView inherits VerticalLayout {
                     text: name;
                     font-size: 24px;
                     font-weight: 700;
-                    ink: !chord.on ? (i < root.now ? Theme.ink-3 : Theme.ink)
+                    ink: !chord.on ? (chord.place < root.now ? Theme.ink-3 : Theme.ink)
                         : Theme.is-rack ? Theme.accent : Look.on-accent;
                     lit: chord.on && Theme.is-rack;
                 }
                 touch := TouchArea {
-                    clicked => { root.seek(i); }
+                    clicked => { root.seek(chord.place); }
                 }
                 accessible-role: button;
                 accessible-label: name;
-                accessible-checked: i == root.now;
-                accessible-action-default => { root.seek(i); }
+                accessible-checked: self.on;
+                accessible-action-default => { root.seek(self.place); }
             }
         }
     }
@@ -93,8 +97,13 @@ export component JamView inherits VerticalLayout {
                     spacing: Theme.sp4;
                     alignment: start;
                     LitText {
+                        // the height of the largest size: a long name must not move what is under it
+                        height: 86px;
                         text: root.moment.chord;
-                        font-size: 72px;
+                        // the card is narrow, and a song can write "F#m7(onC#)"
+                        font-size: self.text.character-count <= 4 ? 72px
+                            : self.text.character-count <= 5 ? 56px
+                            : self.text.character-count <= 7 ? 40px : 30px;
                         font-weight: 700;
                         ink: Theme.is-rack ? Theme.accent : Theme.ink;
                         lit: Theme.is-rack;

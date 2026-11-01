@@ -146,6 +146,17 @@ pub struct JamMoment {
     pub window: Shape,
 }
 
+/// How many chords the song page's strip holds at a readable width.
+const STRIP: usize = 8;
+/// Of those, how many have already gone by: the player needs more of what is coming.
+const STRIP_BEHIND: usize = 3;
+
+/// Which of a song's `len` chords the strip shows while chord `now` sounds. It stays full at both ends.
+pub fn timeline_strip(len: usize, now: usize) -> std::ops::Range<usize> {
+    let first = now.saturating_sub(STRIP_BEHIND).min(len.saturating_sub(STRIP));
+    first..len.min(first + STRIP)
+}
+
 /// The chord sounding (`notes`), in the song's `key`, with the hand around `fret`. `chord` is the
 /// name the song gives it; without one the triad names itself.
 pub fn jam(key: Pc, chord: Option<&str>, notes: &[Pc], fret: f32) -> JamMoment {

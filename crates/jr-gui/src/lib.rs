@@ -157,7 +157,9 @@ fn show_song(w: &AppWindow, s: &State) {
     let Some(chord) = song.chords.get(s.now.min(song.chords.len().saturating_sub(1))) else { return };
     let j = view::jam(song.key, Some(&chord.name), &chord.notes, chord.fret);
     w.set_context(format!("{} · {}", song.title, view::key_title(song.key)).into());
-    w.set_timeline(model(song.chords.iter().map(|c| c.name.clone().into()).collect()));
+    let strip = view::timeline_strip(song.chords.len(), s.now);
+    w.set_timeline_first(strip.start as i32);
+    w.set_timeline(model(song.chords[strip].iter().map(|c| c.name.clone().into()).collect()));
     w.set_now(s.now as i32);
     w.set_moment(j.moment);
     w.set_jam_field(model(j.field));

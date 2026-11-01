@@ -12,7 +12,7 @@ use slint::platform::software_renderer::{MinimalSoftwareWindow, RepaintBufferTyp
 use slint::platform::{Platform, PlatformError, WindowAdapter};
 use slint::{ComponentHandle, PhysicalSize, Rgb8Pixel};
 
-const PAGES: [&str; 5] = ["field", "field-g", "scale", "jam", "jam-borrowed"];
+const PAGES: [&str; 6] = ["field", "field-g", "scale", "jam", "jam-borrowed", "jam-long"];
 const SIZE: (u32, u32) = (1280, 860);
 
 struct Headless(Rc<MinimalSoftwareWindow>);
@@ -62,6 +62,17 @@ fn song() -> Song {
     }
 }
 
+/// A whole song, with the long names a transcription writes: 238 chords.
+fn long_song() -> Song {
+    let names = ["A(onG#)", "E", "E5/B", "F#m", "A(onE)", "D(onF#)", "Dsus4(onA)", "F#m7(onC#)", "C#m7b5"];
+    let chord = |i: usize| SongChord {
+        name: names[i % names.len()].into(),
+        notes: ["A", "C#", "E"].iter().map(|n| parse(n).unwrap()).collect(),
+        fret: 3.0,
+    };
+    Song { title: "Música inteira".into(), key: parse("A").unwrap(), chords: (0..238).map(chord).collect() }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let out = Path::new(args.first().map_or("target/render", String::as_str)).to_path_buf();
@@ -89,6 +100,10 @@ fn main() {
             "jam-borrowed" => {
                 ruler.follow_song(song());
                 ruler.at(4);
+            }
+            "jam-long" => {
+                ruler.follow_song(long_song());
+                ruler.at(97); // the longest name of the song
             }
             other => panic!("no page {other}"),
         }

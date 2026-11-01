@@ -112,8 +112,9 @@ export component AppWindow inherits Window {
     in property <[NoteMark]> scale-notes;
     callback shape-picked(int);
 
-    in property <[string]> timeline;
-    in property <int> now;
+    in property <[string]> timeline;      // the chords on the strip, not the whole song
+    in property <int> timeline-first;     // where they start in the song
+    in property <int> now;                // in the song, as `seek` is
     in property <Moment> moment;
     in property <[ChordCard]> jam-field;
     in property <[NoteMark]> jam-notes;
@@ -243,6 +244,7 @@ export component AppWindow inherits Window {
             if root.page == 2: JamView {
                 vertical-stretch: 1;
                 timeline: root.timeline;
+                first: root.timeline-first;
                 now: root.now;
                 moment: root.moment;
                 field: root.jam-field;

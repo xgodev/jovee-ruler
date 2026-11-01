@@ -75,6 +75,8 @@ same in the standalone app (where the user types the key and plays the notes) an
 - `crates/jr-gui`: the Slint screens, `Ruler` (the window plus the code that fills it, which a host
   embeds) and the `jovee-ruler` binary, the standalone app. A host follows a song with
   `Ruler::follow_song`, moves it on with `Ruler::at`, and hears a click on a chord through `Ruler::on_seek`.
+  The song page's strip shows 8 chords at a time around the one sounding (3 behind); `at` and `on_seek`
+  always count in the whole song.
 - `harmonic-field/`, `scale/`: the printed pieces, as today.
 
 Where the mockup and the printed art disagree, the screens follow the printed art: roman numerals
