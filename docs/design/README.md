@@ -53,6 +53,10 @@ in real time:
 Example: song in G, the tab plays G–B–D, then C–E–G, then D–F#–A: the wheel lights `I`, `IV`, `V`
 in turn, and the neck keeps the G major pentatonic in the shape around the 3rd fret.
 
+Redesign waiting for approval: the ruler opened from a song becomes the neck of one guitar of the song,
+chosen by the player, in its tuning, with the scale, the shape the hand is in and the notes lit as they
+play: [`mockup/neck.html`](mockup/neck.html).
+
 The matching (notes + key → degree, notes + key → pentatonic shape) lives in `jr-core`, so it is the
 same in the standalone app (where the user types the key and plays the notes) and inside Jam.
 
