@@ -1,6 +1,6 @@
 // The JoVee Ruler window, in whichever JoVee look `Theme.index` picks: the header on top, the body under
 // it. Standalone it has two pages, the harmonic field and the scale; a host (JoVee Jam) opens it on the
-// third, the song playing.
+// third, one guitar of the song playing.
 import { Theme } from "@jovee-theme/theme.slint";
 import { Card } from "@jovee-theme/card.slint";
 import { FieldCaption } from "@jovee-theme/field_caption.slint";
@@ -10,10 +10,10 @@ import { Well } from "theme.slint";
 import { Wheel } from "wheel.slint";
 import { FieldCells, FunctionLegend, ChordCard } from "field.slint";
 import { Neck, NoteMark, MarkLegend } from "neck.slint";
-import { JamView, Moment } from "jam.slint";
+import { SongView, NowNote, PhraseChip } from "song.slint";
 
 export { Theme } from "@jovee-theme/theme.slint";
-export { ChordCard, NoteMark, Moment }
+export { ChordCard, NoteMark, NowNote, PhraseChip }
 
 export struct ShapeButton {
     label: string,
@@ -51,15 +51,26 @@ export component AppWindow inherits Window {
     in property <[NoteMark]> scale-notes;
     callback shape-picked(int);
 
-    in property <[string]> timeline;      // the chords on the strip, not the whole song
-    in property <int> timeline-first;     // where they start in the song
-    in property <int> now;                // in the song, as `seek` is
-    in property <Moment> moment;
-    in property <[ChordCard]> jam-field;
-    in property <[NoteMark]> jam-notes;
-    in property <int> jam-first;
-    in property <int> jam-last;
-    callback seek(int);
+    // the song: the guitar followed, the scale and the shape shown, and the notes as they play
+    in property <[string]> guitars;
+    in property <int> guitar;
+    callback guitar-picked(int);
+    in property <int> scale;              // 0 major, 1 pentatonic
+    callback scale-picked(int);
+    in property <[string]> hand-options;
+    in property <int> hand;               // 0 follows the hand, 1-5 a shape, 6 the whole neck
+    callback hand-picked(int);
+    in property <string> tuning;
+    in property <string> song-title;
+    in property <string> song-subtitle;
+    in property <[NoteMark]> song-notes;
+    in property <[string]> open-names;
+    in property <int> song-frets: 15;
+    in property <int> song-first: -1;
+    in property <int> song-last: -1;
+    in property <NowNote> now-note;
+    in property <[PhraseChip]> phrase;
+    callback seek(int);                   // a moment of the song, as `PhraseChip.index` gives it
 
     VerticalLayout {
         WindowHeader {
@@ -198,16 +209,26 @@ export component AppWindow inherits Window {
                 MarkLegend { }
             }
 
-            if root.page == 2: JamView {
+            if root.page == 2: SongView {
                 vertical-stretch: 1;
-                timeline: root.timeline;
-                first: root.timeline-first;
-                now: root.now;
-                moment: root.moment;
-                field: root.jam-field;
-                notes: root.jam-notes;
-                window-first: root.jam-first;
-                window-last: root.jam-last;
+                guitars: root.guitars;
+                guitar: root.guitar;
+                scale: root.scale;
+                tuning: root.tuning;
+                title: root.song-title;
+                subtitle: root.song-subtitle;
+                hand-options: root.hand-options;
+                hand: root.hand;
+                notes: root.song-notes;
+                open-names: root.open-names;
+                frets: root.song-frets;
+                first: root.song-first;
+                last: root.song-last;
+                now: root.now-note;
+                phrase: root.phrase;
+                guitar-picked(i) => { root.guitar-picked(i); }
+                scale-picked(i) => { root.scale-picked(i); }
+                hand-picked(i) => { root.hand-picked(i); }
                 seek(i) => { root.seek(i); }
             }
         }

@@ -2368,7 +2368,7 @@ dependencies = [
 [[package]]
 name = "jovee-theme"
 version = "0.1.0"
-source = "git+ssh://git@github.com/xgodev/jovee-theme.git?branch=main#8d934e106f821e4e4b42c6936caaf649c6d6c91e"
+source = "git+ssh://git@github.com/xgodev/jovee-theme.git?branch=main#cc9209d7c5726d4ea37929023a9f26d60413a118"
 
 [[package]]
 name = "jr-core"

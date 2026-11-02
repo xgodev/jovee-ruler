@@ -10,6 +10,8 @@ export global Look {
     out property <color> on-accent: Theme.well-2;
     out property <color> accent-soft: Theme.accent.with-alpha(0.14);
     out property <color> hover: Theme.ink.with-alpha(0.05);
+    // the name of a note outside the scale, a light red that reads on the dark panels
+    out property <color> outside-ink: Theme.bad.mix(Colors.white, 0.55);
     // Rack's amber display: a dark well with the accent barely in it, and its edge
     out property <color> display: Theme.accent.mix(Theme.well, 0.06);
     out property <color> display-edge: Theme.accent.mix(Theme.well, 0.25);

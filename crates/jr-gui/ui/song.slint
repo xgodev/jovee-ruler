@@ -1,0 +1,376 @@
+// The ruler inside JoVee Jam: one guitar of the song on the neck, in its tuning, with the scale, the shape
+// the hand is in and each note lit as the tab plays it. Under the neck, what sounds now and the phrase
+// around it; a click on the phrase takes the song there.
+import { Theme } from "@jovee-theme/theme.slint";
+import { ElidedText } from "@jovee-theme/elided_text.slint";
+import { FieldCaption } from "@jovee-theme/field_caption.slint";
+import { FieldPill } from "@jovee-theme/field_pill.slint";
+import { Segmented } from "@jovee-theme/segmented.slint";
+import { SelectList } from "@jovee-theme/select_list.slint";
+import { SelectPlacement } from "@jovee-theme/select_placement.slint";
+import { SelectTrigger } from "@jovee-theme/select_trigger.slint";
+import { Look, DotTag, LitText, Well } from "theme.slint";
+import { Dashes, Key, MarkLegend, Neck, NoteMark } from "neck.slint";
+
+export struct NowNote {
+    name: string,      // the note or the chord sounding
+    detail: string,    // where the hand plays it: "corda 2 · casa 3", "acorde · casa 3"
+    outside: bool,     // a note of it is outside the scale on show
+    empty: bool,       // the song has not reached its first note
+}
+
+export struct PhraseChip {
+    name: string,
+    detail: string,    // "corda 2" for a note, "casa 3" for a chord
+    state: int,        // 0 played, 1 sounding, 2 next, 3 later
+    outside: bool,
+    index: int,        // its place in the song, as `seek` takes it
+}
+
+// A caption beside a control, centred on it.
+component Beside inherits VerticalLayout {
+    in property <string> text;
+    horizontal-stretch: 0;
+    alignment: center;
+    FieldCaption { text: root.text; }
+}
+
+// The marks, then the rings a played note wears.
+component SongLegend inherits MarkLegend {
+    short: true;
+    VerticalLayout {
+        alignment: center;
+        Rectangle {
+            width: Look.hair;
+            height: 22px;
+            background: Theme.line;
+        }
+    }
+    Key {
+        text: @tr("tocando agora");
+        Rectangle {
+            width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            border-width: 3.5px;
+            border-color: Theme.accent;
+        }
+    }
+    Key {
+        text: @tr("já tocou");
+        Rectangle {
+            width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            border-width: 2px;
+            border-color: Theme.accent;
+            opacity: 0.5;
+        }
+    }
+    Key {
+        text: @tr("próxima");
+        Path {
+            width: 20px;
+            height: 20px;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            commands: Dashes.circle;
+            stroke: Theme.ink-2;
+            stroke-width: 2px;
+        }
+    }
+    Key {
+        text: @tr("fora da escala");
+        Rectangle {
+            width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            border-width: 3px;
+            border-color: Theme.bad;
+        }
+    }
+}
+
+export component SongView inherits Rectangle {
+    in property <[string]> guitars;
+    in property <int> guitar;
+    in property <int> scale;               // 0 major, 1 pentatonic
+    in property <string> tuning;
+    in property <string> title;
+    in property <string> subtitle;
+    in property <[string]> hand-options;
+    in property <int> hand;
+    in property <[NoteMark]> notes;
+    in property <[string]> open-names;     // lowest first, one per string
+    in property <int> frets: 15;
+    in property <int> first: -1;           // the shape on show; -1 = the whole neck
+    in property <int> last: -1;
+    in property <NowNote> now;
+    in property <[PhraseChip]> phrase;
+    callback guitar-picked(int);
+    callback scale-picked(int);
+    callback hand-picked(int);
+    callback seek(int);
+
+    private property <int> strings: root.open-names.length > 0 ? root.open-names.length : 6;
+    // the neck keeps its height whatever the strings: six of them 64px apart
+    private property <length> sp: 320px / max(1, root.strings - 1);
+    private property <bool> open: false;
+    private property <length> anchor-x;
+    private property <length> anchor-top;
+    private property <length> anchor-bottom;
+    private property <length> anchor-width;
+
+    VerticalLayout {
+        spacing: Theme.sp4;
+
+        HorizontalLayout {
+            spacing: 12px;
+            Beside { text: @tr("Guitarra"); }
+            SelectTrigger {
+                width: 240px;
+                label: @tr("Guitarra");
+                text: root.guitar >= 0 && root.guitar < root.guitars.length ? root.guitars[root.guitar] : "";
+                open: root.open;
+                clicked => {
+                    root.anchor-x = self.absolute-position.x - root.absolute-position.x;
+                    root.anchor-top = self.absolute-position.y - root.absolute-position.y;
+                    root.anchor-bottom = root.anchor-top + self.height;
+                    root.anchor-width = self.width;
+                    root.open = !root.open;
+                }
+            }
+            Rectangle {
+                width: 20px;
+            }
+            Beside { text: @tr("Escala"); }
+            VerticalLayout {
+                horizontal-stretch: 0;
+                alignment: center;
+                Segmented {
+                    label: @tr("Escala");
+                    options: [@tr("Maior"), @tr("Pentatônica")];
+                    current: root.scale;
+                    picked(i) => { root.scale-picked(i); }
+                }
+            }
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+            Beside { text: @tr("Afinação"); }
+            VerticalLayout {
+                horizontal-stretch: 0;
+                alignment: center;
+                FieldPill {
+                    width: tuning.preferred-width + 28px;
+                    height: 34px;
+                    tuning := Text {
+                        x: 14px;
+                        text: root.tuning;
+                        vertical-alignment: center;
+                        font-family: Theme.mono;
+                        font-size: Theme.fs-body;
+                        letter-spacing: 3px;
+                        color: Theme.ink;
+                        accessible-label: @tr("Afinação {}", root.tuning);
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 12px;
+            VerticalLayout {
+                horizontal-stretch: 1;
+                spacing: Theme.sp1;
+                Text {
+                    text: root.title;
+                    font-family: Theme.display;
+                    font-size: 48px;
+                    letter-spacing: 1.4px;
+                    color: Theme.ink;
+                }
+                Text {
+                    text: root.subtitle;
+                    overflow: elide;
+                    font-size: Theme.fs-body;
+                    color: Theme.ink-2;
+                }
+            }
+            Beside { text: @tr("Forma"); }
+            VerticalLayout {
+                horizontal-stretch: 0;
+                alignment: center;
+                Segmented {
+                    label: @tr("Forma");
+                    options: root.hand-options;
+                    current: root.hand;
+                    picked(i) => { root.hand-picked(i); }
+                }
+            }
+        }
+
+        Well {
+            vertical-stretch: 1;
+            VerticalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-top: 6px;
+                padding-bottom: 6px;
+                alignment: center;
+                Neck {
+                    notes: root.notes;
+                    frets: root.frets;
+                    strings: root.strings;
+                    open-names: root.open-names;
+                    window-first: root.first;
+                    window-last: root.last;
+                    sp: root.sp;
+                    // a long neck or many strings make the marks smaller, so they never touch
+                    r: min(22px, root.sp * 0.36, (self.width - 112px) / root.frets * 0.36);
+                }
+            }
+        }
+
+        HorizontalLayout {
+            height: 100px;
+            spacing: Theme.sp4;
+
+            // what sounds now, the name as large as the box lets it be
+            Rectangle {
+                width: 300px;
+                border-radius: Theme.is-rack ? Theme.radius : Theme.radius-card;
+                background: Theme.is-rack ? Theme.well : Look.accent-soft;
+                border-width: Theme.is-rack ? Look.hair : Look.chosen;
+                border-color: Theme.is-rack ? Colors.black : Theme.accent;
+                drop-shadow-blur: Theme.is-neon ? Look.halo : 0;
+                drop-shadow-color: Look.halo-color;
+                // the name at its largest, never shown: how wide it is says how much it must shrink
+                name-at-full := Text {
+                    text: root.now.name;
+                    font-size: 52px;
+                    font-weight: 700;
+                    color: transparent;
+                }
+                VerticalLayout {
+                    padding-top: 10px;
+                    padding-bottom: 10px;
+                    padding-left: 16px;
+                    padding-right: 16px;
+                    ElidedText {
+                        text: @tr("AGORA");
+                        color: Theme.accent;
+                        font-weight: 600;
+                        letter-spacing: 1.6px;
+                    }
+                    HorizontalLayout {
+                        spacing: Theme.sp4;
+                        alignment: start;
+                        LitText {
+                            height: 56px;
+                            text: root.now.empty ? "–" : root.now.name;
+                            // the box is 268px inside: the name takes what the words beside it leave
+                            font-size: max(Theme.fs-body, min(52px, (268px - 2px - Theme.sp4 - where.preferred-width) / max(1px, name-at-full.preferred-width) * 52px));
+                            font-weight: 700;
+                            ink: root.now.empty ? Theme.ink-3 : Theme.is-rack ? Theme.accent : Theme.ink;
+                            lit: Theme.is-rack && !root.now.empty;
+                        }
+                        where := VerticalLayout {
+                            alignment: center;
+                            spacing: 6px;
+                            Text {
+                                text: root.now.empty ? @tr("antes da primeira nota") : root.now.detail;
+                                font-size: Theme.fs-body;
+                                font-weight: 500;
+                                color: Theme.ink-2;
+                            }
+                            if !root.now.empty: DotTag {
+                                text: root.now.outside ? @tr("fora da escala") : @tr("na escala");
+                                dot: root.now.outside ? Theme.bad : Theme.ok;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // the phrase: the notes just played, the one sounding, and what comes
+            Well {
+                horizontal-stretch: 1;
+                classic: Theme.surf-hi;
+                clip: true;
+                HorizontalLayout {
+                    padding: Look.hair;
+                    for c[i] in root.phrase: chip := Rectangle {
+                        private property <bool> on: c.state == 1;
+                        // all the same width, whatever the names: the phrase must not shift as the song moves
+                        preferred-width: 64px;
+                        horizontal-stretch: 1;
+                        background: chip.on ? (Theme.is-rack ? Look.display : Theme.accent)
+                            : touch.has-hover ? Look.hover : transparent;
+                        border-width: chip.on && Theme.is-rack ? Look.hair : c.state == 2 ? 2px : 0;
+                        border-color: chip.on ? Look.display-edge : Theme.line;
+                        drop-shadow-blur: chip.on && Theme.is-neon ? Look.halo : 0;
+                        drop-shadow-color: Look.halo-color;
+                        if i > 0 && !chip.on: Rectangle {
+                            x: 0;
+                            width: Look.hair;
+                            background: Theme.line-soft;
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 6px;
+                            LitText {
+                                text: c.name;
+                                font-size: 28px;
+                                font-weight: 700;
+                                ink: chip.on ? (Theme.is-rack ? Theme.accent : Look.on-accent)
+                                    : c.outside ? Look.outside-ink
+                                    : c.state == 0 ? Theme.ink-3 : Theme.ink;
+                                lit: chip.on && Theme.is-rack;
+                                opacity: c.outside && c.state == 0 ? 0.6 : 1;
+                            }
+                            Text {
+                                text: c.detail;
+                                horizontal-alignment: center;
+                                font-size: Theme.fs-body;
+                                font-weight: 500;
+                                color: chip.on ? (Theme.is-rack ? Theme.ink-2 : Look.on-accent)
+                                    : c.state == 2 ? Theme.ink-2 : Theme.ink-3;
+                            }
+                        }
+                        touch := TouchArea {
+                            clicked => { root.seek(c.index); }
+                        }
+                        accessible-role: button;
+                        accessible-label: "\{c.name}, \{c.detail}";
+                        accessible-checked: chip.on;
+                        accessible-action-default => { root.seek(c.index); }
+                    }
+                }
+            }
+        }
+
+        SongLegend {
+            fourth-and-seventh: root.scale == 0;
+        }
+    }
+
+    // The list of guitars opens over the page; a click anywhere else closes it.
+    if root.open: TouchArea {
+        clicked => { root.open = false; }
+    }
+    if root.open: SelectList {
+        x: SelectPlacement.left(root.anchor-x, root.anchor-width, root.width);
+        y: SelectPlacement.top(root.anchor-top, root.anchor-bottom, self.height, root.height);
+        width: root.anchor-width;
+        available-height: SelectPlacement.height(root.anchor-top, root.anchor-bottom, 44px * root.guitars.length + 12px, root.height);
+        window-width: root.width;
+        window-height: root.height;
+        options: root.guitars;
+        current: root.guitar;
+        picked(i) => {
+            root.open = false;
+            root.guitar-picked(i);
+        }
+    }
+}

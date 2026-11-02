@@ -1,12 +1,53 @@
 use super::*;
+use crate::song::{moments, Song, SongChord, SongNote};
 use jr_core::note::parse;
 
 fn n(s: &str) -> Pc {
     parse(s).unwrap()
 }
 
-fn notes(s: &str) -> Vec<Pc> {
-    s.split_whitespace().map(n).collect()
+const STANDARD_MIDI: [u8; 6] = [64, 59, 55, 50, 45, 40];
+
+/// A note on `string` (1 = highest) at `fret`, in standard tuning, `start` seconds in.
+fn note(start: f64, string: u8, fret: u8) -> SongNote {
+    SongNote { start, end: start + 0.5, string, fret, midi: STANDARD_MIDI[string as usize - 1] + fret }
+}
+
+fn chord(start: f64, frets: &[(u8, u8)]) -> Vec<SongNote> {
+    frets.iter().map(|&(s, f)| note(start, s, f)).collect()
+}
+
+fn song(notes: Vec<SongNote>, chords: &[(f64, &str)]) -> Song {
+    Song {
+        title: "Exemplo em Sol".into(),
+        key: n("G"),
+        tuning: STANDARD_MIDI.to_vec(),
+        guitars: vec!["Base".into(), "Solo".into()],
+        guitar: 1,
+        notes,
+        chords: chords.iter().map(|&(start, name)| SongChord { start, name: name.into() }).collect(),
+    }
+}
+
+/// The lead of the mockup: Bb B on the 3rd string, D E D on the 2nd, B, then G on the 4th.
+fn solo() -> Song {
+    let frets = [(3, 3), (3, 4), (2, 3), (2, 5), (2, 3), (3, 4), (4, 5)];
+    song(frets.iter().enumerate().map(|(i, &(s, f))| note(i as f64, s, f)).collect(), &[])
+}
+
+/// The rhythm of the mockup: G then C, both barred at the 3rd fret.
+fn rhythm() -> Song {
+    let mut notes = chord(0.0, &[(6, 3), (5, 5), (4, 5), (3, 4), (2, 3), (1, 3)]);
+    notes.extend(chord(1.0, &[(5, 3), (4, 5), (3, 5), (2, 5), (1, 3)]));
+    song(notes, &[(0.0, "G"), (1.0, "C")])
+}
+
+fn page(song: &Song, now: Option<usize>, pentatonic: bool, hand: Hand) -> SongPage {
+    song_page(song, &moments(&song.notes), now, pentatonic, hand)
+}
+
+fn at(marks: &[NoteMark], row: i32, fret: i32) -> &NoteMark {
+    marks.iter().find(|m| m.string == row && m.fret == fret).unwrap_or_else(|| panic!("no mark at {row}:{fret}"))
 }
 
 #[test]
@@ -51,56 +92,171 @@ fn shape_buttons_fit_on_the_screen_neck() {
 
 #[test]
 fn the_neck_has_every_scale_note_and_fades_outside_the_shape() {
-    let marks = neck(n("G"), Some((3, 5)), &[]);
+    let marks = neck(n("G"), &STANDARD, FRETS, Some((3, 5)), false, &[]);
     // seven notes out of twelve, on six strings, sixteen positions each
     let expected = (0..6)
         .map(|s| (0..=FRETS).filter(|&f| jr_core::scale(n("G")).contains(&note_at(STANDARD[s], f as u8))).count())
         .sum::<usize>();
     assert_eq!(marks.len(), expected);
-    let tonic = marks.iter().find(|m| m.string == 0 && m.fret == 3).unwrap();
+    let tonic = at(&marks, 0, 3);
     assert_eq!((tonic.name.as_str(), tonic.mark, tonic.lit), ("G", 0, true));
-    let open_e = marks.iter().find(|m| m.string == 0 && m.fret == 0).unwrap();
+    let open_e = at(&marks, 0, 0);
     assert_eq!((open_e.mark, open_e.lit), (1, false));
     assert!(marks.iter().all(|m| m.ring == 0));
 }
 
 #[test]
-fn the_jam_moment_of_the_mockup() {
-    // Song in G, C sounding with the hand at fret 3: IV, transition, shape 1 (3 to 5), C outside.
-    let j = jam(n("G"), Some("C"), &notes("C E G"), 3.0);
-    assert_eq!(j.moment.roman, "IV");
-    assert_eq!(j.moment.function, 1);
-    assert_eq!(j.moment.lit, 3);
-    assert_eq!(j.moment.outside, "C");
-    assert_eq!(j.moment.shape, "Pentatônica de Sol · forma 1 · casas 3 a 5");
-    // C on the 5th string, fret 3: in the shape, outside the pentatonic, red ring.
-    let c = j.notes.iter().find(|m| m.string == 1 && m.fret == 3).unwrap();
-    assert_eq!((c.mark, c.ring), (3, 2));
-    // G on the 6th string, fret 3: the tonic, white ring.
-    let g = j.notes.iter().find(|m| m.string == 0 && m.fret == 3).unwrap();
-    assert_eq!(g.ring, 1);
-    // E on the open 6th: sounding, but outside the shape, so no ring.
-    let e = j.notes.iter().find(|m| m.string == 0 && m.fret == 0).unwrap();
-    assert_eq!(e.ring, 0);
+fn the_neck_follows_the_tuning_and_the_frets_it_is_given() {
+    let drop_d = neck(n("G"), &[2, 9, 2, 7, 11, 4], 19, None, false, &[]);
+    assert_eq!(at(&drop_d, 0, 0).name, "D");
+    assert_eq!(at(&drop_d, 0, 5).mark, 0, "G is two frets higher on a string tuned down");
+    assert!(drop_d.iter().any(|m| m.fret == 19));
+    let seven = neck(n("G"), &[11, 4, 9, 2, 7, 11, 4], FRETS, None, false, &[]);
+    assert_eq!(seven.iter().map(|m| m.string).max(), Some(6));
 }
 
 #[test]
-fn a_borrowed_chord_in_the_jam() {
-    let j = jam(n("G"), Some("F"), &notes("F A C"), 3.0);
-    assert_eq!((j.moment.roman.as_str(), j.moment.function, j.moment.lit), ("♭VII", -1, -1));
-    assert_eq!((j.moment.accidental.as_str(), j.moment.numeral.as_str()), ("♭", "VII"));
-    assert_eq!((j.moment.outside.as_str(), j.moment.outside_count), ("F e C", 2));
-    // F is not in G major: drawn only because it is sounding, as an outside mark with a red ring.
-    let f = j.notes.iter().find(|m| m.string == 1 && m.fret == 8).unwrap();
-    assert_eq!((f.name.as_str(), f.mark, f.lit), ("F", 4, false));
-    let f_in = j.notes.iter().find(|m| m.string == 3 && m.fret == 10);
-    assert!(f_in.is_none() || !f_in.unwrap().lit);
+fn the_pentatonic_hides_the_4th_and_7th_unless_they_are_played() {
+    let marks = neck(n("G"), &STANDARD, FRETS, Some((3, 5)), true, &[]);
+    assert!(marks.iter().all(|m| m.mark != 3));
+    assert!(marks.iter().all(|m| !(m.string == 1 && m.fret == 3)), "C is not in the pentatonic");
+    // played, C shows as outside the scale on show, lit though the shape is elsewhere
+    let played = [Played { row: 1, fret: 15, ring: Ring::Now }];
+    let marks = neck(n("G"), &STANDARD, FRETS, Some((3, 5)), true, &played);
+    let c = at(&marks, 1, 15);
+    assert_eq!((c.name.as_str(), c.mark, c.ring, c.lit), ("C", 4, 1, true));
 }
 
 #[test]
-fn notes_with_no_name_still_show() {
-    let j = jam(n("C"), None, &notes("C D"), 5.0);
-    assert_eq!((j.moment.chord.as_str(), j.moment.roman.as_str()), ("C D", "?"));
-    let j = jam(n("C"), None, &notes("A C E"), 5.0);
-    assert_eq!((j.moment.chord.as_str(), j.moment.roman.as_str()), ("Am", "VI"));
+fn a_note_sounding_now_wins_over_the_one_coming_and_the_one_gone() {
+    let played = [
+        Played { row: 4, fret: 3, ring: Ring::Past },
+        Played { row: 4, fret: 3, ring: Ring::Now },
+        Played { row: 4, fret: 3, ring: Ring::Next },
+        Played { row: 4, fret: 5, ring: Ring::Past },
+        Played { row: 4, fret: 5, ring: Ring::Next },
+    ];
+    let marks = neck(n("G"), &STANDARD, FRETS, None, false, &played);
+    assert_eq!(at(&marks, 4, 3).ring, 1);
+    assert_eq!(at(&marks, 4, 5).ring, 3);
+}
+
+#[test]
+fn the_lead_of_the_mockup() {
+    let p = page(&solo(), Some(2), true, Hand::Follow);
+    assert_eq!(p.title, "Sol maior · pentatônica");
+    assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 3 a 5");
+    assert_eq!(p.tuning, "E A D G B E");
+    assert_eq!(p.open_names, ["E", "A", "D", "G", "B", "E"]);
+    assert_eq!((p.frets, p.window), (FRETS, Some((3, 5))));
+    assert_eq!(
+        (p.now.name.as_str(), p.now.detail.as_str(), p.now.outside, p.now.empty),
+        ("D", "corda 2 · casa 3", false, false)
+    );
+    let chips: Vec<(String, String, i32, bool)> =
+        p.phrase.iter().map(|c| (c.name.to_string(), c.detail.to_string(), c.state, c.outside)).collect();
+    assert_eq!(
+        chips,
+        [
+            // a note outside the key is a lowered degree: the blue third of G
+            ("Bb".into(), "corda 3".into(), 0, true),
+            ("B".into(), "corda 3".into(), 0, false),
+            ("D".into(), "corda 2".into(), 1, false),
+            ("E".into(), "corda 2".into(), 2, false),
+            ("D".into(), "corda 2".into(), 3, false),
+            ("B".into(), "corda 3".into(), 3, false),
+            ("G".into(), "corda 4".into(), 3, false),
+        ]
+    );
+    assert_eq!(p.phrase.iter().map(|c| c.index).collect::<Vec<_>>(), [0, 1, 2, 3, 4, 5, 6]);
+    // the 2nd string is the 5th row from the top
+    assert_eq!(at(&p.notes, 4, 3).ring, 1);
+    assert_eq!(at(&p.notes, 4, 5).ring, 3);
+    let blue = at(&p.notes, 3, 3);
+    assert_eq!((blue.name.as_str(), blue.mark, blue.ring), ("Bb", 4, 2));
+    assert_eq!(at(&p.notes, 3, 4).ring, 2);
+    assert!(p.notes.iter().all(|m| m.mark != 3));
+}
+
+#[test]
+fn the_rhythm_of_the_mockup() {
+    let p = page(&rhythm(), Some(0), false, Hand::Follow);
+    assert_eq!(p.title, "Sol maior");
+    assert_eq!((p.now.name.as_str(), p.now.detail.as_str()), ("G", "acorde · casa 3"));
+    assert_eq!((p.phrase[0].name.as_str(), p.phrase[0].detail.as_str(), p.phrase[0].state), ("G", "casa 3", 1));
+    assert_eq!((p.phrase[1].name.as_str(), p.phrase[1].detail.as_str(), p.phrase[1].state), ("C", "casa 3", 2));
+    assert_eq!(p.phrase.len(), 2);
+    assert_eq!(at(&p.notes, 0, 3).ring, 1);
+    assert_eq!(at(&p.notes, 1, 3).ring, 3, "C on the 5th string comes next");
+    assert!(p.notes.iter().any(|m| m.mark == 3), "the major scale shows the 4th and 7th");
+}
+
+#[test]
+fn a_chord_the_song_does_not_name_names_itself() {
+    let triad = song(chord(0.0, &[(6, 3), (5, 2), (4, 0)]), &[]);
+    assert_eq!(page(&triad, Some(0), false, Hand::Follow).now.name, "G");
+    let fifth = song(chord(0.0, &[(6, 3), (4, 0)]), &[]);
+    assert_eq!(page(&fifth, Some(0), false, Hand::Follow).now.name, "G D");
+    let power = song(chord(0.0, &[(6, 3), (5, 5), (4, 5)]), &[]);
+    assert_eq!(page(&power, Some(0), false, Hand::Follow).now.name, "G D", "the octave is not named twice");
+}
+
+#[test]
+fn a_shape_can_be_picked_or_the_whole_neck_shown() {
+    let p = page(&solo(), Some(2), true, Hand::Shape(2));
+    assert_eq!((p.window, p.subtitle.as_str()), (Some((5, 7)), "Guitarra Solo · forma 2, casas 5 a 7"));
+    let p = page(&solo(), Some(2), true, Hand::Whole);
+    assert_eq!((p.window, p.subtitle.as_str()), (None, "Guitarra Solo · braço todo"));
+    assert!(p.notes.iter().all(|m| m.lit));
+    assert_eq!(hand_options().len(), 7);
+    assert_eq!(
+        (Hand::from_index(0), Hand::from_index(3), Hand::from_index(6)),
+        (Hand::Follow, Hand::Shape(3), Hand::Whole)
+    );
+    assert_eq!(Hand::Shape(3).index(), 3);
+}
+
+#[test]
+fn a_shape_picked_on_a_long_neck_is_the_box_nearest_the_hand() {
+    let frets = [(3, 15), (3, 16), (2, 15), (2, 17), (2, 19)];
+    let high = song(frets.iter().enumerate().map(|(i, &(s, f))| note(i as f64, s, f)).collect(), &[]);
+    let p = page(&high, Some(4), true, Hand::Shape(2));
+    assert_eq!((p.frets, p.window), (19, Some((17, 19))), "not the box at 5 to 7");
+}
+
+#[test]
+fn before_the_first_note_only_what_comes_is_marked() {
+    let p = page(&solo(), None, true, Hand::Follow);
+    assert!(p.now.empty);
+    assert_eq!(p.phrase.iter().map(|c| c.state).collect::<Vec<_>>(), [2, 3, 3, 3, 3, 3, 3]);
+    assert!(p.notes.iter().all(|m| m.ring != 1 && m.ring != 2));
+    assert_eq!(at(&p.notes, 3, 3).ring, 3);
+    assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 3 a 5");
+}
+
+#[test]
+fn a_song_with_no_notes_still_shows_its_scale() {
+    let p = page(&song(Vec::new(), &[]), None, false, Hand::Follow);
+    assert!(p.now.empty && p.phrase.is_empty());
+    assert!(!p.notes.is_empty());
+}
+
+#[test]
+fn the_phrase_keeps_its_size_at_both_ends() {
+    assert_eq!(phrase_strip(3, Some(1)), 0..3);
+    assert_eq!(phrase_strip(100, Some(50)), 48..55);
+    assert_eq!(phrase_strip(100, Some(99)), 93..100);
+    assert_eq!(phrase_strip(100, None), 0..7);
+}
+
+#[test]
+fn a_four_string_bass_counts_its_shapes_on_its_low_e() {
+    let bass = Song {
+        tuning: vec![43, 38, 33, 28],
+        notes: vec![SongNote { start: 0.0, end: 0.5, string: 4, fret: 3, midi: 31 }],
+        ..song(Vec::new(), &[])
+    };
+    let p = page(&bass, Some(0), true, Hand::Follow);
+    assert_eq!((p.tuning.as_str(), p.window), ("E A D G", Some((3, 5))));
+    assert_eq!(at(&p.notes, 0, 3).ring, 1);
 }

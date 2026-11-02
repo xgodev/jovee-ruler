@@ -36,26 +36,25 @@ What paper cannot do, the digital version adds:
 - Click a chord or a note to hear it.
 - Inside a host: when the tuner hears a note, the ruler marks it on the neck.
 
-## Inside JoVee Jam: the harmonic field of the song
+## Inside JoVee Jam: one guitar of the song
 
-The ruler is embedded in JoVee Jam's song screen. Jam gives it two things: the **key** of the song
-and the **notes** being played (from the tab/score, as the song advances). With those, the ruler says,
-in real time:
+The ruler is embedded in JoVee Jam's song screen. Jam hands it one guitar of the song: its notes from
+the tab (string, fret, when), its tuning, the song's key and the names of the other guitars. The page
+([`mockup/neck.html`](mockup/neck.html)) shows:
 
-- **Which chord of the harmonic field this is**: the notes of the current moment are matched against
-  the seven chords of the key, and the ruler shows the degree (e.g. `IV` in C = F), its function
-  (rest, transition, tension) and lights it on the wheel. A chord that is not in the field (borrowed,
-  secondary dominant) is shown as such, not forced onto the nearest degree.
-- **Which pentatonic fits**: the same input places the pentatonic of the key on the neck, with the
-  CAGED shape nearest to where the song is being played, and marks which notes of the moment are
-  inside it.
+- **The guitar**, picked from the song's tracks in a select; Jam answers a pick with that guitar's notes.
+- **The scale**: the major scale of the key or its pentatonic, on a neck in the guitar's tuning (any
+  number of strings, open notes named on the left) and as long as the guitar plays, 15 to 24 frets.
+- **The shape the hand is in**: "Segue a mão" frames the CAGED box nearest the frets held down, and
+  moves with the hand; 1 to 5 fixes one box near the hand; "Braço todo" frames nothing.
+- **The notes as the tab plays them**: the one sounding wears a thick ring with a halo, the two before
+  it a thin faded ring, the next one a dashed ring. A note outside the scale on show is drawn while it
+  is played, in red. Notes struck within 30 ms are one moment, a chord.
+- **Agora and the phrase**: what sounds now (name, where the hand plays it, inside the scale or not)
+  and seven moments around it, two behind. A click on one takes the song there.
 
-Example: song in G, the tab plays G–B–D, then C–E–G, then D–F#–A: the wheel lights `I`, `IV`, `V`
-in turn, and the neck keeps the G major pentatonic in the shape around the 3rd fret.
-
-Approved redesign, replacing the chord view above: the ruler opened from a song becomes the neck of one guitar of the song,
-chosen by the player, in its tuning, with the scale, the shape the hand is in and the notes lit as they
-play: [`mockup/neck.html`](mockup/neck.html).
+Example: song in G, the solo plays Bb–B–D on strings 3 and 2 around the 3rd fret: the neck holds the G
+pentatonic with shape 1 framed at frets 3 to 5, Bb ringed in red, D ringed as the note sounding.
 
 The matching (notes + key → degree, notes + key → pentatonic shape) lives in `jr-core`, so it is the
 same in the standalone app (where the user types the key and plays the notes) and inside Jam.
@@ -77,10 +76,10 @@ same in the standalone app (where the user types the key and plays the notes) an
 
 - `crates/jr-core`: the theory, with its tests.
 - `crates/jr-gui`: the Slint screens, `Ruler` (the window plus the code that fills it, which a host
-  embeds) and the `jovee-ruler` binary, the standalone app. A host follows a song with
-  `Ruler::follow_song`, moves it on with `Ruler::at`, and hears a click on a chord through `Ruler::on_seek`.
-  The song page's strip shows 8 chords at a time around the one sounding (3 behind); `at` and `on_seek`
-  always count in the whole song.
+  embeds) and the `jovee-ruler` binary, the standalone app. A host hands one guitar over with
+  `Ruler::follow_song`, moves it on with `Ruler::at(seconds)`, hears a click on the phrase through
+  `Ruler::on_seek` (the start of that moment, in seconds) and a pick of another guitar through
+  `Ruler::on_guitar` (its index in `Song::guitars`). The scale and the shape picked stay across guitars.
 - `harmonic-field/`, `scale/`: the printed pieces, as today.
 
 Where the mockup and the printed art disagree, the screens follow the printed art: roman numerals
@@ -95,5 +94,5 @@ always uppercase, and the shapes numbered 1–5 with the 3- and 4-fret boxes of 
 2. `jr-core` with tests, checked against the printed art (same notes, same chords, same shapes).
 3. `jr-gui` + the standalone app. Done; the song page is in place for step 5.
 4. JoVee Rig imports it.
-5. Embedded in JoVee Jam: key + notes of the song → degree of the harmonic field and pentatonic.
+5. Embedded in JoVee Jam: one guitar of the song on the neck, its scale, its shape and its notes as they play.
 6. JoVee Studio imports it; the tuner link.

@@ -1,13 +1,13 @@
 //! What each screen shows, worked out from `jr-core`. Plain functions from the key (and the
-//! notes sounding) to the rows the window draws, so they are tested without a window.
+//! song's notes) to the rows the window draws, so they are tested without a window.
 
-use jr_core::note::{fifths, name, name_in};
-use jr_core::{
-    harmonic_field, identify, mark, note_at, outside_pentatonic, roman_from, shape_near, shapes, triad, Function, Mark,
-    Pc, Shape, STANDARD,
-};
+use std::ops::Range;
 
-use crate::ui::{ChordCard, Moment, NoteMark, ShapeButton};
+use jr_core::note::{fifths, name_in, pc};
+use jr_core::{harmonic_field, mark, note_at, scale, shape_near, shapes, triad, Function, Mark, Pc, Shape, STANDARD};
+
+use crate::song::{hand_fret, Moment, Song, SongNote};
+use crate::ui::{ChordCard, NoteMark, NowNote, PhraseChip, ShapeButton};
 
 /// The neck drawn on screen: the nut to fret 15, as in the mockup.
 pub const FRETS: i32 = 15;
@@ -102,23 +102,86 @@ pub fn shape_subtitle(key: Pc, button: &ShapeButton) -> String {
     }
 }
 
-/// The marks on the neck. Notes outside the scale are drawn only when they are sounding.
-pub fn neck(key: Pc, window: Option<(i32, i32)>, sounding: &[Pc]) -> Vec<NoteMark> {
+/// How a played note is ringed on the neck.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Ring {
+    /// Sounding now.
+    Now,
+    /// Just played.
+    Past,
+    /// Coming next.
+    Next,
+}
+
+impl Ring {
+    /// The code the neck draws: 1 now, 2 past, 3 next.
+    fn code(self) -> i32 {
+        match self {
+            Ring::Now => 1,
+            Ring::Past => 2,
+            Ring::Next => 3,
+        }
+    }
+
+    /// Which ring a note played more than once shows: now, then what comes, then what went.
+    fn rank(self) -> u8 {
+        match self {
+            Ring::Now => 2,
+            Ring::Next => 1,
+            Ring::Past => 0,
+        }
+    }
+}
+
+/// A note the song plays, where the neck draws it: `row` 0 is the lowest string, on top.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Played {
+    pub row: i32,
+    pub fret: i32,
+    pub ring: Ring,
+}
+
+/// A note outside the key is a lowered degree (the blue third, the flat seventh), so it is spelled flat.
+fn played_name(key: Pc, p: Pc) -> &'static str {
+    const F: Pc = 5;
+    if mark(key, p) == Mark::Outside {
+        name_in(F, p)
+    } else {
+        name_in(key, p)
+    }
+}
+
+/// The marks on a neck tuned to `open` (lowest string first), from the nut to `frets`. With the
+/// pentatonic on show the 4th and 7th are outside it. Notes outside what is on show are drawn only
+/// while they are played; a played note is lit wherever it is.
+pub fn neck(
+    key: Pc,
+    open: &[Pc],
+    frets: i32,
+    window: Option<(i32, i32)>,
+    pentatonic: bool,
+    played: &[Played],
+) -> Vec<NoteMark> {
     let mut out = Vec::new();
-    for (string, &open) in STANDARD.iter().enumerate() {
-        for fret in 0..=FRETS {
-            let p = note_at(open, fret as u8);
-            let m = mark(key, p);
-            let on = sounding.iter().any(|&n| n % 12 == p);
-            if m == Mark::Outside && !on {
+    for (row, &string) in open.iter().enumerate() {
+        for fret in 0..=frets {
+            let p = note_at(string, fret as u8);
+            let m = match mark(key, p) {
+                Mark::Scale if pentatonic => Mark::Outside,
+                m => m,
+            };
+            let ring = played
+                .iter()
+                .filter(|n| n.row == row as i32 && n.fret == fret)
+                .map(|n| n.ring)
+                .max_by_key(|r| r.rank());
+            if m == Mark::Outside && ring.is_none() {
                 continue;
             }
-            let lit = window.is_none_or(|(a, b)| fret >= a && fret <= b);
-            let in_pentatonic = matches!(m, Mark::Tonic | Mark::MinorTonic | Mark::Pentatonic);
             out.push(NoteMark {
-                string: string as i32,
+                string: row as i32,
                 fret,
-                name: name_in(key, p).into(),
+                name: played_name(key, p).into(),
                 mark: match m {
                     Mark::Tonic => 0,
                     Mark::MinorTonic => 1,
@@ -126,76 +189,212 @@ pub fn neck(key: Pc, window: Option<(i32, i32)>, sounding: &[Pc]) -> Vec<NoteMar
                     Mark::Scale => 3,
                     Mark::Outside => 4,
                 },
-                lit,
-                ring: match (on && lit, in_pentatonic) {
-                    (false, _) => 0,
-                    (true, true) => 1,
-                    (true, false) => 2,
-                },
+                lit: ring.is_some() || window.is_none_or(|(a, b)| fret >= a && fret <= b),
+                ring: ring.map_or(0, Ring::code),
             });
         }
     }
     out
 }
 
-/// One moment of a song inside JoVee Jam, as the window shows it.
-pub struct JamMoment {
-    pub moment: Moment,
-    pub field: Vec<ChordCard>,
-    pub notes: Vec<NoteMark>,
-    pub window: Shape,
+/// What the song page shows of the hand: the shape it is in, one shape, or the whole neck.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Hand {
+    /// The shape nearest the frets the hand holds down.
+    #[default]
+    Follow,
+    /// Shape 1 to 5, the box nearest the hand.
+    Shape(u8),
+    Whole,
 }
 
-/// How many chords the song page's strip holds at a readable width.
-const STRIP: usize = 8;
+impl Hand {
+    /// From the place of its button: "Segue a mão", 1 to 5, "Braço todo".
+    pub fn from_index(i: i32) -> Hand {
+        match i {
+            ..=0 => Hand::Follow,
+            1..=5 => Hand::Shape(i as u8),
+            _ => Hand::Whole,
+        }
+    }
+
+    pub fn index(self) -> i32 {
+        match self {
+            Hand::Follow => 0,
+            Hand::Shape(n) => n as i32,
+            Hand::Whole => 6,
+        }
+    }
+}
+
+/// The buttons of the song page's shape control.
+pub fn hand_options() -> Vec<slint::SharedString> {
+    ["Segue a mão", "1", "2", "3", "4", "5", "Braço todo"].map(Into::into).to_vec()
+}
+
+/// How many moments the phrase strip holds at a readable width.
+const PHRASE: usize = 7;
 /// Of those, how many have already gone by: the player needs more of what is coming.
-const STRIP_BEHIND: usize = 3;
+const PHRASE_BEHIND: usize = 2;
 
-/// Which of a song's `len` chords the strip shows while chord `now` sounds. It stays full at both ends.
-pub fn timeline_strip(len: usize, now: usize) -> std::ops::Range<usize> {
-    let first = now.saturating_sub(STRIP_BEHIND).min(len.saturating_sub(STRIP));
-    first..len.min(first + STRIP)
+/// Which of a song's `len` moments the phrase shows while moment `now` sounds. It stays full at both ends.
+pub fn phrase_strip(len: usize, now: Option<usize>) -> Range<usize> {
+    let first = now.map_or(0, |n| n.saturating_sub(PHRASE_BEHIND)).min(len.saturating_sub(PHRASE));
+    first..len.min(first + PHRASE)
 }
 
-/// The chord sounding (`notes`), in the song's `key`, with the hand around `fret`. `chord` is the
-/// name the song gives it; without one the triad names itself.
-pub fn jam(key: Pc, chord: Option<&str>, notes: &[Pc], fret: f32) -> JamMoment {
-    let found = identify(key, notes);
-    let named = triad(notes);
-    let chord = match (chord, named) {
-        (Some(c), _) => c.to_string(),
-        (None, Some((root, q))) => format!("{}{}", name_in(key, root), q.suffix()),
-        (None, None) => notes.iter().map(|&n| name(n)).collect::<Vec<_>>().join(" "),
+/// The song page at moment `now` (`None` before the first note) of the song's `moments`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SongPage {
+    pub title: String,
+    pub subtitle: String,
+    /// The open strings from the lowest, spaced: "E A D G B E".
+    pub tuning: String,
+    /// The same names, one per row of the neck.
+    pub open_names: Vec<String>,
+    pub frets: i32,
+    /// The shape on show, both frets included; `None` = the whole neck.
+    pub window: Option<(i32, i32)>,
+    pub notes: Vec<NoteMark>,
+    pub now: NowNote,
+    pub phrase: Vec<PhraseChip>,
+}
+
+/// The string whose shapes the boxes are counted on: the low E of a standard neck, found a fourth under
+/// the A string so a dropped 6th string or a 7th string do not move the boxes.
+fn shape_string(open: &[Pc]) -> Pc {
+    match open.len() {
+        n if n >= 5 => pc(open[n - 5] as i32 - 5),
+        _ => open[0],
+    }
+}
+
+/// The frets held down, lowest first: where a chord is played.
+fn lowest_fret(notes: &[SongNote]) -> u8 {
+    notes.iter().map(|n| n.fret).filter(|&f| f > 0).min().unwrap_or(0)
+}
+
+/// What a moment is called: a note's name; a chord as the song writes it there, as its triad, or
+/// its notes from the bass up.
+fn moment_name(song: &Song, m: &Moment) -> String {
+    if !m.is_chord() {
+        return played_name(song.key, pc(m.notes[0].midi as i32)).into();
+    }
+    let written = song.chords.iter().rev().find(|c| c.start <= m.start + 0.03);
+    if let Some(c) = written {
+        return c.name.clone();
+    }
+    let mut notes = m.notes.clone();
+    notes.sort_by_key(|n| n.midi);
+    let pcs: Vec<Pc> = notes.iter().map(|n| pc(n.midi as i32)).collect();
+    if let Some((root, q)) = triad(&pcs) {
+        return format!("{}{}", name_in(song.key, root), q.suffix());
+    }
+    let mut names: Vec<&str> = Vec::new();
+    for p in pcs {
+        let n = played_name(song.key, p);
+        if !names.contains(&n) {
+            names.push(n);
+        }
+    }
+    names.join(" ")
+}
+
+/// The song page: the guitar's neck with the scale and the hand's shape, the moment sounding, the
+/// two before it and the next ringed, and the phrase around it.
+pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic: bool, hand: Hand) -> SongPage {
+    let key = song.key;
+    let open = song.open();
+    let frets = song.frets();
+    let on_show: Vec<Pc> = if pentatonic { jr_core::pentatonic(key).to_vec() } else { scale(key).to_vec() };
+    let outside = |m: &Moment| m.notes.iter().any(|n| !on_show.contains(&pc(n.midi as i32)));
+
+    let fret = hand_fret(moments, now);
+    let base = shape_string(&open);
+    let shape: Option<Shape> = match hand {
+        Hand::Follow => fret.map(|f| shape_near(base, key, f)),
+        Hand::Shape(n) => {
+            let middle = |s: &Shape| (s.first + s.last) as f32 / 2.0;
+            let at = fret.unwrap_or(0.0);
+            shapes(base, key, frets)
+                .into_iter()
+                .filter(|s| s.major == n && s.first >= 0 && s.last <= frets)
+                .min_by(|a, b| (middle(a) - at).abs().total_cmp(&(middle(b) - at).abs()))
+        }
+        Hand::Whole => None,
     };
-    let roman = match (found, named) {
-        (Some(c), _) => c.roman().to_string(),
-        (None, Some((root, _))) => roman_from(key, root),
-        (None, None) => "?".into(),
+    let window = shape.map(|s| (s.first.max(0), s.last.min(frets)));
+    let guitar = song.guitars.get(song.guitar).map_or("", String::as_str);
+    let subtitle = match (hand, shape, window) {
+        (Hand::Follow, Some(s), Some((a, b))) => format!("a mão está na forma {}, casas {a} a {b}", s.major),
+        (Hand::Shape(_), Some(s), Some((a, b))) => format!("forma {}, casas {a} a {b}", s.major),
+        _ => "braço todo".into(),
     };
-    let window = shape_near(STANDARD[0], key, fret);
-    let outside: Vec<&str> = outside_pentatonic(key, notes).iter().map(|&n| name_in(key, n)).collect();
-    // the accidental of a borrowed degree is drawn apart: the title face has no ♭
-    let numeral = roman.trim_start_matches(['♭', '♯']);
-    let moment = Moment {
-        chord: chord.into(),
-        accidental: roman[..roman.len() - numeral.len()].into(),
-        numeral: numeral.into(),
-        roman: roman.as_str().into(),
-        function: found.map_or(-1, |c| function(c.function)),
-        lit: found.map_or(-1, |c| c.degree as i32 - 1),
-        field_title: format!("Campo harmônico de {}", key_title(key)).into(),
-        shape: format!(
-            "Pentatônica de {} · forma {} · casas {} a {}",
-            spoken(key, key),
-            window.major,
-            window.first.max(0),
-            window.last
-        )
-        .into(),
-        outside: outside.join(" e ").into(),
-        outside_count: outside.len() as i32,
+
+    let row = |n: &SongNote| open.len() as i32 - n.string as i32;
+    let mut played = Vec::new();
+    let mut ring = |i: usize, r: Ring| {
+        if let Some(m) = moments.get(i) {
+            played.extend(m.notes.iter().map(|n| Played { row: row(n), fret: n.fret as i32, ring: r }));
+        }
     };
-    JamMoment { moment, field: chord_cards(key), notes: neck(key, Some((window.first, window.last)), notes), window }
+    match now {
+        Some(i) => {
+            (i.saturating_sub(2)..i).for_each(|p| ring(p, Ring::Past));
+            ring(i, Ring::Now);
+            ring(i + 1, Ring::Next);
+        }
+        None => ring(0, Ring::Next),
+    }
+
+    let now_note = match now.and_then(|i| moments.get(i)) {
+        None => NowNote { empty: true, ..NowNote::default() },
+        Some(m) => NowNote {
+            name: moment_name(song, m).into(),
+            detail: if m.is_chord() {
+                format!("acorde · casa {}", lowest_fret(&m.notes)).into()
+            } else {
+                format!("corda {} · casa {}", m.notes[0].string, m.notes[0].fret).into()
+            },
+            outside: outside(m),
+            empty: false,
+        },
+    };
+    let phrase = phrase_strip(moments.len(), now)
+        .map(|i| {
+            let m = &moments[i];
+            PhraseChip {
+                name: moment_name(song, m).into(),
+                detail: if m.is_chord() {
+                    format!("casa {}", lowest_fret(&m.notes)).into()
+                } else {
+                    format!("corda {}", m.notes[0].string).into()
+                },
+                state: match now {
+                    Some(n) if i < n => 0,
+                    Some(n) if i == n => 1,
+                    Some(n) if i == n + 1 => 2,
+                    None if i == 0 => 2,
+                    _ => 3,
+                },
+                outside: outside(m),
+                index: i as i32,
+            }
+        })
+        .collect();
+
+    let names: Vec<String> = open.iter().map(|&p| name_in(key, p).to_string()).collect();
+    SongPage {
+        title: if pentatonic { format!("{} · pentatônica", key_title(key)) } else { key_title(key) },
+        subtitle: format!("Guitarra {guitar} · {subtitle}"),
+        tuning: names.join(" "),
+        notes: neck(key, &open, frets, window, pentatonic, &played),
+        open_names: names,
+        frets,
+        window,
+        now: now_note,
+        phrase,
+    }
 }
 
 #[cfg(test)]
