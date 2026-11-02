@@ -42,113 +42,155 @@ fn the_host_picks_any_of_the_three_looks() {
     }
 }
 
-fn song() -> Song {
-    let chord = |name: &str, notes: &str| SongChord {
-        name: name.into(),
-        notes: notes.split_whitespace().map(|n| parse(n).unwrap()).collect(),
-        fret: 3.0,
-    };
+/// G major up the 1st string, one note a second from 1 s: every name apart, so a chip is only the one
+/// it should be.
+fn run() -> Song {
+    let frets = [3, 5, 7, 8, 10, 12, 14];
     Song {
-        title: "Exemplo".into(),
+        title: "Exemplo em Sol".into(),
         key: parse("G").unwrap(),
-        chords: vec![chord("G", "G B D"), chord("C", "C E G"), chord("F", "F A C")],
+        tuning: vec![64, 59, 55, 50, 45, 40],
+        guitars: vec!["Base".into(), "Solo".into()],
+        guitar: 1,
+        notes: frets
+            .iter()
+            .enumerate()
+            .map(|(i, &fret)| SongNote { start: 1.0 + i as f64, end: 1.5 + i as f64, string: 1, fret, midi: 64 + fret })
+            .collect(),
+        chords: Vec::new(),
     }
 }
 
-/// A whole song: every chord named apart, so a row can only be the one it should be.
-fn long_song(chords: usize) -> Song {
-    let chord = |i| SongChord { name: format!("X{i}"), notes: vec![parse("G").unwrap()], fret: 3.0 };
-    Song { title: "Longa".into(), key: parse("G").unwrap(), chords: (0..chords).map(chord).collect() }
+fn now_name(r: &Ruler) -> String {
+    r.window().get_now_note().name.to_string()
 }
 
-fn strip(r: &Ruler) -> (i32, Vec<String>) {
+#[test]
+fn a_song_opens_on_its_page_before_its_first_note() {
+    init();
+    let r = Ruler::new().unwrap();
+    r.follow_song(run());
     let w = r.window();
-    (w.get_timeline_first(), w.get_timeline().iter().map(|n| n.to_string()).collect())
+    assert_eq!(w.get_page(), 2);
+    assert_eq!(w.get_key_title(), "Sol maior", "the other pages follow the song's key");
+    assert_eq!(w.get_context(), "Exemplo em Sol");
+    assert_eq!(w.get_guitars().iter().map(|g| g.to_string()).collect::<Vec<_>>(), ["Base", "Solo"]);
+    assert_eq!(w.get_guitar(), 1);
+    assert_eq!(w.get_tuning(), "E A D G B E");
+    assert_eq!(w.get_open_names().row_count(), 6);
+    assert_eq!(w.get_song_frets(), 15);
+    assert!(w.get_now_note().empty);
+    assert_eq!(w.get_phrase().row_data(0).unwrap().state, 2, "the first note is the next one");
 }
 
 #[test]
-fn a_long_song_shows_only_the_chords_around_the_one_sounding() {
+fn the_ruler_follows_the_song_note_by_note() {
     init();
     let r = Ruler::new().unwrap();
-    r.follow_song(long_song(238));
-    assert_eq!(strip(&r).0, 0, "the start has nothing before it");
-
-    r.at(100);
-    let (first, names) = strip(&r);
-    assert_eq!(names.len(), 8);
-    assert_eq!(names[(100 - first) as usize], "X100");
-    assert_eq!(r.window().get_now(), 100, "the sounding chord keeps its place in the whole song");
-
-    r.at(237);
-    let (first, names) = strip(&r);
-    assert_eq!((first, names.len()), (230, 8), "the end still fills the strip");
-    assert_eq!(names[7], "X237");
+    r.follow_song(run());
+    r.at(0.5);
+    assert!(r.window().get_now_note().empty);
+    r.at(1.0);
+    assert_eq!(now_name(&r), "G");
+    r.at(3.7);
+    assert_eq!(now_name(&r), "B");
+    assert_eq!(r.window().get_now_note().detail, "corda 1 · casa 7");
+    r.at(99.0);
+    assert_eq!(now_name(&r), "F#");
 }
 
 #[test]
-fn a_short_song_shows_every_chord() {
+fn the_shape_follows_the_hand_up_the_neck() {
     init();
     let r = Ruler::new().unwrap();
-    r.follow_song(song());
-    r.at(2);
-    assert_eq!(strip(&r), (0, vec!["G".to_string(), "C".to_string(), "F".to_string()]));
+    r.follow_song(run());
+    r.at(1.0);
+    let first = r.window().get_song_first();
+    r.at(7.0);
+    assert!(r.window().get_song_first() > first, "fret 14 is in a higher shape than fret 3");
+    assert!(r.window().get_song_subtitle().contains("a mão está na forma"));
 }
 
 #[test]
-fn clicking_a_chord_of_a_long_song_gives_its_place_in_the_whole_song() {
+fn clicking_a_note_of_the_phrase_takes_the_song_there() {
     init();
     let r = Ruler::new().unwrap();
-    r.follow_song(long_song(238));
-    r.at(100);
+    r.follow_song(run());
+    r.at(3.0);
     let heard = Rc::new(RefCell::new(Vec::new()));
     let h = heard.clone();
-    r.on_seek(move |i| h.borrow_mut().push(i));
-    let chord = i_slint_backend_testing::ElementHandle::find_by_accessible_label(r.window(), "X102")
+    r.on_seek(move |s| h.borrow_mut().push(s));
+    let chip = i_slint_backend_testing::ElementHandle::find_by_accessible_label(r.window(), "D, corda 1")
         .next()
-        .expect("the chord two ahead is on the strip");
-    chord.invoke_accessible_default_action();
-    assert_eq!(*heard.borrow(), [102]);
-    assert_eq!(r.window().get_now(), 102);
-}
-
-#[test]
-fn clicking_a_chord_tells_the_host_which_one() {
-    init();
-    let r = Ruler::new().unwrap();
-    r.follow_song(song());
-    let heard = Rc::new(RefCell::new(Vec::new()));
-    let h = heard.clone();
-    r.on_seek(move |i| h.borrow_mut().push(i));
-    r.window().invoke_seek(2);
-    r.window().invoke_seek(0);
-    assert_eq!(*heard.borrow(), [2, 0]);
-    assert_eq!(r.window().get_now(), 0);
+        .expect("the note two ahead is on the phrase");
+    chip.invoke_accessible_default_action();
+    assert_eq!(*heard.borrow(), [5.0], "D starts at 5 s");
+    assert_eq!(now_name(&r), "D", "the ruler shows it before the song gets there");
 }
 
 #[test]
 fn the_host_can_answer_a_click_by_moving_the_ruler() {
     init();
     let r = Rc::new(Ruler::new().unwrap());
-    r.follow_song(song());
+    r.follow_song(run());
     let host = r.clone();
-    r.on_seek(move |i| host.at(i + 1)); // the song lands on the next chord, not the one clicked
+    r.on_seek(move |s| host.at(s + 1.0)); // the song lands on the next note, not the one clicked
     r.window().invoke_seek(0);
-    assert_eq!(r.window().get_now(), 1);
-    assert_eq!(r.window().get_moment().roman, "IV");
+    assert_eq!(now_name(&r), "A");
 }
 
 #[test]
-fn a_song_opens_on_its_page_and_follows_the_chords() {
+fn picking_another_guitar_asks_the_host_for_it() {
     init();
     let r = Ruler::new().unwrap();
-    r.follow_song(song());
+    r.follow_song(run());
+    let heard = Rc::new(RefCell::new(Vec::new()));
+    let h = heard.clone();
+    r.on_guitar(move |g| h.borrow_mut().push(g));
+    r.window().invoke_guitar_picked(0);
+    assert_eq!(*heard.borrow(), [0]);
+    assert_eq!(r.window().get_guitar(), 0, "the select shows the pick while the host reads it");
+}
+
+#[test]
+fn the_scale_and_the_shape_picked_stay_for_the_next_guitar() {
+    init();
+    let r = Ruler::new().unwrap();
+    r.follow_song(run());
+    r.window().invoke_scale_picked(1);
+    assert_eq!(r.window().get_song_title(), "Sol maior · pentatônica");
+    assert!(r.window().get_song_notes().iter().all(|m| m.mark != 3));
+    r.window().invoke_hand_picked(6);
+    assert_eq!(r.window().get_song_first(), -1);
+    r.follow_song(Song { guitar: 0, ..run() });
     let w = r.window();
-    assert_eq!(w.get_page(), 2);
-    assert_eq!(w.get_moment().roman, "I");
-    assert_eq!(w.get_key_title(), "Sol maior");
-    w.invoke_seek(2);
-    assert_eq!(w.get_now(), 2);
-    assert_eq!(w.get_moment().roman, "♭VII");
-    r.at(1);
-    assert_eq!(w.get_moment().roman, "IV");
+    assert_eq!((w.get_scale(), w.get_hand(), w.get_song_first()), (1, 6, -1));
+    assert_eq!(w.get_song_subtitle(), "Guitarra Base · braço todo");
+}
+
+#[test]
+fn a_tuning_and_a_long_neck_come_from_the_song() {
+    init();
+    let r = Ruler::new().unwrap();
+    let mut song = run();
+    song.tuning = vec![64, 59, 55, 50, 45, 38];
+    song.notes[6].fret = 19;
+    r.follow_song(song);
+    let w = r.window();
+    assert_eq!(w.get_tuning(), "D A D G B E");
+    assert_eq!(w.get_open_names().row_data(0).unwrap(), "D");
+    assert_eq!(w.get_song_frets(), 19);
+}
+
+#[test]
+fn the_song_controls_wait_quietly_for_a_song_and_a_host() {
+    init();
+    let r = Ruler::new().unwrap();
+    r.window().invoke_seek(3);
+    r.window().invoke_scale_picked(1);
+    r.window().invoke_guitar_picked(1);
+    assert_eq!((r.window().get_scale(), r.window().get_guitar()), (0, 1), "no song yet: nothing redrawn");
+    r.follow_song(run());
+    r.window().invoke_seek(1);
+    assert_eq!(now_name(&r), "A");
 }

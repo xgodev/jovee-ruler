@@ -5,41 +5,34 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use jr_core::note::fifths;
-use jr_core::Pc;
+use jr_core::{Pc, STANDARD};
 use slint::{ComponentHandle, ModelRc, VecModel};
 
 pub mod ui {
     slint::include_modules!();
 }
+pub mod song;
 pub mod view;
 
 pub use jovee_theme::ThemeId;
 use ui::AppWindow;
 
-/// One chord of a song: its name as the song writes it, the notes sounding and the fret the hand
-/// is around (for the pentatonic shape).
-#[derive(Clone, Debug, PartialEq)]
-pub struct SongChord {
-    pub name: String,
-    pub notes: Vec<Pc>,
-    pub fret: f32,
-}
-
-/// A song as JoVee Jam hands it over: its title, its key and its chords in order.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Song {
-    pub title: String,
-    pub key: Pc,
-    pub chords: Vec<SongChord>,
-}
+use song::Moment;
+pub use song::{Song, SongChord, SongNote};
+use view::Hand;
 
 #[derive(Default)]
 struct State {
     key: Pc,
     shape: usize,
     song: Option<Song>,
-    now: usize,
-    on_seek: Option<Rc<dyn Fn(usize)>>,
+    moments: Vec<Moment>,
+    /// The moment sounding; `None` before the first.
+    now: Option<usize>,
+    pentatonic: bool,
+    hand: Hand,
+    on_seek: Option<Rc<dyn Fn(f64)>>,
+    on_guitar: Option<Rc<dyn Fn(usize)>>,
 }
 
 pub struct Ruler {
@@ -51,11 +44,20 @@ fn model<T: Clone + 'static>(rows: Vec<T>) -> ModelRc<T> {
     ModelRc::new(VecModel::from(rows))
 }
 
+/// Redraws the song page after `change` alters the state.
+fn redraw(w: &slint::Weak<AppWindow>, s: &RefCell<State>, change: impl FnOnce(&mut State)) {
+    change(&mut s.borrow_mut());
+    if let Some(w) = w.upgrade() {
+        show_song(&w, &s.borrow());
+    }
+}
+
 impl Ruler {
     pub fn new() -> Result<Self, slint::PlatformError> {
         let window = AppWindow::new()?;
         let state = Rc::new(RefCell::new(State::default()));
         window.set_keys(model(view::wheel_keys()));
+        window.set_hand_options(model(view::hand_options()));
 
         let (w, s) = (window.as_weak(), state.clone());
         window.on_key_picked(move |i| {
@@ -74,17 +76,32 @@ impl Ruler {
         });
         let (w, s) = (window.as_weak(), state.clone());
         window.on_seek(move |i| {
-            let index = i.max(0) as usize;
-            s.borrow_mut().now = index;
-            if let Some(w) = w.upgrade() {
-                show_song(&w, &s.borrow());
-            }
+            let Some(last) = s.borrow().moments.len().checked_sub(1) else { return };
+            let index = (i.max(0) as usize).min(last);
+            redraw(&w, &s, |st| st.now = Some(index));
             // Taken out of the state first: the host may answer by calling back into the ruler.
-            let host = s.borrow().on_seek.clone();
+            let (host, start) = {
+                let st = s.borrow();
+                (st.on_seek.clone(), st.moments[index].start)
+            };
             if let Some(host) = host {
-                host(index);
+                host(start);
             }
         });
+        let (w, s) = (window.as_weak(), state.clone());
+        window.on_guitar_picked(move |i| {
+            if let Some(w) = w.upgrade() {
+                w.set_guitar(i);
+            }
+            let host = s.borrow().on_guitar.clone();
+            if let Some(host) = host {
+                host(i.max(0) as usize);
+            }
+        });
+        let (w, s) = (window.as_weak(), state.clone());
+        window.on_scale_picked(move |i| redraw(&w, &s, |st| st.pentatonic = i == 1));
+        let (w, s) = (window.as_weak(), state.clone());
+        window.on_hand_picked(move |i| redraw(&w, &s, |st| st.hand = Hand::from_index(i)));
 
         show_key(&window, &state.borrow());
         Ok(Ruler { window, state })
@@ -106,29 +123,43 @@ impl Ruler {
         show_key(&self.window, &self.state.borrow());
     }
 
-    /// Opens the song page on the first chord. The harmonic field and the scale follow its key.
+    /// Opens the song page on one guitar of a song, before its first note. The harmonic field and the
+    /// scale follow its key; the scale and the shape picked stay from the guitar before.
     pub fn follow_song(&self, song: Song) {
+        let title = song.title.clone();
         {
             let mut s = self.state.borrow_mut();
             s.key = song.key % 12;
+            s.moments = song::moments(&song.notes);
             s.song = Some(song);
-            s.now = 0;
+            s.now = None;
         }
         let s = self.state.borrow();
         show_key(&self.window, &s);
         show_song(&self.window, &s);
         self.window.set_page(2);
+        self.window.set_context(title.into());
     }
 
-    /// The user clicked chord `index` of the song: the ruler already shows it, and the host takes the
-    /// song there. A closure that keeps the `Ruler` should hold it weakly, since the ruler keeps the closure.
-    pub fn on_seek(&self, host: impl Fn(usize) + 'static) {
+    /// The user clicked a note of the phrase: the ruler already shows it, and the host takes the song
+    /// to its start, in seconds. A closure that keeps the `Ruler` should hold it weakly, since the ruler
+    /// keeps the closure.
+    pub fn on_seek(&self, host: impl Fn(f64) + 'static) {
         self.state.borrow_mut().on_seek = Some(Rc::new(host));
     }
 
-    /// The song moved on to chord `index`.
-    pub fn at(&self, index: usize) {
-        self.state.borrow_mut().now = index;
+    /// The user picked guitar `index` of the song: the host answers with `follow_song` on its notes.
+    pub fn on_guitar(&self, host: impl Fn(usize) + 'static) {
+        self.state.borrow_mut().on_guitar = Some(Rc::new(host));
+    }
+
+    /// The song is at `seconds`. The page is redrawn only when another moment sounds.
+    pub fn at(&self, seconds: f64) {
+        let now = song::moment_at(&self.state.borrow().moments, seconds);
+        if now == self.state.borrow().now {
+            return;
+        }
+        self.state.borrow_mut().now = now;
         show_song(&self.window, &self.state.borrow());
     }
 }
@@ -147,25 +178,29 @@ fn show_key(w: &AppWindow, s: &State) {
     let window = (pick.first >= 0).then_some((pick.first, pick.last));
     w.set_shape(s.shape.min(buttons.len() - 1) as i32);
     w.set_shape_subtitle(view::shape_subtitle(key, &pick).into());
-    w.set_scale_notes(model(view::neck(key, window, &[])));
+    w.set_scale_notes(model(view::neck(key, &STANDARD, view::FRETS, window, false, &[])));
     w.set_shape_options(model(view::shape_options(&buttons)));
     w.set_shapes(model(buttons));
 }
 
 fn show_song(w: &AppWindow, s: &State) {
     let Some(song) = &s.song else { return };
-    let Some(chord) = song.chords.get(s.now.min(song.chords.len().saturating_sub(1))) else { return };
-    let j = view::jam(song.key, Some(&chord.name), &chord.notes, chord.fret);
-    w.set_context(format!("{} · {}", song.title, view::key_title(song.key)).into());
-    let strip = view::timeline_strip(song.chords.len(), s.now);
-    w.set_timeline_first(strip.start as i32);
-    w.set_timeline(model(song.chords[strip].iter().map(|c| c.name.clone().into()).collect()));
-    w.set_now(s.now as i32);
-    w.set_moment(j.moment);
-    w.set_jam_field(model(j.field));
-    w.set_jam_notes(model(j.notes));
-    w.set_jam_first(j.window.first.max(0));
-    w.set_jam_last(j.window.last);
+    let page = view::song_page(song, &s.moments, s.now, s.pentatonic, s.hand);
+    w.set_guitars(model(song.guitars.iter().map(|g| g.into()).collect()));
+    w.set_guitar(song.guitar as i32);
+    w.set_scale(s.pentatonic as i32);
+    w.set_hand(s.hand.index());
+    w.set_tuning(page.tuning.into());
+    w.set_song_title(page.title.into());
+    w.set_song_subtitle(page.subtitle.into());
+    w.set_song_notes(model(page.notes));
+    w.set_open_names(model(page.open_names.into_iter().map(Into::into).collect()));
+    w.set_song_frets(page.frets);
+    let (first, last) = page.window.unwrap_or((-1, -1));
+    w.set_song_first(first);
+    w.set_song_last(last);
+    w.set_now_note(page.now);
+    w.set_phrase(model(page.phrase));
 }
 
 #[cfg(test)]

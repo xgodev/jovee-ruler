@@ -1,16 +1,23 @@
-// The neck from the nut to fret 15, 6th string on top as on the printed ruler, with the slider's marks
-// over the notes of the scale: square = tonic, diamond = tonic of the relative minor, circle = pentatonic,
-// triangle = the 4th and 7th. Outside the chosen shape the marks fade, as the cassette darkens them.
+// The neck from the nut to fret 15 (or as far as a song goes), the lowest string on top as on the printed
+// ruler, with the slider's marks over the notes of the scale: square = tonic, diamond = tonic of the
+// relative minor, circle = pentatonic, triangle = the 4th and 7th. Outside the chosen shape the marks fade,
+// as the cassette darkens them. A song rings the notes it plays: the one sounding, the ones just played and
+// the next.
 import { Theme } from "@jovee-theme/theme.slint";
 import { Look } from "theme.slint";
 
 export struct NoteMark {
-    string: int,   // 0 = 6th string, drawn on top
+    string: int,   // 0 = the lowest string, drawn on top
     fret: int,     // 0 = open
     name: string,
     mark: int,     // 0 tonic, 1 tonic of the relative minor, 2 pentatonic, 3 scale, 4 outside the scale
-    lit: bool,     // inside the shape on show
-    ring: int,     // sounding now: 0 no, 1 inside the pentatonic, 2 outside it
+    lit: bool,     // inside the shape on show, or played
+    ring: int,     // 0 none, 1 sounding now, 2 just played, 3 the next one
+}
+
+// A ring of 16 dashes, for the note that comes next.
+export global Dashes {
+    out property <string> circle: "M 96.0 50.0 A 46 46 0 0 1 94.9 59.9 M 92.5 67.6 A 46 46 0 0 1 87.7 76.3 M 82.5 82.5 A 46 46 0 0 1 74.8 88.7 M 67.6 92.5 A 46 46 0 0 1 58.1 95.3 M 50.0 96.0 A 46 46 0 0 1 40.1 94.9 M 32.4 92.5 A 46 46 0 0 1 23.7 87.7 M 17.5 82.5 A 46 46 0 0 1 11.3 74.8 M 7.5 67.6 A 46 46 0 0 1 4.7 58.1 M 4.0 50.0 A 46 46 0 0 1 5.1 40.1 M 7.5 32.4 A 46 46 0 0 1 12.3 23.7 M 17.5 17.5 A 46 46 0 0 1 25.2 11.3 M 32.4 7.5 A 46 46 0 0 1 41.9 4.7 M 50.0 4.0 A 46 46 0 0 1 59.9 5.1 M 67.6 7.5 A 46 46 0 0 1 76.3 12.3 M 82.5 17.5 A 46 46 0 0 1 88.7 25.2 M 92.5 32.4 A 46 46 0 0 1 95.3 41.9";
 }
 
 component Dot inherits Rectangle {
@@ -24,17 +31,22 @@ component Dot inherits Rectangle {
 export component Neck inherits Rectangle {
     in property <[NoteMark]> notes;
     in property <int> frets: 15;
+    in property <int> strings: 6;
+    in property <[string]> open-names;    // the open strings, lowest first; empty, and they are numbered
     in property <int> window-first: -1;   // the shape on show, both frets included; -1 = the whole neck
     in property <int> window-last: -1;
     in property <length> sp: 84px;        // between strings
     in property <length> r: 26px;         // of a mark
 
-    height: self.y0 + 5 * self.sp + self.r + 46px;
+    height: self.y0 + self.span + self.r + 46px;
 
     private property <length> x0: 100px;
     private property <length> fw: (root.width - 12px - self.x0) / root.frets;
-    private property <length> y0: root.r + 10px;
-    private property <length> box: 2 * root.r + 20px;   // a mark with room for its ring
+    // room above the top string for the halo of the note sounding
+    private property <length> y0: root.r + 18px;
+    private property <length> span: (root.strings - 1) * root.sp;
+    private property <length> box: 2 * root.r + 36px;   // a mark with room for its halo
+    private property <bool> named: root.open-names.length > 0;
 
     pure function cell-x(f: int) -> length {
         return f == 0 ? root.x0 / 2 + 14px : root.x0 + (f - 0.5) * root.fw;
@@ -47,12 +59,16 @@ export component Neck inherits Rectangle {
     pure function inlay(f: int) -> bool {
         return f == 3 || f == 5 || f == 7 || f == 9 || f == 15 || f == 17 || f == 19 || f == 21;
     }
+    // the ring of a played note: red when the note is outside the scale
+    pure function ring-color(mark: int) -> color {
+        return mark == 4 ? Theme.bad : Theme.accent;
+    }
 
     if root.window-first >= 0: Rectangle {
         x: root.window-first == 0 ? 30px : root.x0 + (root.window-first - 1) * root.fw;
-        y: root.y0 - root.r - 10px;
+        y: root.y0 - root.r - 12px;
         width: root.x0 + root.window-last * root.fw - self.x;
-        height: 5 * root.sp + 2 * root.r + 20px;
+        height: root.span + 2 * root.r + 24px;
         border-radius: Theme.radius-sm;
         background: Look.accent-soft;
         border-width: Look.mark;
@@ -62,26 +78,26 @@ export component Neck inherits Rectangle {
     for f in root.frets + 1: Rectangle {
         if f > 0 && root.inlay(f): Dot {
             x: root.cell-x(f) - 7px;
-            y: root.y0 + 2.5 * root.sp - 7px;
+            y: root.y0 + root.span / 2 - 7px;
         }
-        if f == 12: Dot {
+        if f == 12 || f == 24: Dot {
             x: root.cell-x(f) - 7px;
-            y: root.y0 + 1.5 * root.sp - 7px;
+            y: root.y0 + root.span / 2 - root.sp - 7px;
         }
-        if f == 12: Dot {
+        if f == 12 || f == 24: Dot {
             x: root.cell-x(f) - 7px;
-            y: root.y0 + 3.5 * root.sp - 7px;
+            y: root.y0 + root.span / 2 + root.sp - 7px;
         }
         Rectangle {
             x: root.x0 + f * root.fw - self.width / 2;
             y: root.y0;
             width: f == 0 ? 4px : Look.hair;
-            height: 5 * root.sp;
+            height: root.span;
             background: f == 0 ? Theme.ink-2 : Theme.ink-3.with-alpha(0.45);
         }
         Text {
             x: root.cell-x(f) - 20px;
-            y: root.y0 + 5 * root.sp + root.r + 22px;
+            y: root.y0 + root.span + root.r + 22px;
             width: 40px;
             text: f;
             horizontal-alignment: center;
@@ -91,23 +107,26 @@ export component Neck inherits Rectangle {
         }
     }
 
-    for s in 6: Rectangle {
+    for s in root.strings: Rectangle {
         Rectangle {
             x: root.x0;
             y: root.y0 + s * root.sp - self.height / 2;
             width: root.width - 12px - root.x0;
-            height: (2 - s * 0.2) * 1px;
+            // the lowest string the thickest, 2px down to 1px
+            height: (2 - s / max(1, root.strings - 1)) * 1px;
             background: Theme.ink-3;
         }
+        // the string's open note when a song tunes it, else its number
         Text {
-            x: 4px;
+            x: root.named ? 8px : 4px;
             y: root.y0 + s * root.sp - 12px;
             height: 24px;
-            text: 6 - s;
+            text: root.named ? root.open-names[s] : root.strings - s;
             vertical-alignment: center;
-            font-family: Theme.mono;
-            font-size: Theme.fs-body;
-            color: Theme.ink-3;
+            font-family: root.named ? Theme.sans : Theme.mono;
+            font-size: root.named ? 20px : Theme.fs-body;
+            font-weight: root.named ? 700 : 400;
+            color: root.named ? Theme.ink-2 : Theme.ink-3;
         }
     }
 
@@ -117,12 +136,38 @@ export component Neck inherits Rectangle {
         width: root.box;
         height: root.box;
 
-        if n.ring > 0: Rectangle {
-            width: 2 * root.r + 17px;
+        // sounding now: a soft halo and a thick ring
+        if n.ring == 1: Rectangle {
+            width: 2 * root.r + 34px;
             height: self.width;
             border-radius: self.width / 2;
-            border-width: Look.track;
-            border-color: n.ring == 1 ? Theme.ok : Theme.bad;
+            background: root.ring-color(n.mark).with-alpha(0.2);
+        }
+        if n.ring == 1: Rectangle {
+            width: 2 * root.r + 16px;
+            height: self.width;
+            border-radius: self.width / 2;
+            border-width: 4px;
+            border-color: root.ring-color(n.mark);
+        }
+        // just played: the same ring, thin and half gone
+        if n.ring == 2: Rectangle {
+            width: 2 * root.r + 14px;
+            height: self.width;
+            border-radius: self.width / 2;
+            border-width: 2.5px;
+            border-color: root.ring-color(n.mark);
+            opacity: 0.5;
+        }
+        // the next one: dashed
+        if n.ring == 3: Path {
+            width: 2 * root.r + 14px;
+            height: self.width;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            commands: Dashes.circle;
+            stroke: Theme.ink-2;
+            stroke-width: 2.5px;
         }
         if n.mark == 0: Rectangle {
             width: 2 * root.r;
@@ -158,8 +203,8 @@ export component Neck inherits Rectangle {
             height: self.width;
             border-radius: self.width / 2;
             background: root.fade(Theme.surf-hi, n.lit);
-            border-width: Look.hair;
-            border-color: root.fade(Theme.line, n.lit);
+            border-width: 1.5px;
+            border-color: root.fade(Theme.bad, n.lit);
         }
         Text {
             y: (root.box - self.height) / 2 + (n.mark == 3 ? 6px : 0);
@@ -176,7 +221,7 @@ export component Neck inherits Rectangle {
     accessible-label: @tr("Braço da guitarra com as notas da escala");
 }
 
-component Key inherits HorizontalLayout {
+export component Key inherits HorizontalLayout {
     in property <string> text;
     spacing: Theme.sp2;
     @children
@@ -189,11 +234,14 @@ component Key inherits HorizontalLayout {
     }
 }
 
+// What the marks mean. The song page says it shorter, to leave room for its rings after them.
 export component MarkLegend inherits HorizontalLayout {
-    spacing: 24px;
+    in property <bool> short: false;
+    in property <bool> fourth-and-seventh: true;   // the pentatonic hides them
+    spacing: root.short ? 22px : 24px;
     alignment: start;
     Key {
-        text: @tr("tônica maior");
+        text: root.short ? @tr("tônica") : @tr("tônica maior");
         Rectangle {
             width: 18px;
             height: 18px;
@@ -202,7 +250,7 @@ export component MarkLegend inherits HorizontalLayout {
         }
     }
     Key {
-        text: @tr("tônica da relativa menor");
+        text: root.short ? @tr("tônica da relativa") : @tr("tônica da relativa menor");
         Path {
             width: 20px;
             height: 20px;
@@ -221,7 +269,7 @@ export component MarkLegend inherits HorizontalLayout {
             background: Theme.ink;
         }
     }
-    Key {
+    if root.fourth-and-seventh: Key {
         text: @tr("graus 4 e 7");
         Path {
             width: 20px;
@@ -232,30 +280,6 @@ export component MarkLegend inherits HorizontalLayout {
             fill: Theme.ink-3;
         }
     }
-}
-
-// The rings of the song page: a chord note inside the pentatonic, or outside it.
-export component RingLegend inherits HorizontalLayout {
-    spacing: 24px;
-    alignment: start;
-    Key {
-        text: @tr("nota do acorde na pentatônica");
-        Rectangle {
-            width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            border-width: Look.track;
-            border-color: Theme.ok;
-        }
-    }
-    Key {
-        text: @tr("nota do acorde fora dela");
-        Rectangle {
-            width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            border-width: Look.track;
-            border-color: Theme.bad;
-        }
-    }
+    // what a page adds after the marks
+    @children
 }
