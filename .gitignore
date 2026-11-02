@@ -8,3 +8,6 @@ __pycache__/
 
 # Rust build output (the shared target-dir normally lives elsewhere)
 /target/
+
+# isolated clones (each one a real git clone)
+.solvers/

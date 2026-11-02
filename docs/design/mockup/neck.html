@@ -1,0 +1,207 @@
+<title>JoVee Ruler: braço da guitarra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="jovee-theme-base.css">
+<style>
+/* The ruler opened from a song in JoVee Jam, redone as the neck of one guitar of the song: pick the
+   guitar, see the scale and the shape the hand is in, and the notes light as they play. Same kit and
+   looks as themes.html; each window is the real app size, 1280 x 860. */
+body { background: #000; }
+.page { max-width: 1340px; margin: 0 auto; padding: 32px 16px 64px; display: grid; gap: 28px; }
+.sec-h h2 { font: 400 34px/1 "Bebas Neue"; letter-spacing: .04em; margin: 0 0 8px; }
+.sec-h p { margin: 0; color: #aab3bf; max-width: 80ch; font-size: 18px; }
+.scheme { overflow-x: auto; min-width: 0; }
+.tnum { font: 500 18px/1 "JetBrains Mono"; color: #aab3bf; margin-bottom: 10px; display: block; }
+
+.win { width: 1280px; height: 860px; display: flex; flex-direction: column; color: var(--ink); --accent-soft: rgba(var(--acc-rgb), .14);
+  --ok-t: color-mix(in srgb, var(--ok) 16%, transparent); --bad-t: color-mix(in srgb, var(--bad) 16%, transparent);
+  --ok-i: color-mix(in srgb, var(--ok) 55%, white); --bad-i: color-mix(in srgb, var(--bad) 55%, white);
+  --on-accent: #170800; }
+.hdr { flex: none; }
+.r-song { margin-left: 8px; font: 500 18px/1 Barlow; color: var(--ink-2); }
+.r-body { flex: 1; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.r-row { display: flex; align-items: center; gap: 12px; }
+.grow { flex: 1; }
+.gap { width: 20px; flex: none; }
+.r-card { border-radius: 12px; background: var(--surf-hi); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.r-cap { font: 600 18px/1 Barlow; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-3); }
+.seg.num b { min-width: 44px; font-family: "JetBrains Mono"; font-weight: 500; letter-spacing: 0; }
+.seg.num b.w { font-family: Barlow; font-weight: 600; letter-spacing: 1px; }
+.tun { height: 34px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 17px; font: 500 18px/1 "JetBrains Mono"; letter-spacing: 3px; color: var(--ink); background: var(--well-2); box-shadow: inset 0 0 0 1px var(--line); }
+
+.head { display: flex; align-items: center; gap: 12px; }
+.stitle { font: 400 48px/1 "Bebas Neue"; letter-spacing: .03em; }
+.ssub { color: var(--ink-2); margin-top: 4px; font-size: 18px; }
+.ssub b { color: var(--ink); font-weight: 600; }
+.neckp { flex: 1; min-height: 0; display: grid; place-items: center; padding: 6px 10px; background: var(--well); border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); }
+.neckp svg { display: block; width: 100%; height: auto; }
+
+.phrase { flex: none; display: grid; grid-template-columns: 300px 1fr; gap: 16px; height: 100px; }
+.now { border-radius: 12px; background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); padding: 12px 16px; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr; column-gap: 16px; align-items: center; }
+.now .r-cap { color: var(--accent); grid-column: 1 / 3; }
+.now b { font: 700 52px/1 Barlow; }
+.now .wh { display: grid; gap: 6px; justify-items: start; }
+.now .wh span:first-child { font: 500 18px/1 Barlow; color: var(--ink-2); }
+.seq { display: flex; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); background: var(--surf-hi); }
+.seq > span { flex: 1; display: grid; place-content: center; justify-items: center; gap: 6px; border-left: 1px solid var(--line-soft); }
+.seq > span:first-child { border-left: 0; }
+.seq b { font: 700 28px/1 Barlow; color: var(--ink); }
+.seq small { font: 500 18px/1 Barlow; color: var(--ink-3); }
+.seq .past b { color: var(--ink-3); }
+.seq .past.out b { color: var(--bad-i); opacity: .6; }
+.fl { margin-left: -.14em; }
+.seq .on { background: var(--accent); }
+.seq .on b, .seq .on small { color: var(--on-accent); }
+.seq .nx { box-shadow: inset 0 0 0 2px var(--line); }
+.seq .nx small { color: var(--ink-2); }
+
+.r-tag { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 15px; font: 600 18px/1 Barlow; }
+.r-tag i { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.r-tag.ok { color: var(--ok-i); background: var(--ok-t); }
+.r-tag.bad { color: var(--bad-i); background: var(--bad-t); }
+
+.r-legend { flex: none; display: flex; gap: 22px; align-items: center; }
+.r-key { display: inline-flex; align-items: center; font: 500 18px/1 Barlow; color: var(--ink-2); white-space: nowrap; }
+.r-legend svg { width: 22px; height: 22px; margin-right: 8px; flex: none; }
+.r-legend .sep { width: 1px; height: 22px; background: var(--line); }
+
+/* Neon: what is chosen glows */
+.t-neon .seg b.on { background: none; color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 12px rgba(var(--acc-rgb), .45); }
+.t-neon .r-card, .t-neon .neckp, .t-neon .seq { background: rgba(255,255,255,.02); box-shadow: inset 0 0 0 1px var(--line); }
+.t-neon .now { box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 18px rgba(var(--acc-rgb), .4); }
+.t-neon .seq .on { box-shadow: 0 0 22px rgba(var(--acc-rgb), .7); }
+.t-neon svg .glow { filter: drop-shadow(0 0 7px currentColor); }
+
+/* Rack: wells recessed, amber displays */
+.t-rack .neckp, .t-rack .seq { background: #070708; box-shadow: var(--recess); border-radius: 6px; }
+.t-rack .now { background: linear-gradient(#050505, #0b0a08); box-shadow: inset 0 0 0 1px #000, inset 0 2px 12px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.06); border-radius: 6px; }
+.t-rack .now b { color: var(--accent); text-shadow: 0 0 10px rgba(var(--acc-rgb), .8); }
+.t-rack .seq .on { background: #140d04; box-shadow: inset 0 0 0 1px #4a3214; }
+.t-rack .seq .on b { color: var(--accent); text-shadow: 0 0 8px rgba(var(--acc-rgb), .9); }
+.t-rack .seq .on small { color: var(--ink-2); }
+.t-rack svg .glow { filter: drop-shadow(0 0 5px currentColor); }
+</style>
+<div class="page">
+  <div class="sec-h"><h2>Régua no JoVee Jam: o braço da guitarra</h2><p>Escolhe a guitarra da música; o braço fica na afinação dela, mostra a escala, destaca a forma onde a mão está e acende cada nota quando ela toca. Tamanho real da janela, 1280 × 860.</p></div>
+  <div class="scheme"><span class="tnum">Neon · solo</span><div class="win t-neon" data-view="solo"></div></div>
+  <div class="scheme"><span class="tnum">Neon · base</span><div class="win t-neon" data-view="base"></div></div>
+  <div class="scheme"><span class="tnum">Rack · solo</span><div class="win t-rack" data-view="solo"></div></div>
+  <div class="scheme"><span class="tnum">Rack · base</span><div class="win t-rack" data-view="base"></div></div>
+  <div class="scheme"><span class="tnum">Classic · solo</span><div class="win t-classic" data-view="solo"></div></div>
+  <div class="scheme"><span class="tnum">Classic · base</span><div class="win t-classic" data-view="base"></div></div>
+</div>
+<script>
+const IC = {
+  ruler: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/><path d="M12 3v4" stroke="currentColor" stroke-width="2"/></svg>',
+};
+const NAMES = ['C', 'C#', 'D', 'E♭', 'E', 'F', 'F#', 'G', 'A♭', 'A', 'B♭', 'B'];
+// G major: tonic, relative minor tonic, pentatonic, degrees 4 and 7; anything else is outside the scale
+const MARK = { 7: 0, 4: 1, 9: 2, 11: 2, 2: 2, 0: 3, 6: 3 };
+const STD = [4, 9, 2, 7, 11, 4]; // E A D G B E, 6th string first
+// the flat sign comes from a fallback font with wide side bearings: pull it in
+const flatSvg = n => n.replace('♭', '<tspan dx="-4">♭</tspan>');
+const flatHtml = n => n.replace('♭', '<span class="fl">♭</span>');
+
+// played: [{ s: string (1-6), f: fret, st: 'now' | 'past' | 'next' }]
+function neck({ W, sp, r, win, tuning, played, pent }) {
+  const x0 = 100, fw = (W - x0 - 12) / 15, y0 = r + 18, H = y0 + 5 * sp + r + 52;
+  const cx = f => f === 0 ? x0 / 2 + 14 : x0 + (f - .5) * fw, cy = i => y0 + i * sp;
+  let s = `<svg viewBox="0 0 ${W} ${H}">`;
+  const a = win[0] === 0 ? 30 : x0 + (win[0] - 1) * fw, b = x0 + win[1] * fw;
+  s += `<rect x="${a}" y="${y0 - r - 12}" width="${b - a}" height="${5 * sp + 2 * r + 24}" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>`;
+  [3, 5, 7, 9, 15].forEach(f => s += `<circle cx="${cx(f)}" cy="${cy(2.5)}" r="7" fill="var(--ink-3)" opacity=".3"/>`);
+  [1.5, 3.5].forEach(k => s += `<circle cx="${cx(12)}" cy="${cy(k)}" r="7" fill="var(--ink-3)" opacity=".3"/>`);
+  for (let f = 0; f <= 15; f++) {
+    const x = x0 + f * fw;
+    s += f === 0 ? `<rect x="${x - 2}" y="${y0}" width="4" height="${5 * sp}" fill="var(--ink-2)"/>`
+      : `<line x1="${x}" x2="${x}" y1="${y0}" y2="${y0 + 5 * sp}" stroke="var(--ink-3)" stroke-opacity=".45"/>`;
+    s += `<text x="${cx(f)}" y="${y0 + 5 * sp + r + 38}" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="var(--ink-3)">${f}</text>`;
+  }
+  for (let i = 0; i < 6; i++) {
+    s += `<line x1="${x0}" x2="${W - 12}" y1="${cy(i)}" y2="${cy(i)}" stroke="var(--ink-3)" stroke-width="${2 - i * .2}"/>`;
+    s += `<text x="8" y="${cy(i) + 7}" font-family="Barlow" font-weight="700" font-size="20" fill="var(--ink-2)">${NAMES[tuning[i]]}</text>`;
+  }
+  const at = {};
+  played.forEach(p => { const k = `${6 - p.s}:${p.f}`; if (at[k] !== 'now') at[k] = p.st; });
+  for (let i = 0; i < 6; i++) for (let f = 0; f <= 15; f++) {
+    const p = (tuning[i] + f) % 12, st = at[`${i}:${f}`];
+    let m = MARK[p] ?? 4;
+    if (pent && m === 3) m = 4;
+    if (m === 4 && !st) continue;
+    const lit = st || (f >= win[0] && f <= win[1]), x = cx(f), y = cy(i), col = m === 4 ? 'var(--bad)' : 'var(--accent)';
+    s += `<g opacity="${lit ? 1 : .16}">`;
+    if (st === 'now') s += `<circle cx="${x}" cy="${y}" r="${r + 17}" fill="${col}" opacity=".2"/><circle class="glow" style="color:${col}" cx="${x}" cy="${y}" r="${r + 8}" fill="none" stroke="currentColor" stroke-width="4"/>`;
+    if (st === 'past') s += `<circle cx="${x}" cy="${y}" r="${r + 7}" fill="none" stroke="${col}" stroke-width="2.5" opacity=".5"/>`;
+    if (st === 'next') s += `<circle cx="${x}" cy="${y}" r="${r + 7}" fill="none" stroke="var(--ink-2)" stroke-width="2.5" stroke-dasharray="6 5"/>`;
+    let ink = 'var(--well)';
+    if (m === 0) { s += `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" rx="4" fill="var(--accent)"/>`; ink = 'var(--on-accent)'; }
+    if (m === 1) s += `<path d="M${x} ${y - r - 5} L${x + r + 5} ${y} L${x} ${y + r + 5} L${x - r - 5} ${y} Z" fill="var(--ink)"/>`;
+    if (m === 2) s += `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--ink)"/>`;
+    if (m === 3) s += `<path d="M${x} ${y - r - 2} L${x + r + 3} ${y + r} L${x - r - 3} ${y + r} Z" fill="var(--ink-3)"/>`;
+    if (m === 4) { s += `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--surf-hi)" stroke="var(--bad)" stroke-width="1.5"/>`; ink = 'var(--ink)'; }
+    s += `<text x="${x}" y="${y + (m === 3 ? 12 : 6)}" text-anchor="middle" font-family="Barlow" font-weight="700" font-size="18" fill="${ink}">${flatSvg(NAMES[p])}</text></g>`;
+  }
+  return s + '</svg>';
+}
+
+function legend(pent) {
+  const g = d => `<svg viewBox="0 0 22 22">${d}</svg>`;
+  const ring = (c, w, extra = '') => g(`<circle cx="11" cy="11" r="8.5" fill="none" stroke="${c}" stroke-width="${w}" ${extra}/>`);
+  return `<div class="r-legend">
+    <span class="r-key">${g('<rect x="2" y="2" width="18" height="18" rx="3" fill="var(--accent)"/>')}tônica</span>
+    <span class="r-key">${g('<path d="M11 1 L21 11 L11 21 L1 11 Z" fill="var(--ink)"/>')}tônica da relativa</span>
+    <span class="r-key">${g('<circle cx="11" cy="11" r="9" fill="var(--ink)"/>')}pentatônica</span>
+    ${pent ? '' : `<span class="r-key">${g('<path d="M11 2 L21 20 L1 20 Z" fill="var(--ink-3)"/>')}graus 4 e 7</span>`}
+    <span class="sep"></span>
+    <span class="r-key">${ring('var(--accent)', 3.5)}tocando agora</span>
+    <span class="r-key">${ring('var(--accent)', 2, 'opacity=".5"')}já tocou</span>
+    <span class="r-key">${ring('var(--ink-2)', 2, 'stroke-dasharray="4 3"')}próxima</span>
+    <span class="r-key">${ring('var(--bad)', 3)}fora da escala</span></div>`;
+}
+
+function screen({ track, pent, sub, played, now, seq }) {
+  const seg = (items, on, cls = '') => `<span class="seg ${cls}">${items.map((t, i) => `<b class="${i === on ? 'on' : ''} ${t.length > 2 ? 'w' : ''}">${t}</b>`).join('')}</span>`;
+  return `<div class="hdr"><span class="hic"><span class="ic">${IC.ruler}</span></span><h1>JOVEE RULER</h1><span class="r-song">Exemplo em Sol</span></div>
+  <div class="r-body">
+    <div class="r-row"><span class="r-cap">GUITARRA</span>${seg(['Base', 'Solo'], track)}<span class="gap"></span>
+      <span class="r-cap">ESCALA</span>${seg(['Maior', 'Pentatônica'], pent ? 1 : 0)}<span class="grow"></span>
+      <span class="r-cap">AFINAÇÃO</span><span class="tun">E A D G B E</span></div>
+    <div class="head"><div class="grow"><div class="stitle">SOL MAIOR${pent ? ' · PENTATÔNICA' : ''}</div><div class="ssub">${sub}</div></div>
+      <span class="r-cap">FORMA</span>${seg(['Segue a mão', '1', '2', '3', '4', '5', 'Braço todo'], 0, 'num')}</div>
+    <div class="neckp">${neck({ W: 1220, sp: 64, r: 22, win: [3, 5], tuning: STD, played, pent })}</div>
+    <div class="phrase">
+      <div class="now"><span class="r-cap">AGORA</span><b>${now.n}</b><div class="wh"><span>${now.w}</span><span class="r-tag ok"><i></i>na escala</span></div></div>
+      <div class="seq">${seq.map(([n, w, c]) => `<span class="${c || ''}"><b>${flatHtml(n)}</b><small>${w}</small></span>`).join('')}</div>
+    </div>
+    ${legend(pent)}
+  </div>`;
+}
+
+const VIEWS = {
+  solo: () => screen({
+    track: 1, pent: true,
+    sub: 'Guitarra <b>solo</b> · a mão está na forma 1, casas 3 a 5',
+    played: [{ s: 3, f: 3, st: 'past' }, { s: 3, f: 4, st: 'past' }, { s: 2, f: 3, st: 'now' }, { s: 2, f: 5, st: 'next' }],
+    now: { n: 'D', w: 'corda 2 · casa 3' },
+    seq: [['B♭', 'corda 3', 'past out'], ['B', 'corda 3', 'past'], ['D', 'corda 2', 'on'], ['E', 'corda 2', 'nx'], ['D', 'corda 2'], ['B', 'corda 3'], ['G', 'corda 4']],
+  }),
+  base: () => screen({
+    track: 0, pent: false,
+    sub: 'Guitarra <b>base</b> · a mão está na forma 1, casas 3 a 5',
+    played: [
+      ...[[6, 3], [5, 5], [4, 5], [3, 4], [2, 3], [1, 3]].map(([s, f]) => ({ s, f, st: 'now' })),
+      ...[[5, 3], [4, 5], [3, 5], [2, 5], [1, 3]].map(([s, f]) => ({ s, f, st: 'next' })),
+    ],
+    now: { n: 'G', w: 'acorde · casa 3' },
+    seq: [['Em', 'casa 2', 'past'], ['G', 'casa 3', 'on'], ['C', 'casa 3', 'nx'], ['D', 'casa 5'], ['G', 'casa 3'], ['Em', 'casa 2'], ['C', 'casa 3']],
+  }),
+};
+document.querySelectorAll('[data-view]').forEach(el => el.innerHTML = VIEWS[el.dataset.view]());
+// ?only=N shows just the Nth window at the top left, for a headless screenshot of the real size
+const only = new URLSearchParams(location.search).get('only');
+if (only !== null) {
+  document.querySelector('.sec-h').remove();
+  document.querySelectorAll('.scheme').forEach((el, i) => i == only ? el.querySelector('.tnum').remove() : el.remove());
+  document.querySelector('.page').style.cssText = 'padding:0;margin:0';
+}
+</script>
