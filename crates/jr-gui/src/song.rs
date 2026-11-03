@@ -52,7 +52,7 @@ impl Song {
         highest.clamp(MIN_FRETS, MAX_FRETS)
     }
 
-    /// The open strings' notes, lowest string first as the neck draws them.
+    /// The open strings' notes, lowest string first.
     pub fn open(&self) -> Vec<Pc> {
         if self.tuning.is_empty() {
             return STANDARD.to_vec();
