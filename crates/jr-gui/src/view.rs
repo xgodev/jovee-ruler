@@ -12,18 +12,6 @@ use crate::ui::{ChordCard, NoteMark, NowNote, PhraseChip, ShapeButton};
 /// The neck drawn on screen: the nut to fret 15, as in the mockup.
 pub const FRETS: i32 = 15;
 
-const PT_SHARP: [&str; 12] = ["Dó", "Dó#", "Ré", "Ré#", "Mi", "Fá", "Fá#", "Sol", "Sol#", "Lá", "Lá#", "Si"];
-const PT_FLAT: [&str; 12] = ["Dó", "Réb", "Ré", "Mib", "Mi", "Fá", "Solb", "Sol", "Láb", "Lá", "Sib", "Si"];
-
-/// The note as it is said in Portuguese, spelled as in the key ("Sib" in F, "Fá#" in G).
-pub fn spoken(key: Pc, p: Pc) -> &'static str {
-    if name_in(key, p).contains('b') {
-        PT_FLAT[(p % 12) as usize]
-    } else {
-        PT_SHARP[(p % 12) as usize]
-    }
-}
-
 fn relative(key: Pc) -> Pc {
     (key + 9) % 12
 }
@@ -38,19 +26,13 @@ pub fn wheel_index(key: Pc) -> usize {
     fifths().iter().position(|&k| k == key % 12).expect("every key is on the wheel")
 }
 
-/// The key with its flat or sharp said in full: the title's font has capitals only, so "Láb" would
-/// read "LAB".
+/// The key as the neck and the wheel write it, the flat a lowercase "b": "Ab maior".
 pub fn key_title(key: Pc) -> String {
-    let name = spoken(key, key);
-    match (name.strip_suffix('b'), name.strip_suffix('#')) {
-        (Some(n), _) => format!("{n} bemol maior"),
-        (_, Some(n)) => format!("{n} sustenido maior"),
-        _ => format!("{name} maior"),
-    }
+    format!("{} maior", jr_core::note::key_name(key))
 }
 
 pub fn key_subtitle(key: Pc) -> String {
-    format!("Relativa: {} menor", spoken(key, relative(key)))
+    format!("Relativa: {} menor", name_in(key, relative(key)))
 }
 
 /// The relative minor as the wheel names it under the key: "Em".

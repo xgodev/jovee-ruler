@@ -88,11 +88,12 @@ export component Wheel inherits Rectangle {
             alignment: center;
             padding-top: 6px;
             spacing: -14px;
+            // not the display font: its capitals only would turn the flat in "Ab" into "AB"
             Text {
                 text: root.key-name;
                 horizontal-alignment: center;
-                font-family: Theme.display;
-                font-size: 128px;
+                font-size: 112px;
+                font-weight: 700;
                 color: Theme.ink;
             }
             HorizontalLayout {

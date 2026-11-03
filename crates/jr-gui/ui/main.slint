@@ -131,11 +131,11 @@ export component AppWindow inherits Window {
                         VerticalLayout {
                             spacing: Theme.sp1;
                             FieldCaption { text: @tr("Tom"); }
+                            // not the display font: its capitals only would turn the flat in "Ab" into "AB"
                             Text {
                                 text: root.key-title;
-                                font-family: Theme.display;
-                                font-size: 64px;
-                                letter-spacing: 1.9px;
+                                font-size: 56px;
+                                font-weight: 700;
                                 color: Theme.ink;
                             }
                             Text {
@@ -169,9 +169,8 @@ export component AppWindow inherits Window {
                         spacing: Theme.sp1;
                         Text {
                             text: root.key-title;
-                            font-family: Theme.display;
-                            font-size: 48px;
-                            letter-spacing: 1.4px;
+                            font-size: 44px;
+                            font-weight: 700;
                             color: Theme.ink;
                         }
                         Text {
