@@ -27,6 +27,7 @@ body { background: #000; }
 .r-cap { font: 600 18px/1 Barlow; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-3); }
 .seg.num b { min-width: 44px; font-family: "JetBrains Mono"; font-weight: 500; letter-spacing: 0; }
 .seg.num b.w { font-family: Barlow; font-weight: 600; letter-spacing: 1px; }
+.tun.w { font-family: Barlow; font-weight: 600; letter-spacing: 0; }
 .tun { height: 34px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 17px; font: 500 18px/1 "JetBrains Mono"; letter-spacing: 3px; color: var(--ink); background: var(--well-2); box-shadow: inset 0 0 0 1px var(--line); }
 
 .head { display: flex; align-items: center; gap: 12px; }
@@ -88,7 +89,7 @@ body { background: #000; }
 .t-rack svg .glow { filter: drop-shadow(0 0 5px currentColor); }
 </style>
 <div class="page">
-  <div class="sec-h"><h2>Régua no JoVee Jam: o braço da guitarra</h2><p>Escolhe a guitarra da música; o braço fica na afinação dela, mostra a escala, destaca a forma onde a mão está e acende cada nota quando ela toca. A corda mais aguda fica em cima, como o guitarrista vê o braço; a tecla ao lado da afinação inverte as cordas e a escolha fica guardada. Tamanho real da janela, 1280 × 860.</p></div>
+  <div class="sec-h"><h2>Régua no JoVee Jam: o braço da guitarra</h2><p>Escolhe a guitarra da música; o braço fica na afinação dela, mostra a escala, destaca a forma onde a mão está e acende cada nota quando ela toca. A corda mais aguda fica em cima, como o guitarrista vê o braço; a tecla ao lado da afinação inverte as cordas e a escolha fica guardada. Com capo (JoVee Jam #14), a barra do capo fica na casa escolhida, o que vem antes apaga e as casas contam a partir dele, como na tab. Tamanho real da janela, 1280 × 860.</p></div>
   <div class="scheme"><span class="tnum">Neon · solo · aguda em cima (padrão), a tecla de inverter sob o mouse</span><div class="win t-neon" data-view="solo" data-hover></div></div>
   <div class="scheme"><span class="tnum">Neon · solo · invertido: a grave em cima, a tecla acesa</span><div class="win t-neon" data-view="solo" data-low></div></div>
   <div class="scheme"><span class="tnum">Neon · base</span><div class="win t-neon" data-view="base"></div></div>
@@ -96,6 +97,9 @@ body { background: #000; }
   <div class="scheme"><span class="tnum">Rack · base</span><div class="win t-rack" data-view="base"></div></div>
   <div class="scheme"><span class="tnum">Classic · solo</span><div class="win t-classic" data-view="solo"></div></div>
   <div class="scheme"><span class="tnum">Classic · base</span><div class="win t-classic" data-view="base"></div></div>
+  <div class="scheme"><span class="tnum">Neon · capo na 4ª casa: a mão faz C, soa E</span><div class="win t-neon" data-view="capo"></div></div>
+  <div class="scheme"><span class="tnum">Rack · capo</span><div class="win t-rack" data-view="capo"></div></div>
+  <div class="scheme"><span class="tnum">Classic · capo</span><div class="win t-classic" data-view="capo"></div></div>
 </div>
 <script>
 const IC = {
@@ -104,13 +108,17 @@ const IC = {
 const NAMES = ['C', 'C#', 'D', 'E♭', 'E', 'F', 'F#', 'G', 'A♭', 'A', 'B♭', 'B'];
 // G major: tonic, relative minor tonic, pentatonic, degrees 4 and 7; anything else is outside the scale
 const MARK = { 7: 0, 4: 1, 9: 2, 11: 2, 2: 2, 0: 3, 6: 3 };
+// E major, for the capo example
+const MARK_E = { 4: 0, 1: 1, 6: 2, 8: 2, 11: 2, 9: 3, 3: 3 };
+const SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const STD = [4, 9, 2, 7, 11, 4]; // E A D G B E, 6th string first
 // the flat sign comes from a fallback font with wide side bearings: pull it in
 const flatSvg = n => n.replace('♭', '<tspan dx="-4">♭</tspan>');
 const flatHtml = n => n.replace('♭', '<span class="fl">♭</span>');
 
-// played: [{ s: string (1-6), f: fret, st: 'now' | 'past' | 'next' }]; low: the lowest string on top
-function neck({ W, sp, r, win, tuning, played, pent, low }) {
+// played: [{ s: string (1-6), f: fret, st: 'now' | 'past' | 'next' }]; low: the lowest string on top;
+// capo: the fret it clamps (0 = none), frets behind it go dark and the numbers count from it
+function neck({ W, sp, r, win, tuning, played, pent, low, capo = 0, mark = MARK, names = NAMES }) {
   const x0 = 100, fw = (W - x0 - 12) / 15, y0 = r + 18, H = y0 + 5 * sp + r + 52;
   // i counts from the lowest string; the high string is drawn on top unless the strings are flipped
   const cx = f => f === 0 ? x0 / 2 + 14 : x0 + (f - .5) * fw, cy = i => y0 + (low ? i : 5 - i) * sp;
@@ -123,17 +131,22 @@ function neck({ W, sp, r, win, tuning, played, pent, low }) {
     const x = x0 + f * fw;
     s += f === 0 ? `<rect x="${x - 2}" y="${y0}" width="4" height="${5 * sp}" fill="var(--ink-2)"/>`
       : `<line x1="${x}" x2="${x}" y1="${y0}" y2="${y0 + 5 * sp}" stroke="var(--ink-3)" stroke-opacity=".45"/>`;
-    s += `<text x="${cx(f)}" y="${y0 + 5 * sp + r + 38}" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="var(--ink-3)">${f}</text>`;
+    const lab = !capo ? f : f < capo ? '' : f === capo ? 'CAPO' : f - capo;
+    s += `<text x="${cx(f)}" y="${y0 + 5 * sp + r + 38}" text-anchor="middle" font-family="${f === capo && capo ? 'Barlow' : 'JetBrains Mono'}" font-weight="${f === capo && capo ? 700 : 500}" font-size="18" fill="var(${f === capo && capo ? '--ink' : '--ink-3'})">${lab}</text>`;
   }
   for (let i = 0; i < 6; i++) {
     s += `<line x1="${x0}" x2="${W - 12}" y1="${cy(i)}" y2="${cy(i)}" stroke="var(--ink-3)" stroke-width="${2 - i * .2}"/>`;
     s += `<text x="8" y="${cy(i) + 7}" font-family="Barlow" font-weight="700" font-size="20" fill="var(--ink-2)">${NAMES[tuning[i]]}</text>`;
   }
+  if (capo) {
+    s += `<rect x="${x0 + 2}" y="${y0 - r - 14}" width="${(capo - 1) * fw - 2}" height="${5 * sp + 2 * r + 28}" fill="var(--well)" opacity=".78"/>`;
+    s += `<rect x="${x0 + (capo - 1) * fw + 10}" y="${y0 - r - 10}" width="${fw - 20}" height="${5 * sp + 2 * r + 20}" rx="12" fill="var(--ink-2)" opacity=".55"/>`;
+  }
   const at = {};
   played.forEach(p => { const k = `${6 - p.s}:${p.f}`; if (at[k] !== 'now') at[k] = p.st; });
-  for (let i = 0; i < 6; i++) for (let f = 0; f <= 15; f++) {
+  for (let i = 0; i < 6; i++) for (let f = capo; f <= 15; f++) {
     const p = (tuning[i] + f) % 12, st = at[`${i}:${f}`];
-    let m = MARK[p] ?? 4;
+    let m = mark[p] ?? 4;
     if (pent && m === 3) m = 4;
     if (m === 4 && !st) continue;
     const lit = st || (f >= win[0] && f <= win[1]), x = cx(f), y = cy(i), col = m === 4 ? 'var(--bad)' : 'var(--accent)';
@@ -147,7 +160,7 @@ function neck({ W, sp, r, win, tuning, played, pent, low }) {
     if (m === 2) s += `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--ink)"/>`;
     if (m === 3) s += `<path d="M${x} ${y - r - 2} L${x + r + 3} ${y + r} L${x - r - 3} ${y + r} Z" fill="var(--ink-3)"/>`;
     if (m === 4) { s += `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--surf-hi)" stroke="var(--bad)" stroke-width="1.5"/>`; ink = 'var(--ink)'; }
-    s += `<text x="${x}" y="${y + (m === 3 ? 12 : 6)}" text-anchor="middle" font-family="Barlow" font-weight="700" font-size="18" fill="${ink}">${flatSvg(NAMES[p])}</text></g>`;
+    s += `<text x="${x}" y="${y + (m === 3 ? 12 : 6)}" text-anchor="middle" font-family="Barlow" font-weight="700" font-size="18" fill="${ink}">${flatSvg(names[p])}</text></g>`;
   }
   return s + '</svg>';
 }
@@ -168,17 +181,17 @@ function legend(pent) {
 }
 
 const FLIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20V4M4 8l4-4 4 4M16 4v16M12 16l4 4 4-4"/></svg>';
-function screen({ track, pent, sub, played, now, seq, low, hover }) {
+function screen({ track, pent, sub, played, now, seq, low, hover, song = 'Exemplo em Sol', key = 'SOL MAIOR', capo = 0, mark, names, win = [3, 5] }) {
   const seg = (items, on, cls = '') => `<span class="seg ${cls}">${items.map((t, i) => `<b class="${i === on ? 'on' : ''} ${t.length > 2 ? 'w' : ''}">${t}</b>`).join('')}</span>`;
-  return `<div class="hdr"><span class="hic"><span class="ic">${IC.ruler}</span></span><h1>JOVEE RULER</h1><span class="r-song">Exemplo em Sol</span></div>
+  return `<div class="hdr"><span class="hic"><span class="ic">${IC.ruler}</span></span><h1>JOVEE RULER</h1><span class="r-song">${song}</span></div>
   <div class="r-body">
     <div class="r-row"><span class="r-cap">GUITARRA</span>${seg(['Base', 'Solo'], track)}<span class="gap"></span>
       <span class="r-cap">ESCALA</span>${seg(['Maior', 'Pentatônica'], pent ? 1 : 0)}<span class="grow"></span>
-      <span class="r-cap">AFINAÇÃO</span><span class="tun">E A D G B E</span>
+      ${capo ? `<span class="r-cap">CAPO</span><span class="tun w">${capo}ª casa</span><span class="gap"></span>` : ''}<span class="r-cap">AFINAÇÃO</span><span class="tun">E A D G B E</span>
       <span class="ikey ${low ? 'on' : ''} ${hover ? 'hov' : ''}">${FLIP}${hover ? '<span class="tip">Inverter as cordas</span>' : ''}</span></div>
-    <div class="head"><div class="grow"><div class="stitle">SOL MAIOR${pent ? ' · PENTATÔNICA' : ''}</div><div class="ssub">${sub}</div></div>
+    <div class="head"><div class="grow"><div class="stitle">${key}${pent ? ' · PENTATÔNICA' : ''}</div><div class="ssub">${sub}</div></div>
       <span class="r-cap">FORMA</span>${seg(['Segue a mão', '1', '2', '3', '4', '5', 'Braço todo'], 0, 'num')}</div>
-    <div class="neckp">${neck({ W: 1220, sp: 64, r: 22, win: [3, 5], tuning: STD, played, pent, low })}</div>
+    <div class="neckp">${neck({ W: 1220, sp: 64, r: 22, win, tuning: STD, played, pent, low, capo, mark, names })}</div>
     <div class="phrase">
       <div class="now"><span class="r-cap">AGORA</span><b>${now.n}</b><div class="wh"><span>${now.w}</span><span class="r-tag ok"><i></i>na escala</span></div></div>
       <div class="seq">${seq.map(([n, w, c]) => `<span class="${c || ''}"><b>${flatHtml(n)}</b><small>${w}</small></span>`).join('')}</div>
@@ -204,6 +217,17 @@ const VIEWS = {
     ],
     now: { n: 'G', w: 'acorde · casa 3' },
     seq: [['Em', 'casa 2', 'past'], ['G', 'casa 3', 'on'], ['C', 'casa 3', 'nx'], ['D', 'casa 5'], ['G', 'casa 3'], ['Em', 'casa 2'], ['C', 'casa 3']],
+  }),
+  // capo on 4 (JoVee Jam #14): the song is in E, the hand makes C G Am F; the chord names are the shapes
+  capo: (o = {}) => screen({ ...o,
+    track: 0, pent: false, song: 'Cedo ou Tarde', key: 'MI MAIOR', capo: 4, mark: MARK_E, names: SHARPS, win: [4, 7],
+    sub: 'Guitarra <b>base</b> · capo na 4ª casa: a mão faz as formas de Dó e soa Mi',
+    played: [
+      ...[[5, 7], [4, 6], [3, 4], [2, 5], [1, 4]].map(([s, f]) => ({ s, f, st: 'now' })),
+      ...[[6, 7], [5, 6], [4, 4], [3, 4], [2, 4], [1, 7]].map(([s, f]) => ({ s, f, st: 'next' })),
+    ],
+    now: { n: 'C', w: 'soa E · capo 4' },
+    seq: [['F', 'soa A', 'past'], ['C', 'soa E', 'on'], ['G', 'soa B', 'nx'], ['Am', 'soa C#m'], ['F', 'soa A'], ['C', 'soa E'], ['G', 'soa B']],
   }),
 };
 document.querySelectorAll('[data-view]').forEach(el => el.innerHTML = VIEWS[el.dataset.view]({ low: 'low' in el.dataset, hover: 'hover' in el.dataset }));
