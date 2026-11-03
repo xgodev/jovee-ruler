@@ -148,3 +148,18 @@ msgstr "ダイアトニックコードのホイール：{}"
 
 msgid "{} {}, {}"
 msgstr "{} {}、{}"
+
+msgid "Capo"
+msgstr "カポ"
+
+msgid "on fret {}"
+msgstr "{}フレット"
+
+msgid "sounds {} · capo {}"
+msgstr "実音 {0}・カポ {1}"
+
+msgid "sounds {}"
+msgstr "実音 {}"
+
+msgid "Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}"
+msgstr "ギター {0}・カポ {1}フレット：手は {2} のフォーム、実音は {3}"

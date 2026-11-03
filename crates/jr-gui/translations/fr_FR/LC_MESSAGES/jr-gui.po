@@ -148,3 +148,18 @@ msgstr "Roue du champ harmonique : {}"
 
 msgid "{} {}, {}"
 msgstr "{} {}, {}"
+
+msgid "Capo"
+msgstr "Capo"
+
+msgid "on fret {}"
+msgstr "case {}"
+
+msgid "sounds {} · capo {}"
+msgstr "sonne {} · capo {}"
+
+msgid "sounds {}"
+msgstr "sonne {}"
+
+msgid "Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}"
+msgstr "Guitare {} · capo en case {} : la main fait les formes de {} et ça sonne en {}"

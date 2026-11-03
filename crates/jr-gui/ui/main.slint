@@ -71,9 +71,12 @@ export component AppWindow inherits Window {
     callback hand-picked(int);
     in property <int> song-shape;         // the shape on show, 1 to 5; 0 = the whole neck
     in property <string> tuning;
+    in property <int> song-capo;          // the fret the capo clamps; 0 = none
+    in property <string> capo-key;        // with a capo, the key the hand plays in
     private property <string> guitar-name: root.guitar >= 0 && root.guitar < root.guitars.length ? root.guitars[root.guitar] : "";
     out property <string> song-title: root.scale == 1 ? @tr("{} · pentatonic", root.key-title) : root.key-title;
-    out property <string> song-subtitle: root.song-shape == 0 ? @tr("Guitar {} · whole neck", root.guitar-name)
+    out property <string> song-subtitle: root.song-capo > 0 ? @tr("Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}", root.guitar-name, root.song-capo, root.capo-key, root.key-short)
+        : root.song-shape == 0 ? @tr("Guitar {} · whole neck", root.guitar-name)
         : root.hand == 0 ? @tr("Guitar {} · the hand is in shape {}, frets {} to {}", root.guitar-name, root.song-shape, root.song-first, root.song-last)
         : @tr("Guitar {} · shape {}, frets {} to {}", root.guitar-name, root.song-shape, root.song-first, root.song-last);
     in property <[NoteMark]> song-notes;
@@ -229,6 +232,7 @@ export component AppWindow inherits Window {
                 guitar: root.guitar;
                 scale: root.scale;
                 tuning: root.tuning;
+                capo: root.song-capo;
                 title: root.song-title;
                 subtitle: root.song-subtitle;
                 hand: root.hand;

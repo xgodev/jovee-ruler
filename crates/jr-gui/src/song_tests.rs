@@ -60,3 +60,11 @@ fn the_tuning_reads_from_the_6th_string() {
     assert_eq!(drop_d.open(), [2, 9, 2, 7, 11, 4]);
     assert_eq!(Song::default().open(), jr_core::STANDARD, "a song with no tuning is in standard");
 }
+
+#[test]
+fn the_capo_raises_what_the_strings_sound_but_not_their_names() {
+    let song = Song { capo: 4, ..Song::default() };
+    assert_eq!(song.open(), STANDARD.to_vec(), "the strings are tuned as they are");
+    assert_eq!(song.at_capo(), [8, 1, 6, 11, 3, 8], "G# C# F# B D# G#: four semitones higher");
+    assert_eq!(Song::default().at_capo(), STANDARD.to_vec());
+}

@@ -56,6 +56,12 @@ the tab (string, fret, when), its tuning, the song's key and the names of the ot
   show is drawn while it is played, in red. Notes struck within 30 ms are one moment, a chord.
 - **Agora and the phrase**: what sounds now (name, where the hand plays it, inside the scale or not)
   and seven moments around it, two behind. A click on one takes the song there.
+- **The capo**, when Jam passes one (`Song.capo`, 0 to 7): the neck starts at it, the capo drawn where
+  the nut was and the frets counted from it, as the tab counts them; the dots stay on the guitar's
+  frets. A chord is named by the shape the hand makes ("C") with what it sounds beside it ("soa E");
+  a single note keeps the name it sounds. The strings keep the names they are tuned to, and the
+  subtitle says the capo, the key the hand plays in and the key it sounds in. `jr_core::capo` gives a
+  host the shape of each chord and, per fret, the shapes and how many need a barre.
 
 Example: song in G, the solo plays Bb–B–D on strings 3 and 2 around the 3rd fret: the neck holds the G
 pentatonic with shape 1 framed at frets 2 to 5, Bb ringed in red, D ringed as the note sounding.

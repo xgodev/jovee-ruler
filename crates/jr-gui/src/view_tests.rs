@@ -24,6 +24,7 @@ fn song(notes: Vec<SongNote>, chords: &[(f64, &str)]) -> Song {
         tuning: STANDARD_MIDI.to_vec(),
         guitars: vec!["Base".into(), "Solo".into()],
         guitar: 1,
+        capo: 0,
         notes,
         chords: chords.iter().map(|&(start, name)| SongChord { start, name: name.into() }).collect(),
     }
@@ -291,4 +292,53 @@ fn a_four_string_bass_counts_its_shapes_on_its_low_e() {
     let p = page(&bass, Some(0), true, Hand::Follow);
     assert_eq!((p.tuning.as_str(), p.window), ("E A D G", Some((2, 5))));
     assert!(at(&p.notes, 0, 3).sounding);
+}
+
+/// "Cedo ou Tarde" with the capo on the 4th fret: the song plays E then B, the hand makes C then G,
+/// its frets counted from the capo as the tab writes them.
+fn with_capo(chords: &[(f64, &str)]) -> Song {
+    let at_capo = |start: f64, frets: &[(u8, u8)]| -> Vec<SongNote> {
+        frets.iter().map(|&(s, f)| SongNote { midi: STANDARD_MIDI[s as usize - 1] + 4 + f, ..note(start, s, f) }).collect()
+    };
+    let mut notes = at_capo(0.0, &[(5, 3), (4, 2), (3, 0), (2, 1), (1, 0)]);
+    notes.extend(at_capo(1.0, &[(6, 3), (5, 2), (4, 0), (3, 0), (2, 0), (1, 3)]));
+    notes.extend(at_capo(2.0, &[(1, 0)]));
+    Song { key: n("E"), capo: 4, ..song(notes, chords) }
+}
+
+#[test]
+fn with_a_capo_a_chord_is_named_as_the_hand_makes_it_and_says_what_it_sounds() {
+    let p = page(&with_capo(&[(0.0, "E"), (1.0, "B")]), Some(0), false, Hand::Follow);
+    assert_eq!((p.now.name.as_str(), p.now.sounds.as_str(), p.now.fret), ("C", "E", 1), "fret 1 past the capo");
+    let chip = |c: &PhraseChip| (c.name.to_string(), c.sounds.to_string());
+    assert_eq!(chip(&p.phrase[1]), ("G".into(), "B".into()));
+    assert_eq!((p.capo, p.capo_key.as_str()), (4, "C"), "the hand plays in C, the song sounds in E");
+}
+
+#[test]
+fn with_a_capo_a_chord_the_song_does_not_name_is_named_by_its_shape() {
+    let p = page(&with_capo(&[]), Some(1), false, Hand::Follow);
+    assert_eq!((p.now.name.as_str(), p.now.sounds.as_str()), ("G", "B"));
+}
+
+#[test]
+fn with_a_capo_a_note_keeps_the_name_it_sounds() {
+    let p = page(&with_capo(&[]), Some(2), false, Hand::Follow);
+    assert_eq!((p.now.name.as_str(), p.now.sounds.as_str(), p.now.fret), ("G#", "", 0));
+}
+
+#[test]
+fn with_a_capo_the_neck_starts_at_it() {
+    let p = page(&with_capo(&[(0.0, "E")]), Some(0), false, Hand::Follow);
+    assert_eq!(p.tuning, "E A D G B E", "the strings keep their names");
+    assert_eq!(at(&p.notes, 0, 0).name, "G#", "at the capo the low string sounds G#");
+    assert!(at(&p.notes, 1, 3).sounding, "the C shape's 5th string, 3 frets past the capo");
+    assert_eq!(at(&p.notes, 1, 3).name, "E");
+}
+
+#[test]
+fn without_a_capo_nothing_says_what_it_sounds() {
+    let p = page(&rhythm(), Some(0), false, Hand::Follow);
+    assert!(p.now.sounds.is_empty() && p.phrase.iter().all(|c| c.sounds.is_empty()));
+    assert_eq!((p.capo, p.capo_key.as_str()), (0, ""));
 }

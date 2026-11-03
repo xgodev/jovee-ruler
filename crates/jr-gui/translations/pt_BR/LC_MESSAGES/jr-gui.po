@@ -148,3 +148,18 @@ msgstr "Roda do campo harmônico: {}"
 
 msgid "{} {}, {}"
 msgstr "{} {}, {}"
+
+msgid "Capo"
+msgstr "Capo"
+
+msgid "on fret {}"
+msgstr "{}ª casa"
+
+msgid "sounds {} · capo {}"
+msgstr "soa {} · capo {}"
+
+msgid "sounds {}"
+msgstr "soa {}"
+
+msgid "Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}"
+msgstr "Guitarra {} · capo na {}ª casa: a mão faz as formas de {} e soa {}"

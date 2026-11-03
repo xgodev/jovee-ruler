@@ -148,3 +148,18 @@ msgstr "Harmonic field wheel: {}"
 
 msgid "{} {}, {}"
 msgstr "{} {}, {}"
+
+msgid "Capo"
+msgstr "Capo"
+
+msgid "on fret {}"
+msgstr "on fret {}"
+
+msgid "sounds {} · capo {}"
+msgstr "sounds {} · capo {}"
+
+msgid "sounds {}"
+msgstr "sounds {}"
+
+msgid "Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}"
+msgstr "Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}"
