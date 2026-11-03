@@ -89,7 +89,7 @@ body { background: #000; }
 .t-rack svg .glow { filter: drop-shadow(0 0 5px currentColor); }
 </style>
 <div class="page">
-  <div class="sec-h"><h2>Régua no JoVee Jam: o braço da guitarra</h2><p>Escolhe a guitarra da música; o braço fica na afinação dela, mostra a escala, destaca a forma onde a mão está e acende cada nota quando ela toca. A corda mais aguda fica em cima, como o guitarrista vê o braço; a tecla ao lado da afinação inverte as cordas e a escolha fica guardada. Com capo (JoVee Jam #14), a barra do capo fica na casa escolhida, o que vem antes apaga e as casas contam a partir dele, como na tab. Tamanho real da janela, 1280 × 860.</p></div>
+  <div class="sec-h"><h2>Régua no JoVee Jam: o braço da guitarra</h2><p>Escolhe a guitarra da música; o braço fica na afinação dela, mostra a escala, destaca a forma onde a mão está e acende cada nota quando ela toca. A corda mais aguda fica em cima, como o guitarrista vê o braço; a tecla ao lado da afinação inverte as cordas e a escolha fica guardada. Com capo (JoVee Jam #14), o braço começa no capo, que fica no lugar do nut, e as casas contam a partir dele, como na tab. Tamanho real da janela, 1280 × 860.</p></div>
   <div class="scheme"><span class="tnum">Neon · solo · aguda em cima (padrão), a tecla de inverter sob o mouse</span><div class="win t-neon" data-view="solo" data-hover></div></div>
   <div class="scheme"><span class="tnum">Neon · solo · invertido: a grave em cima, a tecla acesa</span><div class="win t-neon" data-view="solo" data-low></div></div>
   <div class="scheme"><span class="tnum">Neon · base</span><div class="win t-neon" data-view="base"></div></div>
@@ -117,7 +117,8 @@ const flatSvg = n => n.replace('♭', '<tspan dx="-4">♭</tspan>');
 const flatHtml = n => n.replace('♭', '<span class="fl">♭</span>');
 
 // played: [{ s: string (1-6), f: fret, st: 'now' | 'past' | 'next' }]; low: the lowest string on top;
-// capo: the fret it clamps (0 = none), frets behind it go dark and the numbers count from it
+// capo: the fret it clamps (0 = none); the neck then starts at it, the capo stands where the nut was and
+// fret f is fret capo + f on the guitar, as the tab counts them
 function neck({ W, sp, r, win, tuning, played, pent, low, capo = 0, mark = MARK, names = NAMES }) {
   const x0 = 100, fw = (W - x0 - 12) / 15, y0 = r + 18, H = y0 + 5 * sp + r + 52;
   // i counts from the lowest string; the high string is drawn on top unless the strings are flipped
@@ -125,27 +126,25 @@ function neck({ W, sp, r, win, tuning, played, pent, low, capo = 0, mark = MARK,
   let s = `<svg viewBox="0 0 ${W} ${H}">`;
   const a = win[0] === 0 ? 30 : x0 + (win[0] - 1) * fw, b = x0 + win[1] * fw;
   s += `<rect x="${a}" y="${y0 - r - 12}" width="${b - a}" height="${5 * sp + 2 * r + 24}" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>`;
-  [3, 5, 7, 9, 15].forEach(f => s += `<circle cx="${cx(f)}" cy="${cy(2.5)}" r="7" fill="var(--ink-3)" opacity=".3"/>`);
-  [1.5, 3.5].forEach(k => s += `<circle cx="${cx(12)}" cy="${cy(k)}" r="7" fill="var(--ink-3)" opacity=".3"/>`);
+  const inlay = f => f > 0 && f <= 15;
+  [3, 5, 7, 9, 15, 17, 19].map(f => f - capo).filter(inlay).forEach(f => s += `<circle cx="${cx(f)}" cy="${cy(2.5)}" r="7" fill="var(--ink-3)" opacity=".3"/>`);
+  if (inlay(12 - capo)) [1.5, 3.5].forEach(k => s += `<circle cx="${cx(12 - capo)}" cy="${cy(k)}" r="7" fill="var(--ink-3)" opacity=".3"/>`);
   for (let f = 0; f <= 15; f++) {
     const x = x0 + f * fw;
-    s += f === 0 ? `<rect x="${x - 2}" y="${y0}" width="4" height="${5 * sp}" fill="var(--ink-2)"/>`
+    s += f === 0 && capo ? `<rect x="${x - 8}" y="${y0 - r - 6}" width="16" height="${5 * sp + 2 * r + 12}" rx="6" fill="var(--ink-2)"/>`
+      : f === 0 ? `<rect x="${x - 2}" y="${y0}" width="4" height="${5 * sp}" fill="var(--ink-2)"/>`
       : `<line x1="${x}" x2="${x}" y1="${y0}" y2="${y0 + 5 * sp}" stroke="var(--ink-3)" stroke-opacity=".45"/>`;
-    const lab = !capo ? f : f < capo ? '' : f === capo ? 'CAPO' : f - capo;
-    s += `<text x="${cx(f)}" y="${y0 + 5 * sp + r + 38}" text-anchor="middle" font-family="${f === capo && capo ? 'Barlow' : 'JetBrains Mono'}" font-weight="${f === capo && capo ? 700 : 500}" font-size="18" fill="var(${f === capo && capo ? '--ink' : '--ink-3'})">${lab}</text>`;
+    const cap = f === 0 && capo;
+    s += `<text x="${cx(f)}" y="${y0 + 5 * sp + r + 38}" text-anchor="middle" font-family="${cap ? 'Barlow' : 'JetBrains Mono'}" font-weight="${cap ? 700 : 500}" font-size="18" fill="var(${cap ? '--ink' : '--ink-3'})">${cap ? 'CAPO' : f}</text>`;
   }
   for (let i = 0; i < 6; i++) {
     s += `<line x1="${x0}" x2="${W - 12}" y1="${cy(i)}" y2="${cy(i)}" stroke="var(--ink-3)" stroke-width="${2 - i * .2}"/>`;
     s += `<text x="8" y="${cy(i) + 7}" font-family="Barlow" font-weight="700" font-size="20" fill="var(--ink-2)">${NAMES[tuning[i]]}</text>`;
   }
-  if (capo) {
-    s += `<rect x="${x0 + 2}" y="${y0 - r - 14}" width="${(capo - 1) * fw - 2}" height="${5 * sp + 2 * r + 28}" fill="var(--well)" opacity=".78"/>`;
-    s += `<rect x="${x0 + (capo - 1) * fw + 10}" y="${y0 - r - 10}" width="${fw - 20}" height="${5 * sp + 2 * r + 20}" rx="12" fill="var(--ink-2)" opacity=".55"/>`;
-  }
   const at = {};
-  played.forEach(p => { const k = `${6 - p.s}:${p.f}`; if (at[k] !== 'now') at[k] = p.st; });
-  for (let i = 0; i < 6; i++) for (let f = capo; f <= 15; f++) {
-    const p = (tuning[i] + f) % 12, st = at[`${i}:${f}`];
+  played.forEach(p => { const k = `${6 - p.s}:${p.f - capo}`; if (at[k] !== 'now') at[k] = p.st; });
+  for (let i = 0; i < 6; i++) for (let f = 0; f <= 15; f++) {
+    const p = (tuning[i] + capo + f) % 12, st = at[`${i}:${f}`];
     let m = mark[p] ?? 4;
     if (pent && m === 3) m = 4;
     if (m === 4 && !st) continue;
@@ -220,7 +219,7 @@ const VIEWS = {
   }),
   // capo on 4 (JoVee Jam #14): the song is in E, the hand makes C G Am F; the chord names are the shapes
   capo: (o = {}) => screen({ ...o,
-    track: 0, pent: false, song: 'Cedo ou Tarde', key: 'MI MAIOR', capo: 4, mark: MARK_E, names: SHARPS, win: [4, 7],
+    track: 0, pent: false, song: 'Cedo ou Tarde', key: 'MI MAIOR', capo: 4, mark: MARK_E, names: SHARPS, win: [0, 3],
     sub: 'Guitarra <b>base</b> · capo na 4ª casa: a mão faz as formas de Dó e soa Mi',
     played: [
       ...[[5, 7], [4, 6], [3, 4], [2, 5], [1, 4]].map(([s, f]) => ({ s, f, st: 'now' })),
