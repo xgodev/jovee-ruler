@@ -45,6 +45,10 @@ the tab (string, fret, when), its tuning, the song's key and the names of the ot
 - **The guitar**, picked from the song's tracks in a select; Jam answers a pick with that guitar's notes.
 - **The scale**: the major scale of the key or its pentatonic, on a neck in the guitar's tuning (any
   number of strings, open notes named on the left) and as long as the guitar plays, 15 to 24 frets.
+- **The strings as a tab reads them**: the highest on the top line. The key beside the tuning flips
+  the neck, the lowest on top as on the printed ruler, and is lit while flipped; the choice is kept in
+  `~/.jovee/ruler/config.yaml` (`top_string: high` or `low`) for the next opening. The scale page keeps
+  the printed ruler's order.
 - **The shape the hand is in**: "Segue a mão" frames the CAGED box nearest the frets held down, and
   moves with the hand; 1 to 5 fixes one box near the hand; "Braço todo" frames nothing.
 - **The notes as the tab plays them**: only the one sounding is lit, with a thick ring and a halo; the
@@ -80,6 +84,8 @@ same in the standalone app (where the user types the key and plays the notes) an
   `Ruler::follow_song`, moves it on with `Ruler::at(seconds)`, hears a click on the phrase through
   `Ruler::on_seek` (the start of that moment, in seconds) and a pick of another guitar through
   `Ruler::on_guitar` (its index in `Song::guitars`). The scale and the shape picked stay across guitars.
+  `Ruler::keep_choices_in(root)` (normally `jovee_theme::jovee_root()`) keeps the strings flipped
+  between openings; without it nothing is written.
 - `harmonic-field/`, `scale/`: the printed pieces, as today.
 
 Where the mockup and the printed art disagree, the screens follow the printed art: roman numerals

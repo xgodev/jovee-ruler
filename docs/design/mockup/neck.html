@@ -55,6 +55,12 @@ body { background: #000; }
 .seq .nx { box-shadow: inset 0 0 0 2px var(--line); }
 .seq .nx small { color: var(--ink-2); }
 
+.ikey { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 50%; color: var(--ink-2); opacity: .85; position: relative; }
+.ikey svg { width: 18px; height: 18px; }
+.ikey.on { color: var(--accent); opacity: 1; }
+.t-neon .ikey.on { background: radial-gradient(circle, rgba(var(--acc-rgb), .3) 0%, transparent 70%); }
+.ikey.hov { background: rgba(255,255,255,.06); }
+.tip { position: absolute; top: 40px; right: -4px; white-space: nowrap; padding: 6px 10px; border-radius: 6px; font: 400 18px/1.2 Barlow; color: var(--ink); background: var(--surf-hi); box-shadow: inset 0 0 0 1px var(--line), 0 4px 12px rgba(0,0,0,.6); opacity: 1; z-index: 2; }
 .r-tag { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 15px; font: 600 18px/1 Barlow; }
 .r-tag i { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
 .r-tag.ok { color: var(--ok-i); background: var(--ok-t); }
@@ -82,8 +88,9 @@ body { background: #000; }
 .t-rack svg .glow { filter: drop-shadow(0 0 5px currentColor); }
 </style>
 <div class="page">
-  <div class="sec-h"><h2>Régua no JoVee Jam: o braço da guitarra</h2><p>Escolhe a guitarra da música; o braço fica na afinação dela, mostra a escala, destaca a forma onde a mão está e acende cada nota quando ela toca. Tamanho real da janela, 1280 × 860.</p></div>
-  <div class="scheme"><span class="tnum">Neon · solo</span><div class="win t-neon" data-view="solo"></div></div>
+  <div class="sec-h"><h2>Régua no JoVee Jam: o braço da guitarra</h2><p>Escolhe a guitarra da música; o braço fica na afinação dela, mostra a escala, destaca a forma onde a mão está e acende cada nota quando ela toca. A corda mais aguda fica em cima, como o guitarrista vê o braço; a tecla ao lado da afinação inverte as cordas e a escolha fica guardada. Tamanho real da janela, 1280 × 860.</p></div>
+  <div class="scheme"><span class="tnum">Neon · solo · aguda em cima (padrão), a tecla de inverter sob o mouse</span><div class="win t-neon" data-view="solo" data-hover></div></div>
+  <div class="scheme"><span class="tnum">Neon · solo · invertido: a grave em cima, a tecla acesa</span><div class="win t-neon" data-view="solo" data-low></div></div>
   <div class="scheme"><span class="tnum">Neon · base</span><div class="win t-neon" data-view="base"></div></div>
   <div class="scheme"><span class="tnum">Rack · solo</span><div class="win t-rack" data-view="solo"></div></div>
   <div class="scheme"><span class="tnum">Rack · base</span><div class="win t-rack" data-view="base"></div></div>
@@ -102,10 +109,11 @@ const STD = [4, 9, 2, 7, 11, 4]; // E A D G B E, 6th string first
 const flatSvg = n => n.replace('♭', '<tspan dx="-4">♭</tspan>');
 const flatHtml = n => n.replace('♭', '<span class="fl">♭</span>');
 
-// played: [{ s: string (1-6), f: fret, st: 'now' | 'past' | 'next' }]
-function neck({ W, sp, r, win, tuning, played, pent }) {
+// played: [{ s: string (1-6), f: fret, st: 'now' | 'past' | 'next' }]; low: the lowest string on top
+function neck({ W, sp, r, win, tuning, played, pent, low }) {
   const x0 = 100, fw = (W - x0 - 12) / 15, y0 = r + 18, H = y0 + 5 * sp + r + 52;
-  const cx = f => f === 0 ? x0 / 2 + 14 : x0 + (f - .5) * fw, cy = i => y0 + i * sp;
+  // i counts from the lowest string; the high string is drawn on top unless the strings are flipped
+  const cx = f => f === 0 ? x0 / 2 + 14 : x0 + (f - .5) * fw, cy = i => y0 + (low ? i : 5 - i) * sp;
   let s = `<svg viewBox="0 0 ${W} ${H}">`;
   const a = win[0] === 0 ? 30 : x0 + (win[0] - 1) * fw, b = x0 + win[1] * fw;
   s += `<rect x="${a}" y="${y0 - r - 12}" width="${b - a}" height="${5 * sp + 2 * r + 24}" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>`;
@@ -159,16 +167,18 @@ function legend(pent) {
     <span class="r-key">${ring('var(--bad)', 3)}fora da escala</span></div>`;
 }
 
-function screen({ track, pent, sub, played, now, seq }) {
+const FLIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20V4M4 8l4-4 4 4M16 4v16M12 16l4 4 4-4"/></svg>';
+function screen({ track, pent, sub, played, now, seq, low, hover }) {
   const seg = (items, on, cls = '') => `<span class="seg ${cls}">${items.map((t, i) => `<b class="${i === on ? 'on' : ''} ${t.length > 2 ? 'w' : ''}">${t}</b>`).join('')}</span>`;
   return `<div class="hdr"><span class="hic"><span class="ic">${IC.ruler}</span></span><h1>JOVEE RULER</h1><span class="r-song">Exemplo em Sol</span></div>
   <div class="r-body">
     <div class="r-row"><span class="r-cap">GUITARRA</span>${seg(['Base', 'Solo'], track)}<span class="gap"></span>
       <span class="r-cap">ESCALA</span>${seg(['Maior', 'Pentatônica'], pent ? 1 : 0)}<span class="grow"></span>
-      <span class="r-cap">AFINAÇÃO</span><span class="tun">E A D G B E</span></div>
+      <span class="r-cap">AFINAÇÃO</span><span class="tun">E A D G B E</span>
+      <span class="ikey ${low ? 'on' : ''} ${hover ? 'hov' : ''}">${FLIP}${hover ? '<span class="tip">Inverter as cordas</span>' : ''}</span></div>
     <div class="head"><div class="grow"><div class="stitle">SOL MAIOR${pent ? ' · PENTATÔNICA' : ''}</div><div class="ssub">${sub}</div></div>
       <span class="r-cap">FORMA</span>${seg(['Segue a mão', '1', '2', '3', '4', '5', 'Braço todo'], 0, 'num')}</div>
-    <div class="neckp">${neck({ W: 1220, sp: 64, r: 22, win: [3, 5], tuning: STD, played, pent })}</div>
+    <div class="neckp">${neck({ W: 1220, sp: 64, r: 22, win: [3, 5], tuning: STD, played, pent, low })}</div>
     <div class="phrase">
       <div class="now"><span class="r-cap">AGORA</span><b>${now.n}</b><div class="wh"><span>${now.w}</span><span class="r-tag ok"><i></i>na escala</span></div></div>
       <div class="seq">${seq.map(([n, w, c]) => `<span class="${c || ''}"><b>${flatHtml(n)}</b><small>${w}</small></span>`).join('')}</div>
@@ -178,14 +188,14 @@ function screen({ track, pent, sub, played, now, seq }) {
 }
 
 const VIEWS = {
-  solo: () => screen({
+  solo: (o = {}) => screen({ ...o,
     track: 1, pent: true,
     sub: 'Guitarra <b>solo</b> · a mão está na forma 1, casas 3 a 5',
     played: [{ s: 3, f: 3, st: 'past' }, { s: 3, f: 4, st: 'past' }, { s: 2, f: 3, st: 'now' }, { s: 2, f: 5, st: 'next' }],
     now: { n: 'D', w: 'corda 2 · casa 3' },
     seq: [['B♭', 'corda 3', 'past out'], ['B', 'corda 3', 'past'], ['D', 'corda 2', 'on'], ['E', 'corda 2', 'nx'], ['D', 'corda 2'], ['B', 'corda 3'], ['G', 'corda 4']],
   }),
-  base: () => screen({
+  base: (o = {}) => screen({ ...o,
     track: 0, pent: false,
     sub: 'Guitarra <b>base</b> · a mão está na forma 1, casas 3 a 5',
     played: [
@@ -196,7 +206,7 @@ const VIEWS = {
     seq: [['Em', 'casa 2', 'past'], ['G', 'casa 3', 'on'], ['C', 'casa 3', 'nx'], ['D', 'casa 5'], ['G', 'casa 3'], ['Em', 'casa 2'], ['C', 'casa 3']],
   }),
 };
-document.querySelectorAll('[data-view]').forEach(el => el.innerHTML = VIEWS[el.dataset.view]());
+document.querySelectorAll('[data-view]').forEach(el => el.innerHTML = VIEWS[el.dataset.view]({ low: 'low' in el.dataset, hover: 'hover' in el.dataset }));
 // ?only=N shows just the Nth window at the top left, for a headless screenshot of the real size
 const only = new URLSearchParams(location.search).get('only');
 if (only !== null) {

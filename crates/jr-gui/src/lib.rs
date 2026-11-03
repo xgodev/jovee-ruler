@@ -2,6 +2,7 @@
 //! harmonic field and the scale, and a host (JoVee Jam) hands it a song to follow.
 
 use std::cell::RefCell;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use jr_core::note::fifths;
@@ -11,6 +12,7 @@ use slint::{ComponentHandle, ModelRc, VecModel};
 pub mod ui {
     slint::include_modules!();
 }
+mod choices;
 pub mod song;
 pub mod view;
 
@@ -31,6 +33,10 @@ struct State {
     now: Option<usize>,
     pentatonic: bool,
     hand: Hand,
+    /// The song's neck flipped: the lowest string on top, as on the printed ruler.
+    low_on_top: bool,
+    /// Where the user's choices are kept; `None` keeps nothing.
+    choices: Option<PathBuf>,
     on_seek: Option<Rc<dyn Fn(f64)>>,
     on_guitar: Option<Rc<dyn Fn(usize)>>,
 }
@@ -102,6 +108,17 @@ impl Ruler {
         window.on_scale_picked(move |i| redraw(&w, &s, |st| st.pentatonic = i == 1));
         let (w, s) = (window.as_weak(), state.clone());
         window.on_hand_picked(move |i| redraw(&w, &s, |st| st.hand = Hand::from_index(i)));
+        let (w, s) = (window.as_weak(), state.clone());
+        window.on_strings_flipped(move || {
+            redraw(&w, &s, |st| st.low_on_top = !st.low_on_top);
+            let st = s.borrow();
+            if let Some(root) = &st.choices {
+                // the flip stays on screen; only the next opening forgets it
+                if let Err(error) = choices::save(root, st.low_on_top) {
+                    eprintln!("JoVee Ruler: could not keep the strings flipped: {error}");
+                }
+            }
+        });
 
         show_key(&window, &state.borrow());
         Ok(Ruler { window, state })
@@ -115,6 +132,18 @@ impl Ruler {
     /// user switches; the change shows at once.
     pub fn set_theme(&self, look: ThemeId) {
         self.window.global::<ui::Theme>().set_index(look.index());
+    }
+
+    /// Keeps the user's choices under `root`, normally `jovee_theme::jovee_root()`, and shows the ones
+    /// kept there: today which string the song page draws on top. Without it the highest is on top and a
+    /// flip is forgotten when the ruler closes.
+    pub fn keep_choices_in(&self, root: &Path) {
+        {
+            let mut s = self.state.borrow_mut();
+            s.low_on_top = choices::low_on_top(root);
+            s.choices = Some(root.to_path_buf());
+        }
+        show_song(&self.window, &self.state.borrow());
     }
 
     /// Turns the wheel and the scale to a major key.
@@ -190,6 +219,7 @@ fn show_song(w: &AppWindow, s: &State) {
     w.set_guitar(song.guitar as i32);
     w.set_scale(s.pentatonic as i32);
     w.set_hand(s.hand.index());
+    w.set_high_on_top(!s.low_on_top);
     w.set_tuning(page.tuning.into());
     w.set_song_title(page.title.into());
     w.set_song_subtitle(page.subtitle.into());
