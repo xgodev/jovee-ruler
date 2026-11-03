@@ -82,11 +82,11 @@ fn shape_buttons_fit_on_the_screen_neck() {
     assert_eq!(
         got,
         [
-            ("1".into(), 3, 5),
-            ("2".into(), 5, 7),
+            ("1".into(), 2, 5),
+            ("2".into(), 4, 8),
             ("3".into(), 7, 10),
-            ("4".into(), 10, 12),
-            ("5".into(), 0, 3),
+            ("4".into(), 9, 13),
+            ("5".into(), 11, 15),
             ("Braço todo".into(), -1, -1)
         ]
     );
@@ -95,7 +95,7 @@ fn shape_buttons_fit_on_the_screen_neck() {
             assert!(s.first >= 0 && s.last <= FRETS, "key {key}: {s:?} off the neck");
         }
     }
-    assert_eq!(shape_subtitle(n("G"), &b[0]), "Forma 1 · 2 na relativa menor · casas 3 a 5");
+    assert_eq!(shape_subtitle(n("G"), &b[0]), "Forma 1 · 2 na relativa menor · casas 2 a 5");
 }
 
 #[test]
@@ -159,17 +159,17 @@ fn following_a_song_only_the_note_sounding_and_the_next_one_stand_out() {
     assert!(p.notes.iter().all(|m| m.lit == (m.sounding || m.next)));
     assert!(p.notes.iter().all(|m| !(m.string == 3 && m.fret == 3)), "the blue third went with its note");
     // the shape still shows where the hand is
-    assert_eq!(p.window, Some((3, 5)));
+    assert_eq!(p.window, Some((2, 5)));
 }
 
 #[test]
 fn the_lead_of_the_mockup() {
     let p = page(&solo(), Some(2), true, Hand::Follow);
     assert_eq!(p.title, "G maior · pentatônica");
-    assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 3 a 5");
+    assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 2 a 5");
     assert_eq!(p.tuning, "E A D G B E");
     assert_eq!(p.open_names, ["E", "A", "D", "G", "B", "E"]);
-    assert_eq!((p.frets, p.window), (FRETS, Some((3, 5))));
+    assert_eq!((p.frets, p.window), (FRETS, Some((2, 5))));
     assert_eq!(
         (p.now.name.as_str(), p.now.detail.as_str(), p.now.outside, p.now.empty),
         ("D", "corda 2 · casa 3", false, false)
@@ -206,7 +206,8 @@ fn the_rhythm_of_the_mockup() {
     let sounding: Vec<(i32, i32)> = p.notes.iter().filter(|m| m.sounding).map(|m| (m.string, m.fret)).collect();
     assert_eq!(sounding, [(0, 3), (1, 5), (2, 5), (3, 4), (4, 3), (5, 3)], "the whole G chord");
     // the C comes next: the frets it shares with the G keep ringing, the others wait for it
-    let waiting: Vec<(i32, i32)> = p.notes.iter().filter(|m| m.next && !m.sounding).map(|m| (m.string, m.fret)).collect();
+    let waiting: Vec<(i32, i32)> =
+        p.notes.iter().filter(|m| m.next && !m.sounding).map(|m| (m.string, m.fret)).collect();
     assert_eq!(waiting, [(1, 3), (3, 5), (4, 5)]);
     assert_eq!(lit(&p), [(0, 3), (1, 3), (1, 5), (2, 5), (3, 4), (3, 5), (4, 3), (4, 5), (5, 3)]);
     assert!(p.notes.iter().any(|m| m.mark == 3), "the major scale shows the 4th and 7th");
@@ -225,10 +226,14 @@ fn a_chord_the_song_does_not_name_names_itself() {
 #[test]
 fn a_shape_can_be_picked_or_the_whole_neck_shown() {
     let p = page(&solo(), Some(2), true, Hand::Shape(2));
-    assert_eq!((p.window, p.subtitle.as_str()), (Some((5, 7)), "Guitarra Solo · forma 2, casas 5 a 7"));
+    assert_eq!((p.window, p.subtitle.as_str()), (Some((4, 8)), "Guitarra Solo · forma 2, casas 4 a 8"));
     let p = page(&solo(), Some(2), true, Hand::Whole);
     assert_eq!((p.window, p.subtitle.as_str()), (None, "Guitarra Solo · braço todo"));
-    assert_eq!(lit(&p), [(4, 3), (4, 5)], "the whole neck shows the scale, still only the note sounding and the next are lit");
+    assert_eq!(
+        lit(&p),
+        [(4, 3), (4, 5)],
+        "the whole neck shows the scale, still only the note sounding and the next are lit"
+    );
     assert_eq!(hand_options().len(), 7);
     assert_eq!(
         (Hand::from_index(0), Hand::from_index(3), Hand::from_index(6)),
@@ -242,7 +247,8 @@ fn a_shape_picked_on_a_long_neck_is_the_box_nearest_the_hand() {
     let frets = [(3, 15), (3, 16), (2, 15), (2, 17), (2, 19)];
     let high = song(frets.iter().enumerate().map(|(i, &(s, f))| note(i as f64, s, f)).collect(), &[]);
     let p = page(&high, Some(4), true, Hand::Shape(2));
-    assert_eq!((p.frets, p.window), (19, Some((17, 19))), "not the box at 5 to 7");
+    // the box runs one fret past the end of the neck, and is still nearer than the one at 4 to 8
+    assert_eq!((p.frets, p.window), (19, Some((16, 19))));
 }
 
 #[test]
@@ -255,7 +261,7 @@ fn before_the_first_note_only_the_first_one_stands_out_as_next() {
     assert_eq!(next(&p), [(3, 3)]);
     assert_eq!(at(&p.notes, 3, 3).mark, 4);
     assert!(p.notes.iter().all(|m| !m.sounding));
-    assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 3 a 5");
+    assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 2 a 5");
 }
 
 #[test]
@@ -300,6 +306,6 @@ fn a_four_string_bass_counts_its_shapes_on_its_low_e() {
         ..song(Vec::new(), &[])
     };
     let p = page(&bass, Some(0), true, Hand::Follow);
-    assert_eq!((p.tuning.as_str(), p.window), ("E A D G", Some((3, 5))));
+    assert_eq!((p.tuning.as_str(), p.window), ("E A D G", Some((2, 5))));
     assert!(at(&p.notes, 0, 3).sounding);
 }

@@ -1,5 +1,5 @@
 //! The scale ruler: what each note of the neck is in a key, and the five shapes of the
-//! pentatonic as boxes of frets.
+//! pentatonic and of the major scale as boxes of frets.
 
 use crate::field::outside;
 use crate::note::{pc, Pc};
@@ -64,8 +64,9 @@ pub fn tonic_fret(lowest: Pc, key: Pc) -> u8 {
     pc(key as i32 - lowest as i32)
 }
 
-/// One shape: a box of frets, both ends included. Neighbouring boxes share their edge
-/// fret, which is how the shapes join up on the neck.
+/// One shape: a box of frets, both ends included, from the lowest to the highest fret its
+/// notes are played on across the six strings. Neighbouring boxes overlap, which is how the
+/// shapes join up on the neck.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Shape {
     /// 1..=5, counted in the major key (the top row of the label).
@@ -86,17 +87,26 @@ impl Shape {
     }
 }
 
-/// The box edges in frets from the tonic: `SHAPES` in `scale/art_scale.py`.
-const EDGES: [i32; 6] = [0, 2, 4, 7, 9, 12];
+/// The boxes of the pentatonic in frets from the tonic on the lowest string, shape 1 to 5. Shape n
+/// plays two notes on each string, from degree n on the lowest one; the box is every fret they use
+/// on a standard neck, so shape 1 takes the fret under the tonic, where the 5th string plays the 3rd.
+const PENTATONIC_BOXES: [(i32, i32); 5] = [(-1, 2), (1, 5), (4, 7), (6, 9), (9, 12)];
 
-/// Every shape box that touches the neck from the nut to `frets`, in order along the neck.
-pub fn shapes(lowest: Pc, key: Pc, frets: i32) -> Vec<Shape> {
+/// The boxes of the major scale: the pentatonic ones with the 4th and 7th added. Where a note has
+/// no place inside the pentatonic box, it goes on the string that keeps its notes closest: shape 4
+/// reaches up for the 4th on the 2nd string, shape 5 back for the 7th on the 3rd.
+const MAJOR_BOXES: [(i32, i32); 5] = [(-1, 2), (1, 5), (4, 7), (6, 10), (8, 12)];
+
+/// Every shape box that touches the neck from the nut to `frets`, in order along the neck, as
+/// the pentatonic plays it or as the major scale does.
+pub fn shapes(lowest: Pc, key: Pc, frets: i32, pentatonic: bool) -> Vec<Shape> {
     let tonic = tonic_fret(lowest, key) as i32;
+    let boxes = if pentatonic { PENTATONIC_BOXES } else { MAJOR_BOXES };
     let mut out = Vec::new();
     for octave in -1..=(frets / 12 + 1) {
-        for n in 0..5 {
-            let first = tonic + 12 * octave + EDGES[n];
-            let last = tonic + 12 * octave + EDGES[n + 1];
+        for (n, &(a, b)) in boxes.iter().enumerate() {
+            let first = tonic + 12 * octave + a;
+            let last = tonic + 12 * octave + b;
             if last >= 0 && first <= frets {
                 out.push(Shape { major: n as u8 + 1, minor: ((n + 1) % 5) as u8 + 1, first, last });
             }
@@ -106,10 +116,10 @@ pub fn shapes(lowest: Pc, key: Pc, frets: i32) -> Vec<Shape> {
 }
 
 /// The shape whose middle is nearest a fret: where the hand is, the box it is playing in.
-/// A box that runs past the nut is left out unless it is the only one there.
-pub fn shape_near(lowest: Pc, key: Pc, fret: f32) -> Shape {
-    let all = shapes(lowest, key, fret.ceil().max(0.0) as i32 + 12);
-    let on_neck = all.iter().filter(|s| s.first >= 0);
+/// A box mostly past the nut is left out unless it is the only one there.
+pub fn shape_near(lowest: Pc, key: Pc, fret: f32, pentatonic: bool) -> Shape {
+    let all = shapes(lowest, key, fret.ceil().max(0.0) as i32 + 12, pentatonic);
+    let on_neck = all.iter().filter(|s| s.middle() >= 0.0);
     let pick = |it: &mut dyn Iterator<Item = &Shape>| {
         it.min_by(|a, b| (a.middle() - fret).abs().total_cmp(&(b.middle() - fret).abs())).copied()
     };

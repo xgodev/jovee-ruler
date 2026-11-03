@@ -60,10 +60,10 @@ pub fn chord_cards(key: Pc) -> Vec<ChordCard> {
         .collect()
 }
 
-/// One button per shape, 1 to 5 in the major key, each at its first box that fits whole on the
-/// neck on screen; then the whole neck.
+/// One button per shape of the major scale, 1 to 5 in the major key, each at its first box that
+/// fits whole on the neck on screen; then the whole neck.
 pub fn shape_buttons(key: Pc) -> Vec<ShapeButton> {
-    let boxes = shapes(STANDARD[0], key, FRETS);
+    let boxes = shapes(STANDARD[0], key, FRETS, false);
     let mut out: Vec<ShapeButton> = (1..=5)
         .map(|n| {
             let s = boxes
@@ -82,9 +82,9 @@ pub fn shape_options(buttons: &[ShapeButton]) -> Vec<slint::SharedString> {
     buttons.iter().map(|b| b.label.clone()).collect()
 }
 
-/// "Forma 1 · 2 na relativa menor · casas 3 a 5", or the whole neck.
+/// "Forma 1 · 2 na relativa menor · casas 2 a 5", or the whole neck.
 pub fn shape_subtitle(key: Pc, button: &ShapeButton) -> String {
-    let boxes = shapes(STANDARD[0], key, FRETS);
+    let boxes = shapes(STANDARD[0], key, FRETS, false);
     match boxes.iter().find(|s| s.first == button.first && s.last == button.last) {
         Some(s) => format!("Forma {} · {} na relativa menor · casas {} a {}", s.major, s.minor, s.first, s.last),
         None => "Braço todo · as cinco formas".into(),
@@ -269,13 +269,13 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
     let fret = hand_fret(moments, now);
     let base = shape_string(&open);
     let shape: Option<Shape> = match hand {
-        Hand::Follow => fret.map(|f| shape_near(base, key, f)),
+        Hand::Follow => fret.map(|f| shape_near(base, key, f, pentatonic)),
         Hand::Shape(n) => {
             let middle = |s: &Shape| (s.first + s.last) as f32 / 2.0;
             let at = fret.unwrap_or(0.0);
-            shapes(base, key, frets)
+            shapes(base, key, frets, pentatonic)
                 .into_iter()
-                .filter(|s| s.major == n && s.first >= 0 && s.last <= frets)
+                .filter(|s| s.major == n && (0.0..=frets as f32).contains(&middle(s)))
                 .min_by(|a, b| (middle(a) - at).abs().total_cmp(&(middle(b) - at).abs()))
         }
         Hand::Whole => None,
