@@ -1,3 +1,5 @@
+> **Moved.** This code now lives in the JoVee monorepo, [xgodev/jovee-studio](https://github.com/xgodev/jovee-studio), under `apps/ruler`. This repository is archived and read-only.
+
 # JoVee Ruler
 
 Two music-theory tools for guitar, made to be 3D printed — and as interactive
