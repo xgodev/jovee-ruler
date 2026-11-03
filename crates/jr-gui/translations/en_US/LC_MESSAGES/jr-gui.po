@@ -65,6 +65,9 @@ msgstr "playing next"
 msgid "outside the scale"
 msgstr "outside the scale"
 
+msgid "Flip the strings"
+msgstr "Flip the strings"
+
 msgid "Guitar"
 msgstr "Guitar"
 

@@ -65,6 +65,9 @@ msgstr "आगे बजेगा"
 msgid "outside the scale"
 msgstr "स्केल से बाहर"
 
+msgid "Flip the strings"
+msgstr "तार उलटें"
+
 msgid "Guitar"
 msgstr "गिटार"
 

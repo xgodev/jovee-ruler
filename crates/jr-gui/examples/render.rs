@@ -13,7 +13,8 @@ use slint::platform::software_renderer::{MinimalSoftwareWindow, RepaintBufferTyp
 use slint::platform::{Platform, PlatformError, WindowAdapter};
 use slint::{ComponentHandle, PhysicalSize, Rgb8Pixel};
 
-const PAGES: [&str; 7] = ["field", "field-g", "scale", "song-solo", "song-base", "song-seven", "song-flat"];
+const PAGES: [&str; 8] =
+    ["field", "field-g", "scale", "song-solo", "song-flipped", "song-base", "song-seven", "song-flat"];
 const SIZE: (u32, u32) = (1280, 860);
 
 struct Headless(Rc<MinimalSoftwareWindow>);
@@ -129,6 +130,13 @@ fn main() {
             "song-solo" => {
                 ruler.follow_song(solo());
                 ruler.window().invoke_scale_picked(1);
+                ruler.at(2.0);
+            }
+            // the strings flipped by the key beside the tuning: the lowest on top
+            "song-flipped" => {
+                ruler.follow_song(solo());
+                ruler.window().invoke_scale_picked(1);
+                ruler.window().invoke_strings_flipped();
                 ruler.at(2.0);
             }
             "song-base" => {

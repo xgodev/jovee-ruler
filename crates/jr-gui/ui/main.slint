@@ -4,6 +4,7 @@
 import { Theme } from "@jovee-theme/theme.slint";
 import { Card } from "@jovee-theme/card.slint";
 import { FieldCaption } from "@jovee-theme/field_caption.slint";
+import { HoverLabelLayer } from "@jovee-theme/hover_label.slint";
 import { Segmented } from "@jovee-theme/segmented.slint";
 import { WindowHeader } from "@jovee-theme/window_header.slint";
 import { Locale } from "locale.slint";
@@ -83,6 +84,8 @@ export component AppWindow inherits Window {
     in property <NowNote> now-note;
     in property <[PhraseChip]> phrase;
     callback seek(int);                   // a moment of the song, as `PhraseChip.index` gives it
+    in property <bool> high-on-top: true; // the song's neck: the highest string on the top line
+    callback strings-flipped();
 
     VerticalLayout {
         WindowHeader {
@@ -236,11 +239,15 @@ export component AppWindow inherits Window {
                 last: root.song-last;
                 now: root.now-note;
                 phrase: root.phrase;
+                high-on-top: root.high-on-top;
                 guitar-picked(i) => { root.guitar-picked(i); }
                 scale-picked(i) => { root.scale-picked(i); }
                 hand-picked(i) => { root.hand-picked(i); }
                 seek(i) => { root.seek(i); }
+                strings-flipped => { root.strings-flipped(); }
             }
         }
     }
+
+    HoverLabelLayer { }
 }

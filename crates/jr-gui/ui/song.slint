@@ -5,6 +5,7 @@ import { Theme } from "@jovee-theme/theme.slint";
 import { ElidedText } from "@jovee-theme/elided_text.slint";
 import { FieldCaption } from "@jovee-theme/field_caption.slint";
 import { FieldPill } from "@jovee-theme/field_pill.slint";
+import { IconKey } from "@jovee-theme/icon_key.slint";
 import { Segmented } from "@jovee-theme/segmented.slint";
 import { SelectList } from "@jovee-theme/select_list.slint";
 import { SelectPlacement } from "@jovee-theme/select_placement.slint";
@@ -98,10 +99,12 @@ export component SongView inherits Rectangle {
     in property <int> last: -1;
     in property <NowNote> now;
     in property <[PhraseChip]> phrase;
+    in property <bool> high-on-top: true;  // as a tab reads; the key beside the tuning flips it
     callback guitar-picked(int);
     callback scale-picked(int);
     callback hand-picked(int);
     callback seek(int);
+    callback strings-flipped();
 
     private property <int> strings: root.open-names.length > 0 ? root.open-names.length : 6;
     // the neck keeps its height whatever the strings: six of them 64px apart
@@ -167,6 +170,17 @@ export component SongView inherits Rectangle {
                     }
                 }
             }
+            // lit while the strings are flipped, the lowest on top
+            VerticalLayout {
+                horizontal-stretch: 0;
+                alignment: center;
+                IconKey {
+                    icon: @image-url("icons/flip.svg");
+                    tip: @tr("Flip the strings");
+                    lit: !root.high-on-top;
+                    clicked => { root.strings-flipped(); }
+                }
+            }
         }
 
         HorizontalLayout {
@@ -216,6 +230,7 @@ export component SongView inherits Rectangle {
                     open-names: root.open-names;
                     window-first: root.first;
                     window-last: root.last;
+                    high-on-top: root.high-on-top;
                     sp: root.sp;
                     // a long neck or many strings make the marks smaller, so they never touch
                     r: min(22px, root.sp * 0.36, (self.width - 112px) / root.frets * 0.36);

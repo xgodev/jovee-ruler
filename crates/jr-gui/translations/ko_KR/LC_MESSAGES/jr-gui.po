@@ -65,6 +65,9 @@ msgstr "다음 음"
 msgid "outside the scale"
 msgstr "스케일 밖"
 
+msgid "Flip the strings"
+msgstr "줄 순서 뒤집기"
+
 msgid "Guitar"
 msgstr "기타"
 

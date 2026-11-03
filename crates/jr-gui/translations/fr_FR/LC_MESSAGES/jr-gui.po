@@ -65,6 +65,9 @@ msgstr "joué ensuite"
 msgid "outside the scale"
 msgstr "hors de la gamme"
 
+msgid "Flip the strings"
+msgstr "Inverser les cordes"
+
 msgid "Guitar"
 msgstr "Guitare"
 

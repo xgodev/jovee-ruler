@@ -65,6 +65,9 @@ msgstr "次の音"
 msgid "outside the scale"
 msgstr "スケール外"
 
+msgid "Flip the strings"
+msgstr "弦の上下を反転"
+
 msgid "Guitar"
 msgstr "ギター"
 

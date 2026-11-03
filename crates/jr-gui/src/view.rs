@@ -73,7 +73,7 @@ pub fn shape_buttons(key: Pc) -> Vec<ShapeButton> {
     out
 }
 
-/// A note the song is sounding, where the neck draws it: `row` 0 is the lowest string, on top.
+/// A note the song is sounding, where the neck draws it: `row` 0 is the lowest string.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Played {
     pub row: i32,

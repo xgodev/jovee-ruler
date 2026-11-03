@@ -1,5 +1,6 @@
 // The neck from the nut to fret 15 (or as far as a song goes), the lowest string on top as on the printed
-// ruler, with the slider's marks over the notes of the scale: square = tonic, diamond = tonic of the
+// ruler or, on a song, the highest on top as a tab reads, with the slider's marks over the notes of the
+// scale: square = tonic, diamond = tonic of the
 // relative minor, circle = pentatonic, triangle = the 4th and 7th. Outside the chosen shape the marks fade,
 // as the cassette darkens them. A song rings the note it is sounding and, thinner, the one it plays next:
 // the only two lit.
@@ -7,7 +8,7 @@ import { Theme } from "@jovee-theme/theme.slint";
 import { Look } from "theme.slint";
 
 export struct NoteMark {
-    string: int,     // 0 = the lowest string, drawn on top
+    string: int,     // 0 = the lowest string
     fret: int,       // 0 = open
     name: string,
     mark: int,       // 0 tonic, 1 tonic of the relative minor, 2 pentatonic, 3 scale, 4 outside the scale
@@ -33,6 +34,7 @@ export component Neck inherits Rectangle {
     in property <int> window-last: -1;
     in property <length> sp: 84px;        // between strings
     in property <length> r: 26px;         // of a mark
+    in property <bool> high-on-top: false;   // the highest string on the top line, the lowest at the bottom
 
     height: self.y0 + self.span + self.r + 46px;
 
@@ -44,6 +46,10 @@ export component Neck inherits Rectangle {
     private property <length> box: 2 * root.r + 36px;   // a mark with room for its halo
     private property <bool> named: root.open-names.length > 0;
 
+    // the line of string `s`, 0 the lowest
+    pure function row-y(s: int) -> length {
+        return root.y0 + (root.high-on-top ? root.strings - 1 - s : s) * root.sp;
+    }
     pure function cell-x(f: int) -> length {
         return f == 0 ? root.x0 / 2 + 14px : root.x0 + (f - 0.5) * root.fw;
     }
@@ -106,7 +112,7 @@ export component Neck inherits Rectangle {
     for s in root.strings: Rectangle {
         Rectangle {
             x: root.x0;
-            y: root.y0 + s * root.sp - self.height / 2;
+            y: root.row-y(s) - self.height / 2;
             width: root.width - 12px - root.x0;
             // the lowest string the thickest, 2px down to 1px
             height: (2 - s / max(1, root.strings - 1)) * 1px;
@@ -115,7 +121,7 @@ export component Neck inherits Rectangle {
         // the string's open note when a song tunes it, else its number
         Text {
             x: root.named ? 8px : 4px;
-            y: root.y0 + s * root.sp - 12px;
+            y: root.row-y(s) - 12px;
             height: 24px;
             text: root.named ? root.open-names[s] : root.strings - s;
             vertical-alignment: center;
@@ -128,7 +134,7 @@ export component Neck inherits Rectangle {
 
     for n in root.notes: Rectangle {
         x: root.cell-x(n.fret) - root.box / 2;
-        y: root.y0 + n.string * root.sp - root.box / 2;
+        y: root.row-y(n.string) - root.box / 2;
         width: root.box;
         height: root.box;
 

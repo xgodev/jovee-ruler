@@ -228,3 +228,43 @@ fn a_chord_says_the_fret_it_is_barred_at() {
     assert!(find("chord · fret 3").is_some(), "the box under the neck");
     assert!(find("G, fret 3").is_some(), "the chip of the phrase");
 }
+
+#[test]
+fn a_song_draws_the_highest_string_on_top_and_the_key_flips_it() {
+    let r = ruler();
+    r.follow_song(run());
+    assert!(r.window().get_high_on_top(), "as a tab reads, the high E on the top line");
+    let key = i_slint_backend_testing::ElementHandle::find_by_accessible_label(r.window(), "Flip the strings")
+        .next()
+        .expect("the flip key is beside the tuning");
+    key.invoke_accessible_default_action();
+    assert!(!r.window().get_high_on_top());
+    r.follow_song(Song { guitar: 0, ..run() });
+    assert!(!r.window().get_high_on_top(), "the flip stays for the next guitar");
+    r.window().invoke_strings_flipped();
+    assert!(r.window().get_high_on_top());
+}
+
+#[test]
+fn the_flip_is_kept_for_the_next_opening() {
+    let root = crate::choices::choices_tests::scratch("opening");
+    let r = ruler();
+    r.keep_choices_in(&root);
+    r.follow_song(run());
+    r.window().invoke_strings_flipped();
+    drop(r);
+    let again = Ruler::new().unwrap();
+    again.keep_choices_in(&root);
+    again.follow_song(run());
+    assert!(!again.window().get_high_on_top(), "opened again with the lowest string on top");
+}
+
+#[test]
+fn without_a_place_to_keep_it_the_flip_is_forgotten() {
+    let r = ruler();
+    r.follow_song(run());
+    r.window().invoke_strings_flipped();
+    let again = Ruler::new().unwrap();
+    again.follow_song(run());
+    assert!(again.window().get_high_on_top());
+}
