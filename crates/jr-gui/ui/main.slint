@@ -6,6 +6,7 @@ import { Card } from "@jovee-theme/card.slint";
 import { FieldCaption } from "@jovee-theme/field_caption.slint";
 import { Segmented } from "@jovee-theme/segmented.slint";
 import { WindowHeader } from "@jovee-theme/window_header.slint";
+import { Locale } from "locale.slint";
 import { Well } from "theme.slint";
 import { Wheel } from "wheel.slint";
 import { FieldCells, FunctionLegend, ChordCard } from "field.slint";
@@ -13,10 +14,14 @@ import { Neck, NoteMark, MarkLegend } from "neck.slint";
 import { SongView, NowNote, PhraseChip } from "song.slint";
 
 export { Theme } from "@jovee-theme/theme.slint";
+export { Locale } from "locale.slint";
 export { ChordCard, NoteMark, NowNote, PhraseChip }
 
+// A box of the scale: shape 1 to 5 counted in the major key, `minor` the same box counted in the
+// relative minor; the whole neck is shape 0 with no frets.
 export struct ShapeButton {
-    label: string,
+    major: int,
+    minor: int,
     first: int,
     last: int,
 }
@@ -28,7 +33,7 @@ export component AppWindow inherits Window {
     min-width: 1280px;
     min-height: 860px;
     background: Theme.window-bg;
-    default-font-family: Theme.sans;
+    default-font-family: Locale.font-family;
 
     in-out property <int> page;           // 0 harmonic field, 1 scale, 2 the song in JoVee Jam
     in property <string> brand: "JoVee Ruler";
@@ -37,19 +42,23 @@ export component AppWindow inherits Window {
     // the harmonic field and the scale share the key
     in property <[string]> keys;
     in property <int> key-index;
-    in property <string> key-title;
-    in property <string> key-subtitle;
-    in property <string> key-short;
-    in property <string> relative-short;
+    in property <string> key-short;       // the flat a lowercase "b": "Ab"
+    in property <string> relative-name;   // the tonic of the relative minor: "F"
+    in property <string> relative-short;  // the same as the wheel writes it: "Fm"
+    in property <string> key-title: @tr("{} major", root.key-short);
+    in property <string> key-subtitle: @tr("Relative: {} minor", root.relative-name);
     in property <[ChordCard]> chords;
     callback key-picked(int);
 
     in property <[ShapeButton]> shapes;
-    in property <[string]> shape-options;   // the same shapes, as the control takes them
     in property <int> shape;              // index into `shapes`
-    in property <string> shape-subtitle;
     in property <[NoteMark]> scale-notes;
     callback shape-picked(int);
+    private property <ShapeButton> shape-on: root.shape >= 0 && root.shape < root.shapes.length
+        ? root.shapes[root.shape] : { first: -1, last: -1 };
+    out property <string> shape-subtitle: root.shape-on.major > 0
+        ? @tr("Shape {} · {} in the relative minor · frets {} to {}", root.shape-on.major, root.shape-on.minor, root.shape-on.first, root.shape-on.last)
+        : @tr("Whole neck · all five shapes");
 
     // the song: the guitar followed, the scale and the shape shown, and the notes as they play
     in property <[string]> guitars;
@@ -57,12 +66,15 @@ export component AppWindow inherits Window {
     callback guitar-picked(int);
     in property <int> scale;              // 0 major, 1 pentatonic
     callback scale-picked(int);
-    in property <[string]> hand-options;
     in property <int> hand;               // 0 follows the hand, 1-5 a shape, 6 the whole neck
     callback hand-picked(int);
+    in property <int> song-shape;         // the shape on show, 1 to 5; 0 = the whole neck
     in property <string> tuning;
-    in property <string> song-title;
-    in property <string> song-subtitle;
+    private property <string> guitar-name: root.guitar >= 0 && root.guitar < root.guitars.length ? root.guitars[root.guitar] : "";
+    out property <string> song-title: root.scale == 1 ? @tr("{} · pentatonic", root.key-title) : root.key-title;
+    out property <string> song-subtitle: root.song-shape == 0 ? @tr("Guitar {} · whole neck", root.guitar-name)
+        : root.hand == 0 ? @tr("Guitar {} · the hand is in shape {}, frets {} to {}", root.guitar-name, root.song-shape, root.song-first, root.song-last)
+        : @tr("Guitar {} · shape {}, frets {} to {}", root.guitar-name, root.song-shape, root.song-first, root.song-last);
     in property <[NoteMark]> song-notes;
     in property <[string]> open-names;
     in property <int> song-frets: 15;
@@ -93,8 +105,8 @@ export component AppWindow inherits Window {
             if root.page < 2: HorizontalLayout {
                 alignment: start;
                 Segmented {
-                    label: @tr("Página");
-                    options: [@tr("Campo harmônico"), @tr("Escala")];
+                    label: @tr("Page");
+                    options: [@tr("Harmonic field"), @tr("Scale")];
                     current: root.page;
                     picked(i) => { root.page = i; }
                 }
@@ -130,7 +142,7 @@ export component AppWindow inherits Window {
                         vertical-stretch: 1;
                         VerticalLayout {
                             spacing: Theme.sp1;
-                            FieldCaption { text: @tr("Tom"); }
+                            FieldCaption { text: @tr("Key"); }
                             // not the display font: its capitals only would turn the flat in "Ab" into "AB"
                             Text {
                                 text: root.key-title;
@@ -150,7 +162,7 @@ export component AppWindow inherits Window {
                         }
                         FunctionLegend { }
                         Text {
-                            text: @tr("Em cima o grau no tom maior, embaixo na relativa menor. Gire a roda ou clique numa nota.");
+                            text: @tr("On top the degree in the major key, below in the relative minor. Turn the wheel or click a note.");
                             font-size: Theme.fs-body;
                             color: Theme.ink-3;
                             wrap: word-wrap;
@@ -181,13 +193,13 @@ export component AppWindow inherits Window {
                     }
                     VerticalLayout {
                         alignment: center;
-                        FieldCaption { text: @tr("Forma"); }
+                        FieldCaption { text: @tr("Shape"); }
                     }
                     VerticalLayout {
                         alignment: center;
                         Segmented {
-                            label: @tr("Forma");
-                            options: root.shape-options;
+                            label: @tr("Shape");
+                            options: ["1", "2", "3", "4", "5", @tr("Whole neck")];
                             current: root.shape;
                             picked(i) => { root.shape-picked(i); }
                         }
@@ -216,7 +228,6 @@ export component AppWindow inherits Window {
                 tuning: root.tuning;
                 title: root.song-title;
                 subtitle: root.song-subtitle;
-                hand-options: root.hand-options;
                 hand: root.hand;
                 notes: root.song-notes;
                 open-names: root.open-names;

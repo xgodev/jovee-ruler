@@ -203,7 +203,7 @@ export component Neck inherits Rectangle {
     }
 
     accessible-role: image;
-    accessible-label: @tr("Braço da guitarra com as notas da escala");
+    accessible-label: @tr("Guitar neck with the notes of the scale");
 }
 
 export component Key inherits HorizontalLayout {
@@ -226,7 +226,7 @@ export component MarkLegend inherits HorizontalLayout {
     spacing: root.short ? 22px : 24px;
     alignment: start;
     Key {
-        text: root.short ? @tr("tônica") : @tr("tônica maior");
+        text: root.short ? @tr("tonic") : @tr("major tonic");
         Rectangle {
             width: 18px;
             height: 18px;
@@ -235,7 +235,7 @@ export component MarkLegend inherits HorizontalLayout {
         }
     }
     Key {
-        text: root.short ? @tr("tônica da relativa") : @tr("tônica da relativa menor");
+        text: root.short ? @tr("relative tonic") : @tr("relative minor tonic");
         Path {
             width: 20px;
             height: 20px;
@@ -246,7 +246,7 @@ export component MarkLegend inherits HorizontalLayout {
         }
     }
     Key {
-        text: @tr("pentatônica");
+        text: @tr("pentatonic");
         Rectangle {
             width: 18px;
             height: 18px;
@@ -255,7 +255,7 @@ export component MarkLegend inherits HorizontalLayout {
         }
     }
     if root.fourth-and-seventh: Key {
-        text: @tr("graus 4 e 7");
+        text: @tr("4th and 7th degrees");
         Path {
             width: 20px;
             height: 18px;

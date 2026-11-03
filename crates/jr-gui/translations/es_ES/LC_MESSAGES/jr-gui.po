@@ -1,0 +1,147 @@
+# JoVee Ruler — Spanish.
+msgid ""
+msgstr ""
+"Project-Id-Version: JoVee\n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-11-03 00:00+0000\n"
+"Language-Team: Spanish\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "{} major"
+msgstr "{} mayor"
+
+msgid "Relative: {} minor"
+msgstr "Relativa: {} menor"
+
+msgid "Shape {} · {} in the relative minor · frets {} to {}"
+msgstr "Forma {} · {} en la relativa menor · trastes {} a {}"
+
+msgid "Whole neck · all five shapes"
+msgstr "Mástil entero · las cinco formas"
+
+msgid "{} · pentatonic"
+msgstr "{} · pentatónica"
+
+msgid "Guitar {} · whole neck"
+msgstr "Guitarra {} · mástil entero"
+
+msgid "Guitar {} · the hand is in shape {}, frets {} to {}"
+msgstr "Guitarra {} · la mano está en la forma {}, trastes {} a {}"
+
+msgid "Guitar {} · shape {}, frets {} to {}"
+msgstr "Guitarra {} · forma {}, trastes {} a {}"
+
+msgid "Page"
+msgstr "Página"
+
+msgid "Harmonic field"
+msgstr "Campo armónico"
+
+msgid "Scale"
+msgstr "Escala"
+
+msgid "Key"
+msgstr "Tonalidad"
+
+msgid "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+msgstr "Arriba el grado en la tonalidad mayor, abajo en la relativa menor. Gira la rueda o haz clic en una nota."
+
+msgid "Shape"
+msgstr "Forma"
+
+msgid "Whole neck"
+msgstr "Mástil entero"
+
+msgid "playing now"
+msgstr "sonando ahora"
+
+msgid "playing next"
+msgstr "a continuación"
+
+msgid "outside the scale"
+msgstr "fuera de la escala"
+
+msgid "Guitar"
+msgstr "Guitarra"
+
+msgid "Major"
+msgstr "Mayor"
+
+msgid "Pentatonic"
+msgstr "Pentatónica"
+
+msgid "Tuning"
+msgstr "Afinación"
+
+msgid "Tuning {}"
+msgstr "Afinación {}"
+
+msgid "Follow the hand"
+msgstr "Seguir la mano"
+
+msgid "NOW"
+msgstr "AHORA"
+
+msgid "before the first note"
+msgstr "antes de la primera nota"
+
+msgid "chord · fret {}"
+msgstr "acorde · traste {}"
+
+msgid "string {} · fret {}"
+msgstr "cuerda {} · traste {}"
+
+msgid "in the scale"
+msgstr "en la escala"
+
+msgid "fret {}"
+msgstr "traste {}"
+
+msgid "string {}"
+msgstr "cuerda {}"
+
+msgid "Guitar neck with the notes of the scale"
+msgstr "Mástil de guitarra con las notas de la escala"
+
+msgid "tonic"
+msgstr "tónica"
+
+msgid "major tonic"
+msgstr "tónica mayor"
+
+msgid "relative tonic"
+msgstr "tónica relativa"
+
+msgid "relative minor tonic"
+msgstr "tónica de la relativa menor"
+
+msgid "pentatonic"
+msgstr "pentatónica"
+
+msgid "4th and 7th degrees"
+msgstr "grados 4.º y 7.º"
+
+msgid "rest"
+msgstr "reposo"
+
+msgid "transition"
+msgstr "transición"
+
+msgid "tension"
+msgstr "tensión"
+
+msgid "borrowed, outside the field"
+msgstr "prestado, fuera del campo"
+
+msgid "RELATIVE"
+msgstr "RELATIVA"
+
+msgid "Harmonic field wheel: {}"
+msgstr "Rueda del campo armónico: {}"
+
+msgid "{} {}, {}"
+msgstr "{} {}, {}"

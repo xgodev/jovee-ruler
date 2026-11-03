@@ -1,0 +1,147 @@
+# JoVee Ruler — Hindi.
+msgid ""
+msgstr ""
+"Project-Id-Version: JoVee\n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-11-03 00:00+0000\n"
+"Language-Team: Hindi\n"
+"Language: hi_IN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "{} major"
+msgstr "{} मेजर"
+
+msgid "Relative: {} minor"
+msgstr "रिलेटिव: {} माइनर"
+
+msgid "Shape {} · {} in the relative minor · frets {} to {}"
+msgstr "शेप {} · रिलेटिव माइनर में {} · फ्रेट {} से {}"
+
+msgid "Whole neck · all five shapes"
+msgstr "पूरा नेक · सभी पाँच शेप"
+
+msgid "{} · pentatonic"
+msgstr "{} · पेंटाटोनिक"
+
+msgid "Guitar {} · whole neck"
+msgstr "गिटार {} · पूरा नेक"
+
+msgid "Guitar {} · the hand is in shape {}, frets {} to {}"
+msgstr "गिटार {} · हाथ शेप {} में है, फ्रेट {} से {}"
+
+msgid "Guitar {} · shape {}, frets {} to {}"
+msgstr "गिटार {} · शेप {}, फ्रेट {} से {}"
+
+msgid "Page"
+msgstr "पेज"
+
+msgid "Harmonic field"
+msgstr "हार्मोनिक फ़ील्ड"
+
+msgid "Scale"
+msgstr "स्केल"
+
+msgid "Key"
+msgstr "की"
+
+msgid "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+msgstr "ऊपर मेजर की में डिग्री, नीचे रिलेटिव माइनर में। व्हील घुमाएँ या किसी नोट पर क्लिक करें।"
+
+msgid "Shape"
+msgstr "शेप"
+
+msgid "Whole neck"
+msgstr "पूरा नेक"
+
+msgid "playing now"
+msgstr "अभी बज रहा"
+
+msgid "playing next"
+msgstr "आगे बजेगा"
+
+msgid "outside the scale"
+msgstr "स्केल से बाहर"
+
+msgid "Guitar"
+msgstr "गिटार"
+
+msgid "Major"
+msgstr "मेजर"
+
+msgid "Pentatonic"
+msgstr "पेंटाटोनिक"
+
+msgid "Tuning"
+msgstr "ट्यूनिंग"
+
+msgid "Tuning {}"
+msgstr "ट्यूनिंग {}"
+
+msgid "Follow the hand"
+msgstr "हाथ के साथ चलें"
+
+msgid "NOW"
+msgstr "अभी"
+
+msgid "before the first note"
+msgstr "पहले नोट से पहले"
+
+msgid "chord · fret {}"
+msgstr "कॉर्ड · फ्रेट {}"
+
+msgid "string {} · fret {}"
+msgstr "स्ट्रिंग {} · फ्रेट {}"
+
+msgid "in the scale"
+msgstr "स्केल में"
+
+msgid "fret {}"
+msgstr "फ्रेट {}"
+
+msgid "string {}"
+msgstr "स्ट्रिंग {}"
+
+msgid "Guitar neck with the notes of the scale"
+msgstr "स्केल के नोट्स के साथ गिटार का नेक"
+
+msgid "tonic"
+msgstr "टॉनिक"
+
+msgid "major tonic"
+msgstr "मेजर टॉनिक"
+
+msgid "relative tonic"
+msgstr "रिलेटिव टॉनिक"
+
+msgid "relative minor tonic"
+msgstr "रिलेटिव माइनर टॉनिक"
+
+msgid "pentatonic"
+msgstr "पेंटाटोनिक"
+
+msgid "4th and 7th degrees"
+msgstr "चौथी और सातवीं डिग्री"
+
+msgid "rest"
+msgstr "ठहराव"
+
+msgid "transition"
+msgstr "संक्रमण"
+
+msgid "tension"
+msgstr "तनाव"
+
+msgid "borrowed, outside the field"
+msgstr "उधार, फ़ील्ड से बाहर"
+
+msgid "RELATIVE"
+msgstr "रिलेटिव"
+
+msgid "Harmonic field wheel: {}"
+msgstr "हार्मोनिक फ़ील्ड व्हील: {}"
+
+msgid "{} {}, {}"
+msgstr "{} {}, {}"

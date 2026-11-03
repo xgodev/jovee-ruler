@@ -11,6 +11,7 @@ use slint::{ComponentHandle, ModelRc, VecModel};
 pub mod ui {
     slint::include_modules!();
 }
+pub mod language;
 pub mod song;
 pub mod view;
 
@@ -57,7 +58,6 @@ impl Ruler {
         let window = AppWindow::new()?;
         let state = Rc::new(RefCell::new(State::default()));
         window.set_keys(model(view::wheel_keys()));
-        window.set_hand_options(model(view::hand_options()));
 
         let (w, s) = (window.as_weak(), state.clone());
         window.on_key_picked(move |i| {
@@ -117,6 +117,15 @@ impl Ruler {
         self.window.global::<ui::Theme>().set_index(look.index());
     }
 
+    /// Sets the ruler's texts in the face that has the glyphs of `language` (a code of
+    /// `language::LANGUAGES`); a Latin language keeps the JoVee face. A host calls it with the language it
+    /// selected, since Slint keeps one language for every window but each window keeps its own face.
+    pub fn set_font_for(&self, language: &str) {
+        let locale = self.window.global::<ui::Locale>();
+        let face = language::font_for(language).map_or_else(|| self.window.global::<ui::Theme>().get_sans(), Into::into);
+        locale.set_font_family(face);
+    }
+
     /// Turns the wheel and the scale to a major key.
     pub fn set_key(&self, key: Pc) {
         self.state.borrow_mut().key = key % 12;
@@ -167,9 +176,8 @@ impl Ruler {
 fn show_key(w: &AppWindow, s: &State) {
     let key = s.key;
     w.set_key_index(view::wheel_index(key) as i32);
-    w.set_key_title(view::key_title(key).into());
-    w.set_key_subtitle(view::key_subtitle(key).into());
     w.set_key_short(jr_core::note::key_name(key).into());
+    w.set_relative_name(view::relative_name(key).into());
     w.set_relative_short(view::relative_short(key).into());
     w.set_chords(model(view::chord_cards(key)));
 
@@ -177,9 +185,7 @@ fn show_key(w: &AppWindow, s: &State) {
     let pick = buttons[s.shape.min(buttons.len() - 1)].clone();
     let window = (pick.first >= 0).then_some((pick.first, pick.last));
     w.set_shape(s.shape.min(buttons.len() - 1) as i32);
-    w.set_shape_subtitle(view::shape_subtitle(key, &pick).into());
     w.set_scale_notes(model(view::neck(key, &STANDARD, view::FRETS, window, false, &[], &[])));
-    w.set_shape_options(model(view::shape_options(&buttons)));
     w.set_shapes(model(buttons));
 }
 
@@ -191,8 +197,7 @@ fn show_song(w: &AppWindow, s: &State) {
     w.set_scale(s.pentatonic as i32);
     w.set_hand(s.hand.index());
     w.set_tuning(page.tuning.into());
-    w.set_song_title(page.title.into());
-    w.set_song_subtitle(page.subtitle.into());
+    w.set_song_shape(page.shape);
     w.set_song_notes(model(page.notes));
     w.set_open_names(model(page.open_names.into_iter().map(Into::into).collect()));
     w.set_song_frets(page.frets);

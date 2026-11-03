@@ -1,0 +1,147 @@
+# JoVee Ruler — French.
+msgid ""
+msgstr ""
+"Project-Id-Version: JoVee\n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-11-03 00:00+0000\n"
+"Language-Team: French\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "{} major"
+msgstr "{} majeur"
+
+msgid "Relative: {} minor"
+msgstr "Relatif : {} mineur"
+
+msgid "Shape {} · {} in the relative minor · frets {} to {}"
+msgstr "Forme {} · {} dans le relatif mineur · cases {} à {}"
+
+msgid "Whole neck · all five shapes"
+msgstr "Manche entier · les cinq formes"
+
+msgid "{} · pentatonic"
+msgstr "{} · pentatonique"
+
+msgid "Guitar {} · whole neck"
+msgstr "Guitare {} · manche entier"
+
+msgid "Guitar {} · the hand is in shape {}, frets {} to {}"
+msgstr "Guitare {} · la main est dans la forme {}, cases {} à {}"
+
+msgid "Guitar {} · shape {}, frets {} to {}"
+msgstr "Guitare {} · forme {}, cases {} à {}"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "Harmonic field"
+msgstr "Champ harmonique"
+
+msgid "Scale"
+msgstr "Gamme"
+
+msgid "Key"
+msgstr "Tonalité"
+
+msgid "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+msgstr "En haut le degré dans la tonalité majeure, en bas dans le relatif mineur. Tournez la roue ou cliquez sur une note."
+
+msgid "Shape"
+msgstr "Forme"
+
+msgid "Whole neck"
+msgstr "Manche entier"
+
+msgid "playing now"
+msgstr "joué maintenant"
+
+msgid "playing next"
+msgstr "joué ensuite"
+
+msgid "outside the scale"
+msgstr "hors de la gamme"
+
+msgid "Guitar"
+msgstr "Guitare"
+
+msgid "Major"
+msgstr "Majeure"
+
+msgid "Pentatonic"
+msgstr "Pentatonique"
+
+msgid "Tuning"
+msgstr "Accordage"
+
+msgid "Tuning {}"
+msgstr "Accordage {}"
+
+msgid "Follow the hand"
+msgstr "Suivre la main"
+
+msgid "NOW"
+msgstr "MAINTENANT"
+
+msgid "before the first note"
+msgstr "avant la première note"
+
+msgid "chord · fret {}"
+msgstr "accord · case {}"
+
+msgid "string {} · fret {}"
+msgstr "corde {} · case {}"
+
+msgid "in the scale"
+msgstr "dans la gamme"
+
+msgid "fret {}"
+msgstr "case {}"
+
+msgid "string {}"
+msgstr "corde {}"
+
+msgid "Guitar neck with the notes of the scale"
+msgstr "Manche de guitare avec les notes de la gamme"
+
+msgid "tonic"
+msgstr "tonique"
+
+msgid "major tonic"
+msgstr "tonique majeure"
+
+msgid "relative tonic"
+msgstr "tonique relative"
+
+msgid "relative minor tonic"
+msgstr "tonique du relatif mineur"
+
+msgid "pentatonic"
+msgstr "pentatonique"
+
+msgid "4th and 7th degrees"
+msgstr "4e et 7e degrés"
+
+msgid "rest"
+msgstr "repos"
+
+msgid "transition"
+msgstr "transition"
+
+msgid "tension"
+msgstr "tension"
+
+msgid "borrowed, outside the field"
+msgstr "emprunté, hors du champ"
+
+msgid "RELATIVE"
+msgstr "RELATIF"
+
+msgid "Harmonic field wheel: {}"
+msgstr "Roue du champ harmonique : {}"
+
+msgid "{} {}, {}"
+msgstr "{} {}, {}"

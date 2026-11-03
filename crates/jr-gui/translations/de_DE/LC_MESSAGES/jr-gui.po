@@ -1,0 +1,147 @@
+# JoVee Ruler — German.
+msgid ""
+msgstr ""
+"Project-Id-Version: JoVee\n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-11-03 00:00+0000\n"
+"Language-Team: German\n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "{} major"
+msgstr "{}-Dur"
+
+msgid "Relative: {} minor"
+msgstr "Parallele: {}-Moll"
+
+msgid "Shape {} · {} in the relative minor · frets {} to {}"
+msgstr "Form {} · {} in der parallelen Molltonart · Bünde {} bis {}"
+
+msgid "Whole neck · all five shapes"
+msgstr "Ganzes Griffbrett · alle fünf Formen"
+
+msgid "{} · pentatonic"
+msgstr "{} · Pentatonik"
+
+msgid "Guitar {} · whole neck"
+msgstr "Gitarre {} · ganzes Griffbrett"
+
+msgid "Guitar {} · the hand is in shape {}, frets {} to {}"
+msgstr "Gitarre {} · die Hand ist in Form {}, Bünde {} bis {}"
+
+msgid "Guitar {} · shape {}, frets {} to {}"
+msgstr "Gitarre {} · Form {}, Bünde {} bis {}"
+
+msgid "Page"
+msgstr "Seite"
+
+msgid "Harmonic field"
+msgstr "Stufenakkorde"
+
+msgid "Scale"
+msgstr "Tonleiter"
+
+msgid "Key"
+msgstr "Tonart"
+
+msgid "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+msgstr "Oben die Stufe in Dur, unten in der parallelen Molltonart. Drehe das Rad oder klicke auf eine Note."
+
+msgid "Shape"
+msgstr "Form"
+
+msgid "Whole neck"
+msgstr "Ganzes Griffbrett"
+
+msgid "playing now"
+msgstr "spielt jetzt"
+
+msgid "playing next"
+msgstr "spielt als Nächstes"
+
+msgid "outside the scale"
+msgstr "außerhalb der Tonleiter"
+
+msgid "Guitar"
+msgstr "Gitarre"
+
+msgid "Major"
+msgstr "Dur"
+
+msgid "Pentatonic"
+msgstr "Pentatonik"
+
+msgid "Tuning"
+msgstr "Stimmung"
+
+msgid "Tuning {}"
+msgstr "Stimmung {}"
+
+msgid "Follow the hand"
+msgstr "Der Hand folgen"
+
+msgid "NOW"
+msgstr "JETZT"
+
+msgid "before the first note"
+msgstr "vor der ersten Note"
+
+msgid "chord · fret {}"
+msgstr "Akkord · Bund {}"
+
+msgid "string {} · fret {}"
+msgstr "Saite {} · Bund {}"
+
+msgid "in the scale"
+msgstr "in der Tonleiter"
+
+msgid "fret {}"
+msgstr "Bund {}"
+
+msgid "string {}"
+msgstr "Saite {}"
+
+msgid "Guitar neck with the notes of the scale"
+msgstr "Griffbrett mit den Noten der Tonleiter"
+
+msgid "tonic"
+msgstr "Grundton"
+
+msgid "major tonic"
+msgstr "Dur-Grundton"
+
+msgid "relative tonic"
+msgstr "Parallel-Grundton"
+
+msgid "relative minor tonic"
+msgstr "Grundton der parallelen Molltonart"
+
+msgid "pentatonic"
+msgstr "Pentatonik"
+
+msgid "4th and 7th degrees"
+msgstr "4. und 7. Stufe"
+
+msgid "rest"
+msgstr "Ruhe"
+
+msgid "transition"
+msgstr "Übergang"
+
+msgid "tension"
+msgstr "Spannung"
+
+msgid "borrowed, outside the field"
+msgstr "entliehen, außerhalb der Tonart"
+
+msgid "RELATIVE"
+msgstr "PARALLELE"
+
+msgid "Harmonic field wheel: {}"
+msgstr "Rad der Stufenakkorde: {}"
+
+msgid "{} {}, {}"
+msgstr "{} {}, {}"

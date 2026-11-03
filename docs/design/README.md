@@ -80,6 +80,11 @@ same in the standalone app (where the user types the key and plays the notes) an
   `Ruler::follow_song`, moves it on with `Ruler::at(seconds)`, hears a click on the phrase through
   `Ruler::on_seek` (the start of that moment, in seconds) and a pick of another guitar through
   `Ruler::on_guitar` (its index in `Song::guitars`). The scale and the shape picked stay across guitars.
+  The texts are English in the `.slint` and translated in `translations/`, one folder per language JoVee
+  Studio ships. Slint keeps one language for every window, so a host selects its own and the ruler
+  follows; the host only calls `Ruler::set_font_for(code)` so Japanese, Chinese, Korean and Hindi get a
+  face with their glyphs. The folders must stay the same nine as the host's: Slint finds a window's texts
+  by the language's place in that list.
 - `harmonic-field/`, `scale/`: the printed pieces, as today.
 
 Where the mockup and the printed art disagree, the screens follow the printed art: roman numerals
