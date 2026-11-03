@@ -19,7 +19,7 @@ fn chord(start: f64, frets: &[(u8, u8)]) -> Vec<SongNote> {
 
 fn song(notes: Vec<SongNote>, chords: &[(f64, &str)]) -> Song {
     Song {
-        title: "Exemplo em Sol".into(),
+        title: "Example in G".into(),
         key: n("G"),
         tuning: STANDARD_MIDI.to_vec(),
         guitars: vec!["Base".into(), "Solo".into()],

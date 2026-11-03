@@ -60,7 +60,7 @@ fn struck(tuning: &[u8], start: f64, at: &[(u8, u8)]) -> Vec<SongNote> {
 
 fn song(guitar: usize, tuning: &[u8], moments: &[&[(u8, u8)]], chords: &[&str]) -> Song {
     Song {
-        title: "Exemplo em Sol".into(),
+        title: "Example in G".into(),
         key: parse("G").unwrap(),
         tuning: tuning.to_vec(),
         guitars: vec!["Base".into(), "Solo".into()],

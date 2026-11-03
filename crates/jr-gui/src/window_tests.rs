@@ -51,7 +51,7 @@ fn the_host_picks_any_of_the_three_looks() {
 fn run() -> Song {
     let frets = [3, 5, 7, 8, 10, 12, 14];
     Song {
-        title: "Exemplo em Sol".into(),
+        title: "Example in G".into(),
         key: parse("G").unwrap(),
         tuning: vec![64, 59, 55, 50, 45, 40],
         guitars: vec!["Base".into(), "Solo".into()],
@@ -76,7 +76,7 @@ fn a_song_opens_on_its_page_before_its_first_note() {
     let w = r.window();
     assert_eq!(w.get_page(), 2);
     assert_eq!(w.get_key_title(), "G major", "the other pages follow the song's key");
-    assert_eq!(w.get_context(), "Exemplo em Sol");
+    assert_eq!(w.get_context(), "Example in G");
     assert_eq!(w.get_guitars().iter().map(|g| g.to_string()).collect::<Vec<_>>(), ["Base", "Solo"]);
     assert_eq!(w.get_guitar(), 1);
     assert_eq!(w.get_tuning(), "E A D G B E");
