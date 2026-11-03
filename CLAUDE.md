@@ -81,3 +81,9 @@ change goes through the coupon first.
 bearing-ledge fix of 30/08, so they carry the geometry of the defect the plates fell through.
 Nothing regenerates them. Always start a fresh slicer project from the STLs in `scale/stl/`;
 opening a `.3mf` is how a 5-hour print gets thrown away.
+
+- JoVee libraries (ruler, stem, theme, pedal drivers, tuner-core...) are declared with `branch = "main"`, never
+  `rev`, `tag` or a version, and every build takes the tip of their `main`: `scripts/follow-branches.sh` moves
+  Cargo.lock first (`scripts/update-libs.sh` before a build), and the commit carries
+  the moved lock. **Why:** a Jam beta shipped a ruler four commits behind its `main`; the owner: "entre as
+  dependencias do jovee nao pode ter trava por versao, sempre tem que ser a ultima versao da main".
