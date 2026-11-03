@@ -14,7 +14,9 @@ path = "src/main.rs"
 [dependencies]
 jovee-theme.workspace = true
 jr-core.workspace = true
+serde_yaml.workspace = true
 slint.workspace = true
+sys-locale.workspace = true
 
 [[example]]
 name = "render"
@@ -23,6 +25,7 @@ name = "render"
 resvg.workspace = true
 slint = { workspace = true, features = ["renderer-software"] }
 i-slint-backend-testing.workspace = true
+tempfile.workspace = true
 
 [build-dependencies]
 jovee-theme.workspace = true

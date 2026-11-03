@@ -1,6 +1,7 @@
 //! The real window, filled by the real `Ruler`, drawn by Slint's software renderer to one PNG per page
 //! and look (`field-neon.png`, `field-rack.png`, `field-classic.png`, …):
-//! `cargo run -p jr-gui --example render -- <out dir> [page…]`.
+//! `cargo run -p jr-gui --example render -- <out dir> [page…] [--language ja-JP]`. English unless a language is
+//! given, then its code ends each file name (`field-neon-ja-JP.png`).
 
 use std::path::Path;
 use std::rc::Rc;
@@ -87,7 +88,7 @@ fn base() -> Song {
     song(0, &STANDARD, &[em, g, c, d, g, em, c], &["Em", "G", "C", "D", "G", "Em", "C"])
 }
 
-/// The solo a half step up, in Ab: a flat in the title, "Ab maior · pentatônica".
+/// The solo a half step up, in Ab: a flat in the title, "Ab major · pentatonic".
 fn flat() -> Song {
     let up: &[&[(u8, u8)]] = &[&[(3, 4)], &[(3, 5)], &[(2, 4)], &[(2, 6)], &[(2, 4)], &[(3, 5)], &[(4, 6)]];
     Song { key: parse("Ab").unwrap(), ..song(1, &STANDARD, up, &[]) }
@@ -100,7 +101,12 @@ fn seven() -> Song {
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let mut args: Vec<String> = std::env::args().skip(1).collect();
+    let language = args.iter().position(|a| a == "--language").map(|at| {
+        let code = args.get(at + 1).cloned().expect("--language takes a code, as ja-JP");
+        args.drain(at..at + 2);
+        code
+    });
     let out = Path::new(args.first().map_or("target/render", String::as_str)).to_path_buf();
     let pages: Vec<&str> = if args.len() > 1 { args[1..].iter().map(String::as_str).collect() } else { PAGES.to_vec() };
     std::fs::create_dir_all(&out).unwrap();
@@ -108,6 +114,7 @@ fn main() {
     slint::platform::set_platform(Box::new(Headless(window.clone()))).unwrap();
     for (page, look) in pages.iter().flat_map(|p| ThemeId::ALL.map(|look| (*p, look))) {
         let ruler = Ruler::new().unwrap();
+        jr_gui::language::select(&ruler, language.as_deref().unwrap_or("en-US")).unwrap();
         ruler.set_theme(look);
         ruler.window().show().unwrap();
         window.set_size(PhysicalSize::new(SIZE.0, SIZE.1));
@@ -138,7 +145,7 @@ fn main() {
                 ruler.at(2.0);
             }
             "song-start" => ruler.follow_song(solo()),
-            // the "Agora" box at its tightest, a long chord name: one per step of the name's size
+            // the "Now" box at its tightest, a long chord name: one per step of the name's size
             tight if tight.starts_with("tight-") => {
                 let mut s = base();
                 s.chords[1].name = tight["tight-".len()..].into();
@@ -147,7 +154,8 @@ fn main() {
             }
             other => panic!("no page {other}"),
         }
-        save(&window, &out.join(format!("{page}-{}.png", look.name())));
+        let suffix = language.as_deref().map_or_else(String::new, |code| format!("-{code}"));
+        save(&window, &out.join(format!("{page}-{}{suffix}.png", look.name())));
         ruler.window().hide().unwrap();
     }
 }

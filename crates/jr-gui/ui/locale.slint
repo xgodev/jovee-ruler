@@ -1,0 +1,9 @@
+// The face the ruler's own texts are set in. The JoVee faces have only Latin glyphs, so a language in
+// another script (Japanese, Chinese, Korean, Hindi) gets a face with its glyphs from Rust.
+import { Theme } from "@jovee-theme/theme.slint";
+
+export global Locale {
+    in-out property <string> font-family: Theme.sans;
+    // the display face where a Latin language keeps it; another script keeps its own face there too
+    out property <string> display-font-family: root.font-family == Theme.sans ? Theme.display : root.font-family;
+}

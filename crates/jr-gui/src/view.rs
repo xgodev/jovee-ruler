@@ -26,13 +26,9 @@ pub fn wheel_index(key: Pc) -> usize {
     fifths().iter().position(|&k| k == key % 12).expect("every key is on the wheel")
 }
 
-/// The key as the neck and the wheel write it, the flat a lowercase "b": "Ab maior".
-pub fn key_title(key: Pc) -> String {
-    format!("{} maior", jr_core::note::key_name(key))
-}
-
-pub fn key_subtitle(key: Pc) -> String {
-    format!("Relativa: {} menor", name_in(key, relative(key)))
+/// The tonic of the relative minor, spelled in the key: "E" under G, "F" under Ab.
+pub fn relative_name(key: Pc) -> &'static str {
+    name_in(key, relative(key))
 }
 
 /// The relative minor as the wheel names it under the key: "Em".
@@ -70,25 +66,11 @@ pub fn shape_buttons(key: Pc) -> Vec<ShapeButton> {
                 .iter()
                 .find(|s| s.major == n && s.first >= 0 && s.last <= FRETS)
                 .expect("every shape fits on fifteen frets");
-            ShapeButton { label: n.to_string().into(), first: s.first, last: s.last }
+            ShapeButton { major: s.major as i32, minor: s.minor as i32, first: s.first, last: s.last }
         })
         .collect();
-    out.push(ShapeButton { label: "Braço todo".into(), first: -1, last: -1 });
+    out.push(ShapeButton { major: 0, minor: 0, first: -1, last: -1 });
     out
-}
-
-/// The shape buttons as the segmented control takes them: their labels.
-pub fn shape_options(buttons: &[ShapeButton]) -> Vec<slint::SharedString> {
-    buttons.iter().map(|b| b.label.clone()).collect()
-}
-
-/// "Forma 1 · 2 na relativa menor · casas 3 a 5", or the whole neck.
-pub fn shape_subtitle(key: Pc, button: &ShapeButton) -> String {
-    let boxes = shapes(STANDARD[0], key, FRETS);
-    match boxes.iter().find(|s| s.first == button.first && s.last == button.last) {
-        Some(s) => format!("Forma {} · {} na relativa menor · casas {} a {}", s.major, s.minor, s.first, s.last),
-        None => "Braço todo · as cinco formas".into(),
-    }
 }
 
 /// A note the song is sounding, where the neck draws it: `row` 0 is the lowest string, on top.
@@ -162,7 +144,7 @@ pub enum Hand {
 }
 
 impl Hand {
-    /// From the place of its button: "Segue a mão", 1 to 5, "Braço todo".
+    /// From the place of its button: follow the hand, 1 to 5, the whole neck.
     pub fn from_index(i: i32) -> Hand {
         match i {
             ..=0 => Hand::Follow,
@@ -180,11 +162,6 @@ impl Hand {
     }
 }
 
-/// The buttons of the song page's shape control.
-pub fn hand_options() -> Vec<slint::SharedString> {
-    ["Segue a mão", "1", "2", "3", "4", "5", "Braço todo"].map(Into::into).to_vec()
-}
-
 /// How many moments the phrase strip holds at a readable width.
 const PHRASE: usize = 7;
 /// Of those, how many have already gone by: the player needs more of what is coming.
@@ -199,8 +176,8 @@ pub fn phrase_strip(len: usize, now: Option<usize>) -> Range<usize> {
 /// The song page at moment `now` (`None` before the first note) of the song's `moments`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SongPage {
-    pub title: String,
-    pub subtitle: String,
+    /// The shape on show, 1 to 5 in the major key; 0 = the whole neck.
+    pub shape: i32,
     /// The open strings from the lowest, spaced: "E A D G B E".
     pub tuning: String,
     /// The same names, one per row of the neck.
@@ -277,12 +254,6 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
         Hand::Whole => None,
     };
     let window = shape.map(|s| (s.first.max(0), s.last.min(frets)));
-    let guitar = song.guitars.get(song.guitar).map_or("", String::as_str);
-    let subtitle = match (hand, shape, window) {
-        (Hand::Follow, Some(s), Some((a, b))) => format!("a mão está na forma {}, casas {a} a {b}", s.major),
-        (Hand::Shape(_), Some(s), Some((a, b))) => format!("forma {}, casas {a} a {b}", s.major),
-        _ => "braço todo".into(),
-    };
 
     let row = |n: &SongNote| open.len() as i32 - n.string as i32;
     let sounding: Vec<Played> = now
@@ -299,11 +270,9 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
         None => NowNote { empty: true, ..NowNote::default() },
         Some(m) => NowNote {
             name: moment_name(song, m).into(),
-            detail: if m.is_chord() {
-                format!("acorde · casa {}", lowest_fret(&m.notes)).into()
-            } else {
-                format!("corda {} · casa {}", m.notes[0].string, m.notes[0].fret).into()
-            },
+            chord: m.is_chord(),
+            string: m.notes[0].string as i32,
+            fret: (if m.is_chord() { lowest_fret(&m.notes) } else { m.notes[0].fret }) as i32,
             outside: outside(m),
             empty: false,
         },
@@ -313,11 +282,9 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
             let m = &moments[i];
             PhraseChip {
                 name: moment_name(song, m).into(),
-                detail: if m.is_chord() {
-                    format!("casa {}", lowest_fret(&m.notes)).into()
-                } else {
-                    format!("corda {}", m.notes[0].string).into()
-                },
+                chord: m.is_chord(),
+                string: m.notes[0].string as i32,
+                fret: (if m.is_chord() { lowest_fret(&m.notes) } else { m.notes[0].fret }) as i32,
                 state: match now {
                     Some(n) if i < n => 0,
                     Some(n) if i == n => 1,
@@ -333,8 +300,7 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
 
     let names: Vec<String> = open.iter().map(|&p| name_in(key, p).to_string()).collect();
     SongPage {
-        title: if pentatonic { format!("{} · pentatônica", key_title(key)) } else { key_title(key) },
-        subtitle: format!("Guitarra {guitar} · {subtitle}"),
+        shape: shape.map_or(0, |s| s.major as i32),
         tuning: names.join(" "),
         notes,
         open_names: names,

@@ -51,18 +51,11 @@ fn at(marks: &[NoteMark], row: i32, fret: i32) -> &NoteMark {
 }
 
 #[test]
-fn titles_name_the_key_as_the_neck_writes_it() {
-    assert_eq!(key_title(n("G")), "G maior");
-    assert_eq!(key_subtitle(n("G")), "Relativa: E menor");
-    assert_eq!(key_subtitle(n("Ab")), "Relativa: F menor");
-}
-
-#[test]
-fn the_title_writes_the_flat_as_a_lowercase_b() {
-    assert_eq!(key_title(n("Ab")), "Ab maior");
-    assert_eq!(key_title(n("Bb")), "Bb maior");
-    assert_eq!(key_title(n("F#")), "F# maior");
-    assert_eq!(key_subtitle(n("F")), "Relativa: D menor");
+fn the_relative_minor_is_named_in_the_key() {
+    assert_eq!(relative_name(n("G")), "E");
+    assert_eq!(relative_name(n("Ab")), "F");
+    assert_eq!(relative_name(n("F")), "D");
+    assert_eq!(relative_name(n("Eb")), "C");
     assert_eq!(relative_short(n("C")), "Am");
 }
 
@@ -78,24 +71,14 @@ fn the_wheel_starts_at_c_and_goes_in_fifths() {
 #[test]
 fn shape_buttons_fit_on_the_screen_neck() {
     let b = shape_buttons(n("G"));
-    let got: Vec<(String, i32, i32)> = b.iter().map(|s| (s.label.to_string(), s.first, s.last)).collect();
-    assert_eq!(
-        got,
-        [
-            ("1".into(), 3, 5),
-            ("2".into(), 5, 7),
-            ("3".into(), 7, 10),
-            ("4".into(), 10, 12),
-            ("5".into(), 0, 3),
-            ("Braço todo".into(), -1, -1)
-        ]
-    );
+    let got: Vec<(i32, i32, i32, i32)> = b.iter().map(|s| (s.major, s.minor, s.first, s.last)).collect();
+    // each box counted in the major key and in the relative minor; the whole neck last
+    assert_eq!(got, [(1, 2, 3, 5), (2, 3, 5, 7), (3, 4, 7, 10), (4, 5, 10, 12), (5, 1, 0, 3), (0, 0, -1, -1)]);
     for key in 0..12 {
         for s in &shape_buttons(key)[..5] {
             assert!(s.first >= 0 && s.last <= FRETS, "key {key}: {s:?} off the neck");
         }
     }
-    assert_eq!(shape_subtitle(n("G"), &b[0]), "Forma 1 · 2 na relativa menor · casas 3 a 5");
 }
 
 #[test]
@@ -154,28 +137,29 @@ fn following_a_song_only_the_note_sounding_stands_out() {
 #[test]
 fn the_lead_of_the_mockup() {
     let p = page(&solo(), Some(2), true, Hand::Follow);
-    assert_eq!(p.title, "G maior · pentatônica");
-    assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 3 a 5");
+    assert_eq!((p.shape, p.window), (1, Some((3, 5))), "the hand is in shape 1, frets 3 to 5");
     assert_eq!(p.tuning, "E A D G B E");
     assert_eq!(p.open_names, ["E", "A", "D", "G", "B", "E"]);
     assert_eq!((p.frets, p.window), (FRETS, Some((3, 5))));
+    let now = &p.now;
     assert_eq!(
-        (p.now.name.as_str(), p.now.detail.as_str(), p.now.outside, p.now.empty),
-        ("D", "corda 2 · casa 3", false, false)
+        (now.name.as_str(), now.chord, now.string, now.fret, now.outside, now.empty),
+        ("D", false, 2, 3, false, false),
+        "D on the 2nd string, 3rd fret"
     );
-    let chips: Vec<(String, String, i32, bool)> =
-        p.phrase.iter().map(|c| (c.name.to_string(), c.detail.to_string(), c.state, c.outside)).collect();
+    let chips: Vec<(String, bool, i32, i32, bool)> =
+        p.phrase.iter().map(|c| (c.name.to_string(), c.chord, c.string, c.state, c.outside)).collect();
     assert_eq!(
         chips,
         [
             // a note outside the key is a lowered degree: the blue third of G
-            ("Bb".into(), "corda 3".into(), 0, true),
-            ("B".into(), "corda 3".into(), 0, false),
-            ("D".into(), "corda 2".into(), 1, false),
-            ("E".into(), "corda 2".into(), 2, false),
-            ("D".into(), "corda 2".into(), 3, false),
-            ("B".into(), "corda 3".into(), 3, false),
-            ("G".into(), "corda 4".into(), 3, false),
+            ("Bb".into(), false, 3, 0, true),
+            ("B".into(), false, 3, 0, false),
+            ("D".into(), false, 2, 1, false),
+            ("E".into(), false, 2, 2, false),
+            ("D".into(), false, 2, 3, false),
+            ("B".into(), false, 3, 3, false),
+            ("G".into(), false, 4, 3, false),
         ]
     );
     assert_eq!(p.phrase.iter().map(|c| c.index).collect::<Vec<_>>(), [0, 1, 2, 3, 4, 5, 6]);
@@ -187,10 +171,10 @@ fn the_lead_of_the_mockup() {
 #[test]
 fn the_rhythm_of_the_mockup() {
     let p = page(&rhythm(), Some(0), false, Hand::Follow);
-    assert_eq!(p.title, "G maior");
-    assert_eq!((p.now.name.as_str(), p.now.detail.as_str()), ("G", "acorde · casa 3"));
-    assert_eq!((p.phrase[0].name.as_str(), p.phrase[0].detail.as_str(), p.phrase[0].state), ("G", "casa 3", 1));
-    assert_eq!((p.phrase[1].name.as_str(), p.phrase[1].detail.as_str(), p.phrase[1].state), ("C", "casa 3", 2));
+    assert_eq!((p.now.name.as_str(), p.now.chord, p.now.fret), ("G", true, 3), "a chord, barred at the 3rd fret");
+    let chip = |c: &PhraseChip| (c.name.to_string(), c.chord, c.fret, c.state);
+    assert_eq!(chip(&p.phrase[0]), ("G".into(), true, 3, 1));
+    assert_eq!(chip(&p.phrase[1]), ("C".into(), true, 3, 2));
     assert_eq!(p.phrase.len(), 2);
     assert_eq!(
         lit(&p),
@@ -213,11 +197,10 @@ fn a_chord_the_song_does_not_name_names_itself() {
 #[test]
 fn a_shape_can_be_picked_or_the_whole_neck_shown() {
     let p = page(&solo(), Some(2), true, Hand::Shape(2));
-    assert_eq!((p.window, p.subtitle.as_str()), (Some((5, 7)), "Guitarra Solo · forma 2, casas 5 a 7"));
+    assert_eq!((p.window, p.shape), (Some((5, 7)), 2));
     let p = page(&solo(), Some(2), true, Hand::Whole);
-    assert_eq!((p.window, p.subtitle.as_str()), (None, "Guitarra Solo · braço todo"));
+    assert_eq!((p.window, p.shape), (None, 0), "the whole neck is no shape");
     assert_eq!(lit(&p), [(4, 3)], "the whole neck shows the scale, still only the note sounding is lit");
-    assert_eq!(hand_options().len(), 7);
     assert_eq!(
         (Hand::from_index(0), Hand::from_index(3), Hand::from_index(6)),
         (Hand::Follow, Hand::Shape(3), Hand::Whole)
@@ -240,7 +223,7 @@ fn before_the_first_note_nothing_on_the_neck_stands_out() {
     assert_eq!(p.phrase.iter().map(|c| c.state).collect::<Vec<_>>(), [2, 3, 3, 3, 3, 3, 3]);
     assert!(lit(&p).is_empty());
     assert!(p.notes.iter().all(|m| !m.sounding));
-    assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 3 a 5");
+    assert_eq!((p.shape, p.window), (1, Some((3, 5))), "the hand waits where the first note is");
 }
 
 #[test]

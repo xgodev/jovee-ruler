@@ -1,0 +1,144 @@
+# JoVee Ruler — Brazilian Portuguese.
+msgid ""
+msgstr ""
+"Project-Id-Version: JoVee\n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-11-03 00:00+0000\n"
+"Language-Team: Brazilian Portuguese\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "{} major"
+msgstr "{} maior"
+
+msgid "Relative: {} minor"
+msgstr "Relativa: {} menor"
+
+msgid "Shape {} · {} in the relative minor · frets {} to {}"
+msgstr "Forma {} · {} na relativa menor · casas {} a {}"
+
+msgid "Whole neck · all five shapes"
+msgstr "Braço todo · as cinco formas"
+
+msgid "{} · pentatonic"
+msgstr "{} · pentatônica"
+
+msgid "Guitar {} · whole neck"
+msgstr "Guitarra {} · braço todo"
+
+msgid "Guitar {} · the hand is in shape {}, frets {} to {}"
+msgstr "Guitarra {} · a mão está na forma {}, casas {} a {}"
+
+msgid "Guitar {} · shape {}, frets {} to {}"
+msgstr "Guitarra {} · forma {}, casas {} a {}"
+
+msgid "Page"
+msgstr "Página"
+
+msgid "Harmonic field"
+msgstr "Campo harmônico"
+
+msgid "Scale"
+msgstr "Escala"
+
+msgid "Key"
+msgstr "Tom"
+
+msgid "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+msgstr "Em cima o grau no tom maior, embaixo na relativa menor. Gire a roda ou clique numa nota."
+
+msgid "Shape"
+msgstr "Forma"
+
+msgid "Whole neck"
+msgstr "Braço todo"
+
+msgid "playing now"
+msgstr "tocando agora"
+
+msgid "outside the scale"
+msgstr "fora da escala"
+
+msgid "Guitar"
+msgstr "Guitarra"
+
+msgid "Major"
+msgstr "Maior"
+
+msgid "Pentatonic"
+msgstr "Pentatônica"
+
+msgid "Tuning"
+msgstr "Afinação"
+
+msgid "Tuning {}"
+msgstr "Afinação {}"
+
+msgid "Follow the hand"
+msgstr "Segue a mão"
+
+msgid "NOW"
+msgstr "AGORA"
+
+msgid "before the first note"
+msgstr "antes da primeira nota"
+
+msgid "chord · fret {}"
+msgstr "acorde · casa {}"
+
+msgid "string {} · fret {}"
+msgstr "corda {} · casa {}"
+
+msgid "in the scale"
+msgstr "na escala"
+
+msgid "fret {}"
+msgstr "casa {}"
+
+msgid "string {}"
+msgstr "corda {}"
+
+msgid "Guitar neck with the notes of the scale"
+msgstr "Braço da guitarra com as notas da escala"
+
+msgid "tonic"
+msgstr "tônica"
+
+msgid "major tonic"
+msgstr "tônica maior"
+
+msgid "relative tonic"
+msgstr "tônica da relativa"
+
+msgid "relative minor tonic"
+msgstr "tônica da relativa menor"
+
+msgid "pentatonic"
+msgstr "pentatônica"
+
+msgid "4th and 7th degrees"
+msgstr "graus 4 e 7"
+
+msgid "rest"
+msgstr "repouso"
+
+msgid "transition"
+msgstr "transição"
+
+msgid "tension"
+msgstr "tensão"
+
+msgid "borrowed, outside the field"
+msgstr "emprestado, fora do campo"
+
+msgid "RELATIVE"
+msgstr "RELATIVA"
+
+msgid "Harmonic field wheel: {}"
+msgstr "Roda do campo harmônico: {}"
+
+msgid "{} {}, {}"
+msgstr "{} {}, {}"

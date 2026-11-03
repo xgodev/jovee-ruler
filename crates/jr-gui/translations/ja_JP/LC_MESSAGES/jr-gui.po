@@ -1,0 +1,144 @@
+# JoVee Ruler — Japanese.
+msgid ""
+msgstr ""
+"Project-Id-Version: JoVee\n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-11-03 00:00+0000\n"
+"Language-Team: Japanese\n"
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "{} major"
+msgstr "{}メジャー"
+
+msgid "Relative: {} minor"
+msgstr "平行調：{}マイナー"
+
+msgid "Shape {} · {} in the relative minor · frets {} to {}"
+msgstr "フォーム{0}・平行調マイナーでは{1}・{2}〜{3}フレット"
+
+msgid "Whole neck · all five shapes"
+msgstr "ネック全体・5つのフォームすべて"
+
+msgid "{} · pentatonic"
+msgstr "{}・ペンタトニック"
+
+msgid "Guitar {} · whole neck"
+msgstr "ギター {}・ネック全体"
+
+msgid "Guitar {} · the hand is in shape {}, frets {} to {}"
+msgstr "ギター {0}・手はフォーム{1}、{2}〜{3}フレット"
+
+msgid "Guitar {} · shape {}, frets {} to {}"
+msgstr "ギター {0}・フォーム{1}、{2}〜{3}フレット"
+
+msgid "Page"
+msgstr "ページ"
+
+msgid "Harmonic field"
+msgstr "ダイアトニックコード"
+
+msgid "Scale"
+msgstr "スケール"
+
+msgid "Key"
+msgstr "キー"
+
+msgid "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+msgstr "上はメジャーキーでの度数、下は平行調マイナーでの度数。ホイールを回すか、音をクリックしてください。"
+
+msgid "Shape"
+msgstr "フォーム"
+
+msgid "Whole neck"
+msgstr "ネック全体"
+
+msgid "playing now"
+msgstr "演奏中"
+
+msgid "outside the scale"
+msgstr "スケール外"
+
+msgid "Guitar"
+msgstr "ギター"
+
+msgid "Major"
+msgstr "メジャー"
+
+msgid "Pentatonic"
+msgstr "ペンタトニック"
+
+msgid "Tuning"
+msgstr "チューニング"
+
+msgid "Tuning {}"
+msgstr "チューニング {}"
+
+msgid "Follow the hand"
+msgstr "手に合わせる"
+
+msgid "NOW"
+msgstr "いま"
+
+msgid "before the first note"
+msgstr "最初の音の前"
+
+msgid "chord · fret {}"
+msgstr "コード・{}フレット"
+
+msgid "string {} · fret {}"
+msgstr "{0}弦・{1}フレット"
+
+msgid "in the scale"
+msgstr "スケール内"
+
+msgid "fret {}"
+msgstr "{}フレット"
+
+msgid "string {}"
+msgstr "{}弦"
+
+msgid "Guitar neck with the notes of the scale"
+msgstr "スケールの音を示したギターのネック"
+
+msgid "tonic"
+msgstr "主音"
+
+msgid "major tonic"
+msgstr "メジャーの主音"
+
+msgid "relative tonic"
+msgstr "平行調の主音"
+
+msgid "relative minor tonic"
+msgstr "平行調マイナーの主音"
+
+msgid "pentatonic"
+msgstr "ペンタトニック"
+
+msgid "4th and 7th degrees"
+msgstr "4度と7度"
+
+msgid "rest"
+msgstr "安定"
+
+msgid "transition"
+msgstr "推移"
+
+msgid "tension"
+msgstr "緊張"
+
+msgid "borrowed, outside the field"
+msgstr "借用、ダイアトニック外"
+
+msgid "RELATIVE"
+msgstr "平行調"
+
+msgid "Harmonic field wheel: {}"
+msgstr "ダイアトニックコードのホイール：{}"
+
+msgid "{} {}, {}"
+msgstr "{} {}、{}"

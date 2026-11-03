@@ -1,0 +1,144 @@
+# JoVee Ruler — English.
+msgid ""
+msgstr ""
+"Project-Id-Version: JoVee\n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-11-03 00:00+0000\n"
+"Language-Team: English\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "{} major"
+msgstr "{} major"
+
+msgid "Relative: {} minor"
+msgstr "Relative: {} minor"
+
+msgid "Shape {} · {} in the relative minor · frets {} to {}"
+msgstr "Shape {} · {} in the relative minor · frets {} to {}"
+
+msgid "Whole neck · all five shapes"
+msgstr "Whole neck · all five shapes"
+
+msgid "{} · pentatonic"
+msgstr "{} · pentatonic"
+
+msgid "Guitar {} · whole neck"
+msgstr "Guitar {} · whole neck"
+
+msgid "Guitar {} · the hand is in shape {}, frets {} to {}"
+msgstr "Guitar {} · the hand is in shape {}, frets {} to {}"
+
+msgid "Guitar {} · shape {}, frets {} to {}"
+msgstr "Guitar {} · shape {}, frets {} to {}"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "Harmonic field"
+msgstr "Harmonic field"
+
+msgid "Scale"
+msgstr "Scale"
+
+msgid "Key"
+msgstr "Key"
+
+msgid "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+msgstr "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+
+msgid "Shape"
+msgstr "Shape"
+
+msgid "Whole neck"
+msgstr "Whole neck"
+
+msgid "playing now"
+msgstr "playing now"
+
+msgid "outside the scale"
+msgstr "outside the scale"
+
+msgid "Guitar"
+msgstr "Guitar"
+
+msgid "Major"
+msgstr "Major"
+
+msgid "Pentatonic"
+msgstr "Pentatonic"
+
+msgid "Tuning"
+msgstr "Tuning"
+
+msgid "Tuning {}"
+msgstr "Tuning {}"
+
+msgid "Follow the hand"
+msgstr "Follow the hand"
+
+msgid "NOW"
+msgstr "NOW"
+
+msgid "before the first note"
+msgstr "before the first note"
+
+msgid "chord · fret {}"
+msgstr "chord · fret {}"
+
+msgid "string {} · fret {}"
+msgstr "string {} · fret {}"
+
+msgid "in the scale"
+msgstr "in the scale"
+
+msgid "fret {}"
+msgstr "fret {}"
+
+msgid "string {}"
+msgstr "string {}"
+
+msgid "Guitar neck with the notes of the scale"
+msgstr "Guitar neck with the notes of the scale"
+
+msgid "tonic"
+msgstr "tonic"
+
+msgid "major tonic"
+msgstr "major tonic"
+
+msgid "relative tonic"
+msgstr "relative tonic"
+
+msgid "relative minor tonic"
+msgstr "relative minor tonic"
+
+msgid "pentatonic"
+msgstr "pentatonic"
+
+msgid "4th and 7th degrees"
+msgstr "4th and 7th degrees"
+
+msgid "rest"
+msgstr "rest"
+
+msgid "transition"
+msgstr "transition"
+
+msgid "tension"
+msgstr "tension"
+
+msgid "borrowed, outside the field"
+msgstr "borrowed, outside the field"
+
+msgid "RELATIVE"
+msgstr "RELATIVE"
+
+msgid "Harmonic field wheel: {}"
+msgstr "Harmonic field wheel: {}"
+
+msgid "{} {}, {}"
+msgstr "{} {}, {}"

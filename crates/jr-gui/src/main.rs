@@ -8,6 +8,13 @@ const LOOK_CHECK: Duration = Duration::from_secs(1);
 fn main() -> Result<(), slint::PlatformError> {
     let ruler = std::rc::Rc::new(jr_gui::Ruler::new()?);
     let root = jovee_theme::jovee_root();
+    let language = jr_gui::language::resolve(
+        jr_gui::language::chosen(&root).as_deref(),
+        sys_locale::get_locale().as_deref(),
+    );
+    if let Err(e) = jr_gui::language::select(&ruler, language) {
+        eprintln!("jovee-ruler: no {language} translation ({e}); keeping English");
+    }
     ruler.set_theme(jovee_theme::load(&root));
     ruler.set_key(0);
     let timer = slint::Timer::default();

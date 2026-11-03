@@ -2,6 +2,7 @@
 // Drag to turn it, or click a key. The wheel only turns; which key that is comes back through `pick`.
 import { Theme } from "@jovee-theme/theme.slint";
 import { Look } from "theme.slint";
+import { Locale } from "locale.slint";
 
 export component Wheel inherits Rectangle {
     in property <[string]> keys;      // twelve names, in fifths order from C
@@ -100,9 +101,9 @@ export component Wheel inherits Rectangle {
                 alignment: center;
                 spacing: 8px;
                 Text {
-                    text: @tr("RELATIVA");
+                    text: @tr("RELATIVE");
                     vertical-alignment: center;
-                    font-family: Theme.display;
+                    font-family: Locale.display-font-family;
                     font-size: 20px;
                     letter-spacing: 2.8px;
                     color: Theme.ink-3;
@@ -170,5 +171,5 @@ export component Wheel inherits Rectangle {
     }
 
     accessible-role: list;
-    accessible-label: @tr("Roda do campo harmônico: {}", root.key-name);
+    accessible-label: @tr("Harmonic field wheel: {}", root.key-name);
 }

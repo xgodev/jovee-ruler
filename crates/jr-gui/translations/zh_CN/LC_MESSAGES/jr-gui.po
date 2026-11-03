@@ -1,0 +1,144 @@
+# JoVee Ruler — Simplified Chinese.
+msgid ""
+msgstr ""
+"Project-Id-Version: JoVee\n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-11-03 00:00+0000\n"
+"Language-Team: Simplified Chinese\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "{} major"
+msgstr "{} 大调"
+
+msgid "Relative: {} minor"
+msgstr "关系小调：{} 小调"
+
+msgid "Shape {} · {} in the relative minor · frets {} to {}"
+msgstr "指型 {0} · 关系小调中为 {1} · 第 {2} 至 {3} 品"
+
+msgid "Whole neck · all five shapes"
+msgstr "整个指板 · 全部五个指型"
+
+msgid "{} · pentatonic"
+msgstr "{} · 五声音阶"
+
+msgid "Guitar {} · whole neck"
+msgstr "吉他 {} · 整个指板"
+
+msgid "Guitar {} · the hand is in shape {}, frets {} to {}"
+msgstr "吉他 {0} · 手在指型 {1}，第 {2} 至 {3} 品"
+
+msgid "Guitar {} · shape {}, frets {} to {}"
+msgstr "吉他 {0} · 指型 {1}，第 {2} 至 {3} 品"
+
+msgid "Page"
+msgstr "页面"
+
+msgid "Harmonic field"
+msgstr "顺阶和弦"
+
+msgid "Scale"
+msgstr "音阶"
+
+msgid "Key"
+msgstr "调性"
+
+msgid "On top the degree in the major key, below in the relative minor. Turn the wheel or click a note."
+msgstr "上方为大调中的级数，下方为关系小调中的级数。转动转盘或点击一个音。"
+
+msgid "Shape"
+msgstr "指型"
+
+msgid "Whole neck"
+msgstr "整个指板"
+
+msgid "playing now"
+msgstr "正在演奏"
+
+msgid "outside the scale"
+msgstr "音阶外"
+
+msgid "Guitar"
+msgstr "吉他"
+
+msgid "Major"
+msgstr "大调"
+
+msgid "Pentatonic"
+msgstr "五声音阶"
+
+msgid "Tuning"
+msgstr "定弦"
+
+msgid "Tuning {}"
+msgstr "定弦 {}"
+
+msgid "Follow the hand"
+msgstr "跟随手的位置"
+
+msgid "NOW"
+msgstr "当前"
+
+msgid "before the first note"
+msgstr "第一个音之前"
+
+msgid "chord · fret {}"
+msgstr "和弦 · 第 {} 品"
+
+msgid "string {} · fret {}"
+msgstr "第 {0} 弦 · 第 {1} 品"
+
+msgid "in the scale"
+msgstr "音阶内"
+
+msgid "fret {}"
+msgstr "第 {} 品"
+
+msgid "string {}"
+msgstr "第 {} 弦"
+
+msgid "Guitar neck with the notes of the scale"
+msgstr "标有音阶音符的吉他指板"
+
+msgid "tonic"
+msgstr "主音"
+
+msgid "major tonic"
+msgstr "大调主音"
+
+msgid "relative tonic"
+msgstr "关系调主音"
+
+msgid "relative minor tonic"
+msgstr "关系小调主音"
+
+msgid "pentatonic"
+msgstr "五声音阶"
+
+msgid "4th and 7th degrees"
+msgstr "第 4 和第 7 级"
+
+msgid "rest"
+msgstr "稳定"
+
+msgid "transition"
+msgstr "过渡"
+
+msgid "tension"
+msgstr "紧张"
+
+msgid "borrowed, outside the field"
+msgstr "借用，调外"
+
+msgid "RELATIVE"
+msgstr "关系调"
+
+msgid "Harmonic field wheel: {}"
+msgstr "顺阶和弦转盘：{}"
+
+msgid "{} {}, {}"
+msgstr "{} {}，{}"
