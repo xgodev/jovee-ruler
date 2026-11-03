@@ -12,7 +12,7 @@ use slint::platform::software_renderer::{MinimalSoftwareWindow, RepaintBufferTyp
 use slint::platform::{Platform, PlatformError, WindowAdapter};
 use slint::{ComponentHandle, PhysicalSize, Rgb8Pixel};
 
-const PAGES: [&str; 6] = ["field", "field-g", "scale", "song-solo", "song-base", "song-seven"];
+const PAGES: [&str; 7] = ["field", "field-g", "scale", "song-solo", "song-base", "song-seven", "song-flat"];
 const SIZE: (u32, u32) = (1280, 860);
 
 struct Headless(Rc<MinimalSoftwareWindow>);
@@ -87,6 +87,12 @@ fn base() -> Song {
     song(0, &STANDARD, &[em, g, c, d, g, em, c], &["Em", "G", "C", "D", "G", "Em", "C"])
 }
 
+/// The solo a half step up, in Ab: the longest title, "Lá bemol maior · pentatônica".
+fn flat() -> Song {
+    let up: &[&[(u8, u8)]] = &[&[(3, 4)], &[(3, 5)], &[(2, 4)], &[(2, 6)], &[(2, 4)], &[(3, 5)], &[(4, 6)]];
+    Song { key: parse("Ab").unwrap(), ..song(1, &STANDARD, up, &[]) }
+}
+
 /// A seven-string, the low B under the E, the riff climbing past the 15th fret.
 fn seven() -> Song {
     let tuning = [64, 59, 55, 50, 45, 40, 35];
@@ -125,6 +131,11 @@ fn main() {
             "song-seven" => {
                 ruler.follow_song(seven());
                 ruler.at(3.0);
+            }
+            "song-flat" => {
+                ruler.follow_song(flat());
+                ruler.window().invoke_scale_picked(1);
+                ruler.at(2.0);
             }
             "song-start" => ruler.follow_song(solo()),
             // the "Agora" box at its tightest, a long chord name: one per step of the name's size

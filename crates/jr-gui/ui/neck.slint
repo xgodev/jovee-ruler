@@ -1,23 +1,17 @@
 // The neck from the nut to fret 15 (or as far as a song goes), the lowest string on top as on the printed
 // ruler, with the slider's marks over the notes of the scale: square = tonic, diamond = tonic of the
 // relative minor, circle = pentatonic, triangle = the 4th and 7th. Outside the chosen shape the marks fade,
-// as the cassette darkens them. A song rings the notes it plays: the one sounding, the ones just played and
-// the next.
+// as the cassette darkens them. A song rings the note it is sounding, the only one lit.
 import { Theme } from "@jovee-theme/theme.slint";
 import { Look } from "theme.slint";
 
 export struct NoteMark {
-    string: int,   // 0 = the lowest string, drawn on top
-    fret: int,     // 0 = open
+    string: int,     // 0 = the lowest string, drawn on top
+    fret: int,       // 0 = open
     name: string,
-    mark: int,     // 0 tonic, 1 tonic of the relative minor, 2 pentatonic, 3 scale, 4 outside the scale
-    lit: bool,     // inside the shape on show, or played
-    ring: int,     // 0 none, 1 sounding now, 2 just played, 3 the next one
-}
-
-// A ring of 16 dashes, for the note that comes next.
-export global Dashes {
-    out property <string> circle: "M 96.0 50.0 A 46 46 0 0 1 94.9 59.9 M 92.5 67.6 A 46 46 0 0 1 87.7 76.3 M 82.5 82.5 A 46 46 0 0 1 74.8 88.7 M 67.6 92.5 A 46 46 0 0 1 58.1 95.3 M 50.0 96.0 A 46 46 0 0 1 40.1 94.9 M 32.4 92.5 A 46 46 0 0 1 23.7 87.7 M 17.5 82.5 A 46 46 0 0 1 11.3 74.8 M 7.5 67.6 A 46 46 0 0 1 4.7 58.1 M 4.0 50.0 A 46 46 0 0 1 5.1 40.1 M 7.5 32.4 A 46 46 0 0 1 12.3 23.7 M 17.5 17.5 A 46 46 0 0 1 25.2 11.3 M 32.4 7.5 A 46 46 0 0 1 41.9 4.7 M 50.0 4.0 A 46 46 0 0 1 59.9 5.1 M 67.6 7.5 A 46 46 0 0 1 76.3 12.3 M 82.5 17.5 A 46 46 0 0 1 88.7 25.2 M 92.5 32.4 A 46 46 0 0 1 95.3 41.9";
+    mark: int,       // 0 tonic, 1 tonic of the relative minor, 2 pentatonic, 3 scale, 4 outside the scale
+    lit: bool,       // inside the shape on show, or sounding
+    sounding: bool,  // the song is playing it now
 }
 
 component Dot inherits Rectangle {
@@ -137,37 +131,18 @@ export component Neck inherits Rectangle {
         height: root.box;
 
         // sounding now: a soft halo and a thick ring
-        if n.ring == 1: Rectangle {
+        if n.sounding: Rectangle {
             width: 2 * root.r + 34px;
             height: self.width;
             border-radius: self.width / 2;
             background: root.ring-color(n.mark).with-alpha(0.2);
         }
-        if n.ring == 1: Rectangle {
+        if n.sounding: Rectangle {
             width: 2 * root.r + 16px;
             height: self.width;
             border-radius: self.width / 2;
             border-width: 4px;
             border-color: root.ring-color(n.mark);
-        }
-        // just played: the same ring, thin and half gone
-        if n.ring == 2: Rectangle {
-            width: 2 * root.r + 14px;
-            height: self.width;
-            border-radius: self.width / 2;
-            border-width: 2.5px;
-            border-color: root.ring-color(n.mark);
-            opacity: 0.5;
-        }
-        // the next one: dashed
-        if n.ring == 3: Path {
-            width: 2 * root.r + 14px;
-            height: self.width;
-            viewbox-width: 100;
-            viewbox-height: 100;
-            commands: Dashes.circle;
-            stroke: Theme.ink-2;
-            stroke-width: 2.5px;
         }
         if n.mark == 0: Rectangle {
             width: 2 * root.r;

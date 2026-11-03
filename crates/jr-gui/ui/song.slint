@@ -10,7 +10,7 @@ import { SelectList } from "@jovee-theme/select_list.slint";
 import { SelectPlacement } from "@jovee-theme/select_placement.slint";
 import { SelectTrigger } from "@jovee-theme/select_trigger.slint";
 import { Look, DotTag, LitText, Well } from "theme.slint";
-import { Dashes, Key, MarkLegend, Neck, NoteMark } from "neck.slint";
+import { Key, MarkLegend, Neck, NoteMark } from "neck.slint";
 
 export struct NowNote {
     name: string,      // the note or the chord sounding
@@ -35,7 +35,7 @@ component Beside inherits VerticalLayout {
     FieldCaption { text: root.text; }
 }
 
-// The marks, then the rings a played note wears.
+// The marks, then the rings the note sounding wears.
 component SongLegend inherits MarkLegend {
     short: true;
     VerticalLayout {
@@ -54,29 +54,6 @@ component SongLegend inherits MarkLegend {
             border-radius: 10px;
             border-width: 3.5px;
             border-color: Theme.accent;
-        }
-    }
-    Key {
-        text: @tr("já tocou");
-        Rectangle {
-            width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            border-width: 2px;
-            border-color: Theme.accent;
-            opacity: 0.5;
-        }
-    }
-    Key {
-        text: @tr("próxima");
-        Path {
-            width: 20px;
-            height: 20px;
-            viewbox-width: 100;
-            viewbox-height: 100;
-            commands: Dashes.circle;
-            stroke: Theme.ink-2;
-            stroke-width: 2px;
         }
     }
     Key {

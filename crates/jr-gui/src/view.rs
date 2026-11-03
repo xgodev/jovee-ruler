@@ -38,8 +38,15 @@ pub fn wheel_index(key: Pc) -> usize {
     fifths().iter().position(|&k| k == key % 12).expect("every key is on the wheel")
 }
 
+/// The key with its flat or sharp said in full: the title's font has capitals only, so "Láb" would
+/// read "LAB".
 pub fn key_title(key: Pc) -> String {
-    format!("{} maior", spoken(key, key))
+    let name = spoken(key, key);
+    match (name.strip_suffix('b'), name.strip_suffix('#')) {
+        (Some(n), _) => format!("{n} bemol maior"),
+        (_, Some(n)) => format!("{n} sustenido maior"),
+        _ => format!("{name} maior"),
+    }
 }
 
 pub fn key_subtitle(key: Pc) -> String {
@@ -102,43 +109,11 @@ pub fn shape_subtitle(key: Pc, button: &ShapeButton) -> String {
     }
 }
 
-/// How a played note is ringed on the neck.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Ring {
-    /// Sounding now.
-    Now,
-    /// Just played.
-    Past,
-    /// Coming next.
-    Next,
-}
-
-impl Ring {
-    /// The code the neck draws: 1 now, 2 past, 3 next.
-    fn code(self) -> i32 {
-        match self {
-            Ring::Now => 1,
-            Ring::Past => 2,
-            Ring::Next => 3,
-        }
-    }
-
-    /// Which ring a note played more than once shows: now, then what comes, then what went.
-    fn rank(self) -> u8 {
-        match self {
-            Ring::Now => 2,
-            Ring::Next => 1,
-            Ring::Past => 0,
-        }
-    }
-}
-
-/// A note the song plays, where the neck draws it: `row` 0 is the lowest string, on top.
+/// A note the song is sounding, where the neck draws it: `row` 0 is the lowest string, on top.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Played {
     pub row: i32,
     pub fret: i32,
-    pub ring: Ring,
 }
 
 /// A note outside the key is a lowered degree (the blue third, the flat seventh), so it is spelled flat.
@@ -153,14 +128,14 @@ fn played_name(key: Pc, p: Pc) -> &'static str {
 
 /// The marks on a neck tuned to `open` (lowest string first), from the nut to `frets`. With the
 /// pentatonic on show the 4th and 7th are outside it. Notes outside what is on show are drawn only
-/// while they are played; a played note is lit wherever it is.
+/// while they sound; a note sounding is lit wherever it is.
 pub fn neck(
     key: Pc,
     open: &[Pc],
     frets: i32,
     window: Option<(i32, i32)>,
     pentatonic: bool,
-    played: &[Played],
+    sounding: &[Played],
 ) -> Vec<NoteMark> {
     let mut out = Vec::new();
     for (row, &string) in open.iter().enumerate() {
@@ -170,12 +145,8 @@ pub fn neck(
                 Mark::Scale if pentatonic => Mark::Outside,
                 m => m,
             };
-            let ring = played
-                .iter()
-                .filter(|n| n.row == row as i32 && n.fret == fret)
-                .map(|n| n.ring)
-                .max_by_key(|r| r.rank());
-            if m == Mark::Outside && ring.is_none() {
+            let now = sounding.iter().any(|n| n.row == row as i32 && n.fret == fret);
+            if m == Mark::Outside && !now {
                 continue;
             }
             out.push(NoteMark {
@@ -189,8 +160,8 @@ pub fn neck(
                     Mark::Scale => 3,
                     Mark::Outside => 4,
                 },
-                lit: ring.is_some() || window.is_none_or(|(a, b)| fret >= a && fret <= b),
-                ring: ring.map_or(0, Ring::code),
+                lit: now || window.is_none_or(|(a, b)| fret >= a && fret <= b),
+                sounding: now,
             });
         }
     }
@@ -300,8 +271,8 @@ fn moment_name(song: &Song, m: &Moment) -> String {
     names.join(" ")
 }
 
-/// The song page: the guitar's neck with the scale and the hand's shape, the moment sounding, the
-/// two before it and the next ringed, and the phrase around it.
+/// The song page: the guitar's neck with the scale and the hand's shape, only the moment sounding lit
+/// on it, and the phrase around it.
 pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic: bool, hand: Hand) -> SongPage {
     let key = song.key;
     let open = song.open();
@@ -332,20 +303,15 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
     };
 
     let row = |n: &SongNote| open.len() as i32 - n.string as i32;
-    let mut played = Vec::new();
-    let mut ring = |i: usize, r: Ring| {
-        if let Some(m) = moments.get(i) {
-            played.extend(m.notes.iter().map(|n| Played { row: row(n), fret: n.fret as i32, ring: r }));
-        }
-    };
-    match now {
-        Some(i) => {
-            (i.saturating_sub(2)..i).for_each(|p| ring(p, Ring::Past));
-            ring(i, Ring::Now);
-            ring(i + 1, Ring::Next);
-        }
-        None => ring(0, Ring::Next),
-    }
+    let sounding: Vec<Played> = now
+        .and_then(|i| moments.get(i))
+        .into_iter()
+        .flat_map(|m| &m.notes)
+        .map(|n| Played { row: row(n), fret: n.fret as i32 })
+        .collect();
+    // following the song the eye goes to one place: the note sounding; the scale and the shape stay dark
+    let mut notes = neck(key, &open, frets, window, pentatonic, &sounding);
+    notes.iter_mut().for_each(|m| m.lit = m.sounding);
 
     let now_note = match now.and_then(|i| moments.get(i)) {
         None => NowNote { empty: true, ..NowNote::default() },
@@ -388,7 +354,7 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
         title: if pentatonic { format!("{} · pentatônica", key_title(key)) } else { key_title(key) },
         subtitle: format!("Guitarra {guitar} · {subtitle}"),
         tuning: names.join(" "),
-        notes: neck(key, &open, frets, window, pentatonic, &played),
+        notes,
         open_names: names,
         frets,
         window,

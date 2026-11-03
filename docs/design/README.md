@@ -47,9 +47,9 @@ the tab (string, fret, when), its tuning, the song's key and the names of the ot
   number of strings, open notes named on the left) and as long as the guitar plays, 15 to 24 frets.
 - **The shape the hand is in**: "Segue a mão" frames the CAGED box nearest the frets held down, and
   moves with the hand; 1 to 5 fixes one box near the hand; "Braço todo" frames nothing.
-- **The notes as the tab plays them**: the one sounding wears a thick ring with a halo, the two before
-  it a thin faded ring, the next one a dashed ring. A note outside the scale on show is drawn while it
-  is played, in red. Notes struck within 30 ms are one moment, a chord.
+- **The notes as the tab plays them**: only the one sounding is lit, with a thick ring and a halo; the
+  scale and the shape stay dark around it, so the eye has one place to go. A note outside the scale on
+  show is drawn while it is played, in red. Notes struck within 30 ms are one moment, a chord.
 - **Agora and the phrase**: what sounds now (name, where the hand plays it, inside the scale or not)
   and seven moments around it, two behind. A click on one takes the song there.
 
