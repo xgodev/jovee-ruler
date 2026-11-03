@@ -3,7 +3,8 @@
 
 use std::ops::Range;
 
-use jr_core::note::{fifths, name_in, pc};
+use jr_core::capo::shape_name;
+use jr_core::note::{fifths, key_name, name_in, pc};
 use jr_core::{harmonic_field, mark, note_at, scale, shape_near, shapes, triad, Function, Mark, Pc, Shape, STANDARD};
 
 use crate::song::{hand_fret, Moment, Song, SongNote};
@@ -180,6 +181,10 @@ pub fn phrase_strip(len: usize, now: Option<usize>) -> Range<usize> {
 /// The song page at moment `now` (`None` before the first note) of the song's `moments`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SongPage {
+    /// The fret the capo clamps; 0 = none.
+    pub capo: i32,
+    /// With a capo, the key the hand plays in: "C" for a song in E with the capo on the 4th fret.
+    pub capo_key: String,
     /// The shape on show, 1 to 5 in the major key; 0 = the whole neck.
     pub shape: i32,
     /// The open strings from the lowest, spaced: "E A D G B E".
@@ -209,20 +214,19 @@ fn lowest_fret(notes: &[SongNote]) -> u8 {
 }
 
 /// What a moment is called: a note's name; a chord as the song writes it there, as its triad, or
-/// its notes from the bass up.
-fn moment_name(song: &Song, m: &Moment) -> String {
+/// its notes from the bass up. With a capo a chord is called by the shape the hand makes, and the
+/// second name is the chord it sounds; it is empty when the two are the same.
+fn moment_name(song: &Song, m: &Moment) -> (String, String) {
     if !m.is_chord() {
-        return played_name(song.key, pc(m.notes[0].midi as i32)).into();
-    }
-    let written = song.chords.iter().rev().find(|c| c.start <= m.start + 0.03);
-    if let Some(c) = written {
-        return c.name.clone();
+        return (played_name(song.key, pc(m.notes[0].midi as i32)).into(), String::new());
     }
     let mut notes = m.notes.clone();
     notes.sort_by_key(|n| n.midi);
     let pcs: Vec<Pc> = notes.iter().map(|n| pc(n.midi as i32)).collect();
-    if let Some((root, q)) = triad(&pcs) {
-        return format!("{}{}", name_in(song.key, root), q.suffix());
+    let written = song.chords.iter().rev().find(|c| c.start <= m.start + 0.03).map(|c| c.name.clone());
+    if let Some(sounds) = written.or_else(|| triad(&pcs).map(|(root, q)| format!("{}{}", name_in(song.key, root), q.suffix()))) {
+        let shape = shape_name(&sounds, song.capo);
+        return if shape == sounds { (shape, String::new()) } else { (shape, sounds) };
     }
     let mut names: Vec<&str> = Vec::new();
     for p in pcs {
@@ -231,14 +235,15 @@ fn moment_name(song: &Song, m: &Moment) -> String {
             names.push(n);
         }
     }
-    names.join(" ")
+    (names.join(" "), String::new())
 }
 
 /// The song page: the guitar's neck with the scale and the hand's shape, only the moment sounding lit
 /// on it, and the phrase around it.
 pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic: bool, hand: Hand) -> SongPage {
     let key = song.key;
-    let open = song.open();
+    // the neck starts at the capo: its notes are what the strings sound there
+    let open = song.at_capo();
     let frets = song.frets();
     let on_show: Vec<Pc> = if pentatonic { jr_core::pentatonic(key).to_vec() } else { scale(key).to_vec() };
     let outside = |m: &Moment| m.notes.iter().any(|n| !on_show.contains(&pc(n.midi as i32)));
@@ -277,20 +282,26 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
 
     let now_note = match now.and_then(|i| moments.get(i)) {
         None => NowNote { empty: true, ..NowNote::default() },
-        Some(m) => NowNote {
-            name: moment_name(song, m).into(),
+        Some(m) => {
+            let (name, sounds) = moment_name(song, m);
+            NowNote {
+            name: name.into(),
+            sounds: sounds.into(),
             chord: m.is_chord(),
             string: m.notes[0].string as i32,
             fret: (if m.is_chord() { lowest_fret(&m.notes) } else { m.notes[0].fret }) as i32,
             outside: outside(m),
             empty: false,
-        },
+        }
+        }
     };
     let phrase = phrase_strip(moments.len(), now)
         .map(|i| {
             let m = &moments[i];
+            let (name, sounds) = moment_name(song, m);
             PhraseChip {
-                name: moment_name(song, m).into(),
+                name: name.into(),
+                sounds: sounds.into(),
                 chord: m.is_chord(),
                 string: m.notes[0].string as i32,
                 fret: (if m.is_chord() { lowest_fret(&m.notes) } else { m.notes[0].fret }) as i32,
@@ -307,8 +318,11 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
         })
         .collect();
 
-    let names: Vec<String> = open.iter().map(|&p| name_in(key, p).to_string()).collect();
+    // the strings are named as they are tuned, the capo aside
+    let names: Vec<String> = song.open().iter().map(|&p| name_in(key, p).to_string()).collect();
     SongPage {
+        capo: song.capo as i32,
+        capo_key: if song.capo == 0 { String::new() } else { key_name(pc(key as i32 - song.capo as i32)).into() },
         shape: shape.map_or(0, |s| s.major as i32),
         tuning: names.join(" "),
         notes,

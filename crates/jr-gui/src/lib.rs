@@ -227,6 +227,8 @@ fn show_song(w: &AppWindow, s: &State) {
     w.set_hand(s.hand.index());
     w.set_high_on_top(!s.low_on_top);
     w.set_tuning(page.tuning.into());
+    w.set_song_capo(page.capo);
+    w.set_capo_key(page.capo_key.into());
     w.set_song_shape(page.shape);
     w.set_song_notes(model(page.notes));
     w.set_open_names(model(page.open_names.into_iter().map(Into::into).collect()));

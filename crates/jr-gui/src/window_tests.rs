@@ -56,6 +56,7 @@ fn run() -> Song {
         tuning: vec![64, 59, 55, 50, 45, 40],
         guitars: vec!["Base".into(), "Solo".into()],
         guitar: 1,
+        capo: 0,
         notes: frets
             .iter()
             .enumerate()

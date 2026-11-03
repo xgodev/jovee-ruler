@@ -41,6 +41,8 @@ pub struct Song {
     pub guitars: Vec<String>,
     /// The one whose notes these are.
     pub guitar: usize,
+    /// The fret the capo clamps, 0 = none: the notes' frets count from it, as the tab writes them.
+    pub capo: u8,
     pub notes: Vec<SongNote>,
     pub chords: Vec<SongChord>,
 }
@@ -58,6 +60,11 @@ impl Song {
             return STANDARD.to_vec();
         }
         self.tuning.iter().rev().map(|&m| pc(m as i32)).collect()
+    }
+
+    /// What the strings sound at the capo, lowest string first: the open strings when there is none.
+    pub fn at_capo(&self) -> Vec<Pc> {
+        self.open().iter().map(|&p| pc(p as i32 + self.capo as i32)).collect()
     }
 }
 

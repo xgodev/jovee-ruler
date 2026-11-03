@@ -148,3 +148,18 @@ msgstr "Rad der Stufenakkorde: {}"
 
 msgid "{} {}, {}"
 msgstr "{} {}, {}"
+
+msgid "Capo"
+msgstr "Kapo"
+
+msgid "on fret {}"
+msgstr "{}. Bund"
+
+msgid "sounds {} · capo {}"
+msgstr "klingt {} · Kapo {}"
+
+msgid "sounds {}"
+msgstr "klingt {}"
+
+msgid "Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}"
+msgstr "Gitarre {} · Kapo im {}. Bund: {}-Griffe, klingt in {}"

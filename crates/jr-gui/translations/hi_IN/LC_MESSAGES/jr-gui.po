@@ -148,3 +148,18 @@ msgstr "हार्मोनिक फ़ील्ड व्हील: {}"
 
 msgid "{} {}, {}"
 msgstr "{} {}, {}"
+
+msgid "Capo"
+msgstr "कैपो"
+
+msgid "on fret {}"
+msgstr "फ्रेट {}"
+
+msgid "sounds {} · capo {}"
+msgstr "बजता है {} · कैपो {}"
+
+msgid "sounds {}"
+msgstr "बजता है {}"
+
+msgid "Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}"
+msgstr "गिटार {} · कैपो फ्रेट {} पर: हाथ {} के शेप बनाता है और {} में बजता है"

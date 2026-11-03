@@ -13,8 +13,8 @@ use slint::platform::software_renderer::{MinimalSoftwareWindow, RepaintBufferTyp
 use slint::platform::{Platform, PlatformError, WindowAdapter};
 use slint::{ComponentHandle, PhysicalSize, Rgb8Pixel};
 
-const PAGES: [&str; 8] =
-    ["field", "field-g", "scale", "song-solo", "song-flipped", "song-base", "song-seven", "song-flat"];
+const PAGES: [&str; 9] =
+    ["field", "field-g", "scale", "song-solo", "song-flipped", "song-base", "song-seven", "song-flat", "song-capo"];
 const SIZE: (u32, u32) = (1280, 860);
 
 struct Headless(Rc<MinimalSoftwareWindow>);
@@ -66,6 +66,7 @@ fn song(guitar: usize, tuning: &[u8], moments: &[&[(u8, u8)]], chords: &[&str]) 
         tuning: tuning.to_vec(),
         guitars: vec!["Base".into(), "Solo".into()],
         guitar,
+        capo: 0,
         notes: moments.iter().enumerate().flat_map(|(i, at)| struck(tuning, i as f64, at)).collect(),
         chords: chords
             .iter()
@@ -99,6 +100,18 @@ fn flat() -> Song {
 fn seven() -> Song {
     let tuning = [64, 59, 55, 50, 45, 40, 35];
     song(1, &tuning, &[&[(7, 3)], &[(6, 3)], &[(5, 5)], &[(2, 15)], &[(1, 17)], &[(1, 19)]], &[])
+}
+
+/// "Cedo ou Tarde" with the capo on the 4th fret: the song plays A E B C#m, the hand makes F C G Am.
+fn capo() -> Song {
+    let raised: Vec<u8> = STANDARD.iter().map(|m| m + 4).collect();
+    let f: &[(u8, u8)] = &[(6, 1), (5, 3), (4, 3), (3, 2), (2, 1), (1, 1)];
+    let c: &[(u8, u8)] = &[(5, 3), (4, 2), (3, 0), (2, 1), (1, 0)];
+    let g: &[(u8, u8)] = &[(6, 3), (5, 2), (4, 0), (3, 0), (2, 0), (1, 3)];
+    let am: &[(u8, u8)] = &[(5, 0), (4, 2), (3, 2), (2, 1), (1, 0)];
+    let chords = ["A", "E", "B", "C#m", "A", "E", "B"];
+    let song = song(0, &raised, &[f, c, g, am, f, c, g], &chords);
+    Song { key: parse("E").unwrap(), tuning: STANDARD.to_vec(), capo: 4, ..song }
 }
 
 fn main() {
@@ -151,6 +164,10 @@ fn main() {
                 ruler.follow_song(flat());
                 ruler.window().invoke_scale_picked(1);
                 ruler.at(2.0);
+            }
+            "song-capo" => {
+                ruler.follow_song(capo());
+                ruler.at(1.0);
             }
             "song-start" => ruler.follow_song(solo()),
             // the "Now" box at its tightest, a long chord name: one per step of the name's size

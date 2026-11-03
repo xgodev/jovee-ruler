@@ -148,3 +148,18 @@ msgstr "顺阶和弦转盘：{}"
 
 msgid "{} {}, {}"
 msgstr "{} {}，{}"
+
+msgid "Capo"
+msgstr "变调夹"
+
+msgid "on fret {}"
+msgstr "第 {} 品"
+
+msgid "sounds {} · capo {}"
+msgstr "实音 {0} · 变调夹 {1}"
+
+msgid "sounds {}"
+msgstr "实音 {}"
+
+msgid "Guitar {} · capo on fret {}: the hand makes the {} shapes and it sounds in {}"
+msgstr "吉他 {0} · 变调夹在第 {1} 品：手按 {2} 的指型，实音为 {3}"

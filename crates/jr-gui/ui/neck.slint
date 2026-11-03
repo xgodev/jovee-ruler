@@ -35,6 +35,9 @@ export component Neck inherits Rectangle {
     in property <length> sp: 84px;        // between strings
     in property <length> r: 26px;         // of a mark
     in property <bool> high-on-top: false;   // the highest string on the top line, the lowest at the bottom
+    // the fret a capo clamps, 0 = none: the neck then starts at it, the capo where the nut was, and fret
+    // f is fret capo + f on the guitar, as the tab counts them
+    in property <int> capo: 0;
 
     height: self.y0 + self.span + self.r + 46px;
 
@@ -45,6 +48,7 @@ export component Neck inherits Rectangle {
     private property <length> span: (root.strings - 1) * root.sp;
     private property <length> box: 2 * root.r + 36px;   // a mark with room for its halo
     private property <bool> named: root.open-names.length > 0;
+    private property <string> capo-name: @tr("Capo");
 
     // the line of string `s`, 0 the lowest
     pure function row-y(s: int) -> length {
@@ -77,20 +81,32 @@ export component Neck inherits Rectangle {
         border-color: Theme.accent;
     }
 
-    for f in root.frets + 1: Rectangle {
-        if f > 0 && root.inlay(f): Dot {
+    for f in root.frets + 1: fret := Rectangle {
+        // the dots stay on the guitar's frets, wherever the capo is
+        private property <int> on-guitar: f + root.capo;
+        private property <bool> capo-here: f == 0 && root.capo > 0;
+        if f > 0 && root.inlay(fret.on-guitar): Dot {
             x: root.cell-x(f) - 7px;
             y: root.y0 + root.span / 2 - 7px;
         }
-        if f == 12 || f == 24: Dot {
+        if f > 0 && (fret.on-guitar == 12 || fret.on-guitar == 24): Dot {
             x: root.cell-x(f) - 7px;
             y: root.y0 + root.span / 2 - root.sp - 7px;
         }
-        if f == 12 || f == 24: Dot {
+        if f > 0 && (fret.on-guitar == 12 || fret.on-guitar == 24): Dot {
             x: root.cell-x(f) - 7px;
             y: root.y0 + root.span / 2 + root.sp - 7px;
         }
-        Rectangle {
+        // the capo: a bar across every string, past them on both sides
+        if fret.capo-here: Rectangle {
+            x: root.x0 - 8px;
+            y: root.y0 - root.r - 6px;
+            width: 16px;
+            height: root.span + 2 * root.r + 12px;
+            border-radius: 6px;
+            background: Theme.ink-2;
+        }
+        if !fret.capo-here: Rectangle {
             x: root.x0 + f * root.fw - self.width / 2;
             y: root.y0;
             width: f == 0 ? 4px : Look.hair;
@@ -98,14 +114,15 @@ export component Neck inherits Rectangle {
             background: f == 0 ? Theme.ink-2 : Theme.ink-3.with-alpha(0.45);
         }
         Text {
-            x: root.cell-x(f) - 20px;
+            x: root.cell-x(f) - self.width / 2;
             y: root.y0 + root.span + root.r + 22px;
-            width: 40px;
-            text: f;
+            width: fret.capo-here ? 80px : 40px;
+            text: fret.capo-here ? root.capo-name.to-uppercase() : "\{f}";
             horizontal-alignment: center;
-            font-family: Theme.mono;
+            font-family: fret.capo-here ? Theme.sans : Theme.mono;
             font-size: Theme.fs-body;
-            color: Theme.ink-3;
+            font-weight: fret.capo-here ? 700 : 400;
+            color: fret.capo-here ? Theme.ink : Theme.ink-3;
         }
     }
 

@@ -4,6 +4,7 @@
 //! scale ruler (`neck`). The numbers follow the printed art, so a player who knows the
 //! physical ruler reads the digital one the same way.
 
+pub mod capo;
 pub mod field;
 pub mod neck;
 pub mod note;

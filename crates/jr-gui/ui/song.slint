@@ -15,7 +15,8 @@ import { Key, MarkLegend, Neck, NoteMark } from "neck.slint";
 
 // Where the hand plays a moment: a note on its string and fret, a chord at its lowest fret held down.
 export struct NowNote {
-    name: string,      // the note or the chord sounding
+    name: string,      // the note or the chord sounding; with a capo, a chord's shape
+    sounds: string,    // with a capo, the chord the shape sounds; else empty
     chord: bool,
     string: int,       // 1 = the highest; a note's only
     fret: int,
@@ -25,6 +26,7 @@ export struct NowNote {
 
 export struct PhraseChip {
     name: string,
+    sounds: string,    // as `NowNote.sounds`
     chord: bool,
     string: int,       // a note's: the chip says its string
     fret: int,         // a chord's: the chip says its lowest fret
@@ -89,6 +91,7 @@ export component SongView inherits Rectangle {
     in property <int> guitar;
     in property <int> scale;               // 0 major, 1 pentatonic
     in property <string> tuning;
+    in property <int> capo;                // the fret it clamps; 0 = none
     in property <string> title;
     in property <string> subtitle;
     in property <int> hand;
@@ -122,7 +125,8 @@ export component SongView inherits Rectangle {
             spacing: 12px;
             Beside { text: @tr("Guitar"); }
             SelectTrigger {
-                width: 240px;
+                // narrower while the capo is shown, so every caption of the row fits
+                width: root.capo > 0 ? 180px : 240px;
                 label: @tr("Guitar");
                 text: root.guitar >= 0 && root.guitar < root.guitars.length ? root.guitars[root.guitar] : "";
                 open: root.open;
@@ -150,6 +154,24 @@ export component SongView inherits Rectangle {
             }
             Rectangle {
                 horizontal-stretch: 1;
+            }
+            // the capo is picked in the tab; here it is only shown
+            if root.capo > 0: Beside { text: @tr("Capo"); }
+            if root.capo > 0: VerticalLayout {
+                horizontal-stretch: 0;
+                alignment: center;
+                FieldPill {
+                    width: capo-fret.preferred-width + 28px;
+                    height: 34px;
+                    capo-fret := Text {
+                        x: 14px;
+                        text: @tr("on fret {}", root.capo);
+                        vertical-alignment: center;
+                        font-size: Theme.fs-body;
+                        font-weight: 600;
+                        color: Theme.ink;
+                    }
+                }
             }
             Beside { text: @tr("Tuning"); }
             VerticalLayout {
@@ -225,6 +247,7 @@ export component SongView inherits Rectangle {
                 alignment: center;
                 Neck {
                     notes: root.notes;
+                    capo: root.capo;
                     frets: root.frets;
                     strings: root.strings;
                     open-names: root.open-names;
@@ -286,6 +309,7 @@ export component SongView inherits Rectangle {
                             spacing: 6px;
                             Text {
                                 text: root.now.empty ? @tr("before the first note")
+                                    : root.now.sounds != "" ? @tr("sounds {} · capo {}", root.now.sounds, root.capo)
                                     : root.now.chord ? @tr("chord · fret {}", root.now.fret)
                                     : @tr("string {} · fret {}", root.now.string, root.now.fret);
                                 font-size: Theme.fs-body;
@@ -310,7 +334,8 @@ export component SongView inherits Rectangle {
                     padding: Look.hair;
                     for c[i] in root.phrase: chip := Rectangle {
                         private property <bool> on: c.state == 1;
-                        private property <string> detail: c.chord ? @tr("fret {}", c.fret) : @tr("string {}", c.string);
+                        private property <string> detail: c.sounds != "" ? @tr("sounds {}", c.sounds)
+                            : c.chord ? @tr("fret {}", c.fret) : @tr("string {}", c.string);
                         // all the same width, whatever the names: the phrase must not shift as the song moves
                         preferred-width: 64px;
                         horizontal-stretch: 1;
