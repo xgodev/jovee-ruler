@@ -54,7 +54,7 @@ the tab (string, fret, when), its tuning, the song's key and the names of the ot
   and seven moments around it, two behind. A click on one takes the song there.
 
 Example: song in G, the solo plays Bb–B–D on strings 3 and 2 around the 3rd fret: the neck holds the G
-pentatonic with shape 1 framed at frets 3 to 5, Bb ringed in red, D ringed as the note sounding.
+pentatonic with shape 1 framed at frets 2 to 5, Bb ringed in red, D ringed as the note sounding.
 
 The matching (notes + key → degree, notes + key → pentatonic shape) lives in `jr-core`, so it is the
 same in the standalone app (where the user types the key and plays the notes) and inside Jam.
@@ -83,7 +83,10 @@ same in the standalone app (where the user types the key and plays the notes) an
 - `harmonic-field/`, `scale/`: the printed pieces, as today.
 
 Where the mockup and the printed art disagree, the screens follow the printed art: roman numerals
-always uppercase, and the shapes numbered 1–5 with the 3- and 4-fret boxes of the slider.
+always uppercase, and the shapes numbered 1–5 as on the slider. The boxes are not the slider's: the
+slider marks where each shape sits on the 6th string, the screen frames every fret the shape's notes
+are played on across the six strings, so shape 1 of Ab takes fret 3 (C on the 5th string, F on the 4th,
+Bb on the 3rd). The major scale has its own boxes, a fret wider in shapes 4 and 5.
 
 ## Order
 

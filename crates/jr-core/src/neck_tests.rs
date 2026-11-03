@@ -1,5 +1,5 @@
 use super::*;
-use crate::note::parse;
+use crate::note::{parse, pc};
 
 fn n(s: &str) -> Pc {
     parse(s).unwrap()
@@ -47,23 +47,69 @@ fn the_pentatonic_of_g() {
     assert_eq!(outside_pentatonic(n("G"), &["G", "C", "B", "F#", "C"].map(n)), ["C", "F#"].map(n));
 }
 
-#[test]
-fn the_shapes_of_g_match_the_label() {
-    // The tonic of G on the 6th string is fret 3; boxes 3-5, 5-7, 7-10, 10-12, 12-15.
-    let in_first_octave: Vec<(u8, u8, i32, i32)> = shapes(STANDARD[0], n("G"), 15)
+/// Semitones from the open 6th string to each open string of a standard neck.
+const OPEN: [i32; 6] = [0, 5, 10, 15, 19, 24];
+
+/// The five boxes of one octave of `key`, from shape 1 on: (shape, first, last).
+fn octave(key: Pc, pentatonic: bool) -> Vec<(u8, i32, i32)> {
+    let tonic = tonic_fret(STANDARD[0], key) as i32;
+    shapes(STANDARD[0], key, 30, pentatonic)
         .into_iter()
-        .filter(|s| s.first >= 3 && s.last <= 15)
-        .map(|s| (s.major, s.minor, s.first, s.last))
-        .collect();
-    assert_eq!(in_first_octave, [(1, 2, 3, 5), (2, 3, 5, 7), (3, 4, 7, 10), (4, 5, 10, 12), (5, 1, 12, 15)]);
+        .filter(|s| s.first >= tonic - 1 && s.first < tonic + 11)
+        .map(|s| (s.major, s.first, s.last))
+        .collect()
 }
 
 #[test]
-fn only_shapes_3_and_5_fill_the_four_fret_window() {
-    // how-to-use.md: shapes 3 and 5 are 4 frets wide, 1, 2 and 4 are 3.
+fn the_shapes_of_g() {
+    // G on the 6th string is fret 3. The pentatonic boxes, and the major scale's five positions.
+    assert_eq!(octave(n("G"), true), [(1, 2, 5), (2, 4, 8), (3, 7, 10), (4, 9, 12), (5, 12, 15)]);
+    assert_eq!(octave(n("G"), false), [(1, 2, 5), (2, 4, 8), (3, 7, 10), (4, 9, 13), (5, 11, 15)]);
+}
+
+#[test]
+fn the_shapes_of_ab_take_fret_3() {
+    // The owner, on Ab: shape 1 plays C on the 5th string, F on the 4th and Bb on the 3rd at fret 3.
+    let three: Vec<Pc> = (1..4).map(|s| note_at(STANDARD[s], 3)).collect();
+    assert_eq!(three, ["C", "F", "Bb"].map(n));
+    assert_eq!(octave(n("Ab"), true), [(1, 3, 6), (2, 5, 9), (3, 8, 11), (4, 10, 13), (5, 13, 16)]);
+    assert_eq!(octave(n("Ab"), false), [(1, 3, 6), (2, 5, 9), (3, 8, 11), (4, 10, 14), (5, 12, 16)]);
+}
+
+/// The pentatonic as shape `major` of `key` plays it: from that degree on the 6th string inside the
+/// box, the scale upwards, two notes on each string. Pitches in semitones over the open 6th string.
+fn two_per_string(key: Pc, major: u8, first: i32, last: i32) -> Vec<i32> {
+    let degree = pentatonic(key)[major as usize - 1];
+    let start = (first..=last).find(|&f| name(f) == degree).expect("the shape starts inside its box");
+    (start..).filter(|&p| pentatonic(key).contains(&name(p))).take(12).collect()
+}
+
+/// The note `p` semitones over the open 6th string.
+fn name(p: i32) -> Pc {
+    pc(STANDARD[0] as i32 + p)
+}
+
+/// Whether every note of a shape has a fret inside `first..=last`: the pentatonic two per string,
+/// and with the major scale every note of the scale between its lowest note and its highest.
+fn fits(notes: &[i32], key: Pc, pentatonic: bool, first: i32, last: i32) -> bool {
+    let inside = |f: i32| (first..=last).contains(&f);
+    let pairs = notes.iter().enumerate().all(|(i, p)| inside(p - OPEN[i / 2]));
+    let added = pentatonic
+        || (notes[0]..notes[11]).filter(|&p| scale(key).contains(&name(p))).all(|p| OPEN.iter().any(|o| inside(p - o)));
+    pairs && added
+}
+
+#[test]
+fn every_box_holds_every_note_of_its_shape_and_no_more_frets() {
     for key in 0..12 {
-        for s in shapes(STANDARD[0], key, 24) {
-            assert_eq!(s.frets(), if s.major == 3 || s.major == 5 { 4 } else { 3 });
+        for pentatonic in [true, false] {
+            for s in shapes(STANDARD[0], key, 24, pentatonic) {
+                let notes = two_per_string(key, s.major, s.first, s.last);
+                let what = format!("key {key}, pentatonic {pentatonic}, {s:?}");
+                assert!(fits(&notes, key, pentatonic, s.first, s.last), "{what}: a note is left out");
+                assert!(!fits(&notes, key, pentatonic, s.first + 1, s.last), "{what}: the first fret is not needed");
+                assert!(!fits(&notes, key, pentatonic, s.first, s.last - 1), "{what}: the last fret is not needed");
+            }
         }
     }
 }
@@ -71,31 +117,43 @@ fn only_shapes_3_and_5_fill_the_four_fret_window() {
 #[test]
 fn shape_1_of_a_minor_is_on_fret_5_and_17() {
     // how-to-use.md: Am (key C), shape 1 of the minor starts on fret 5, and again on 17.
-    let starts: Vec<i32> =
-        shapes(STANDARD[0], n("C"), 24).into_iter().filter(|s| s.minor == 1 && s.first >= 0).map(|s| s.first).collect();
+    let starts: Vec<i32> = shapes(STANDARD[0], n("C"), 24, true)
+        .into_iter()
+        .filter(|s| s.minor == 1 && s.first >= 0)
+        .map(|s| s.first)
+        .collect();
     assert_eq!(starts, [5, 17]);
 }
 
 #[test]
 fn shapes_cover_the_whole_neck_and_join_up() {
     for key in 0..12 {
-        let all = shapes(STANDARD[0], key, 24);
-        assert!(all.first().unwrap().first <= 0, "key {key}: nothing at the nut");
-        assert!(all.last().unwrap().last >= 24, "key {key}: nothing at fret 24");
-        for pair in all.windows(2) {
-            assert_eq!(pair[0].last, pair[1].first, "key {key}: boxes do not share a fret");
+        for pentatonic in [true, false] {
+            let all = shapes(STANDARD[0], key, 24, pentatonic);
+            assert!(all.first().unwrap().first <= 0, "key {key}: nothing at the nut");
+            assert!(all.last().unwrap().last >= 24, "key {key}: nothing at fret 24");
+            for pair in all.windows(2) {
+                assert!(pair[0].first < pair[1].first, "key {key}: boxes out of order");
+                assert!(pair[1].first <= pair[0].last, "key {key}: a gap between boxes");
+            }
         }
     }
 }
 
 #[test]
 fn the_shape_near_the_hand() {
-    // Design doc: a song in G played around the 3rd fret sits in shape 1 (frets 3-5).
-    let s = shape_near(STANDARD[0], n("G"), 3.0);
-    assert_eq!((s.major, s.first, s.last), (1, 3, 5));
-    let s = shape_near(STANDARD[0], n("G"), 13.5);
+    // Design doc: a song in G played around the 3rd fret sits in shape 1 (frets 2-5).
+    let s = shape_near(STANDARD[0], n("G"), 3.0, true);
+    assert_eq!((s.major, s.first, s.last), (1, 2, 5));
+    let s = shape_near(STANDARD[0], n("G"), 13.5, true);
     assert_eq!((s.major, s.first, s.last), (5, 12, 15));
     // At the nut in G the nearest whole box is shape 5 an octave down (0-3).
-    let s = shape_near(STANDARD[0], n("G"), 0.0);
+    let s = shape_near(STANDARD[0], n("G"), 0.0, true);
     assert_eq!((s.major, s.first, s.last), (5, 0, 3));
+    // The major scale's shape 5 reaches back for the 7th: an octave down, one fret under the nut.
+    let s = shape_near(STANDARD[0], n("G"), 0.0, false);
+    assert_eq!((s.major, s.first, s.last), (5, -1, 3));
+    // In E shape 1 takes the fret under the nut, and is still the shape of the open strings.
+    let s = shape_near(STANDARD[0], n("E"), 1.0, true);
+    assert_eq!((s.major, s.first, s.last), (1, -1, 2));
 }

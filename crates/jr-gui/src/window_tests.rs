@@ -16,7 +16,7 @@ fn picking_a_key_on_the_wheel_fills_both_pages() {
     assert_eq!(w.get_key_index(), 1);
     assert_eq!(w.get_chords().row_count(), 7);
     assert_eq!(w.get_chords().row_data(3).unwrap().name, "C");
-    assert_eq!(w.get_shapes().row_data(0).unwrap().first, 3);
+    assert_eq!(w.get_shapes().row_data(0).unwrap().first, 2);
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn picking_a_shape_fades_the_rest_of_the_neck() {
     r.window().invoke_shape_picked(0);
     let notes = r.window().get_scale_notes();
     assert!(notes.iter().any(|m| !m.lit));
-    assert!(notes.iter().filter(|m| m.lit).all(|m| (3..=5).contains(&m.fret)));
+    assert!(notes.iter().filter(|m| m.lit).all(|m| (2..=5).contains(&m.fret)));
 }
 
 #[test]
