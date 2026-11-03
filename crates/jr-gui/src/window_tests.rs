@@ -12,7 +12,7 @@ fn picking_a_key_on_the_wheel_fills_both_pages() {
     let r = Ruler::new().unwrap();
     r.window().invoke_key_picked(1); // G, one fifth up from C
     let w = r.window();
-    assert_eq!(w.get_key_title(), "Sol maior");
+    assert_eq!(w.get_key_title(), "G maior");
     assert_eq!(w.get_key_index(), 1);
     assert_eq!(w.get_chords().row_count(), 7);
     assert_eq!(w.get_chords().row_data(3).unwrap().name, "C");
@@ -72,7 +72,7 @@ fn a_song_opens_on_its_page_before_its_first_note() {
     r.follow_song(run());
     let w = r.window();
     assert_eq!(w.get_page(), 2);
-    assert_eq!(w.get_key_title(), "Sol maior", "the other pages follow the song's key");
+    assert_eq!(w.get_key_title(), "G maior", "the other pages follow the song's key");
     assert_eq!(w.get_context(), "Exemplo em Sol");
     assert_eq!(w.get_guitars().iter().map(|g| g.to_string()).collect::<Vec<_>>(), ["Base", "Solo"]);
     assert_eq!(w.get_guitar(), 1);
@@ -158,7 +158,7 @@ fn the_scale_and_the_shape_picked_stay_for_the_next_guitar() {
     let r = Ruler::new().unwrap();
     r.follow_song(run());
     r.window().invoke_scale_picked(1);
-    assert_eq!(r.window().get_song_title(), "Sol maior · pentatônica");
+    assert_eq!(r.window().get_song_title(), "G maior · pentatônica");
     assert!(r.window().get_song_notes().iter().all(|m| m.mark != 3));
     r.window().invoke_hand_picked(6);
     assert_eq!(r.window().get_song_first(), -1);

@@ -3,6 +3,16 @@
 JoVee Ruler: the printed rulers plus their digital, interactive version (standalone app and library
 inside JoVee Rig / JoVee Studio). Design: `docs/design/README.md`.
 
+## Every change starts from an issue (the JoVee Studio flow)
+
+A change the owner asks for — however small, even a fix to work just delivered — first gets its GitHub
+issue: search open and closed ones (`gh issue list --state all --search ...`), open one only if none covers
+it (the app's issues live in `xgodev/jovee-jam`, where the ruler runs). Then: clone in `.solvers/issue-N`,
+branch `{type}/issue-N` from `main`, merge into `main` from the clone and push, `gh issue comment` after each
+push, and the validation checklist on the issue and in chat.
+**Why:** a ruler change was made, merged and pushed with no issue; the owner: "vc tem que abrir a issue..
+pq vc nao segue as mesmas regras do jovee rig/studio?".
+
 ## Screens use the jovee-theme controls
 
 Before drawing or changing a control in `crates/jr-gui/ui/`, run `cargo update -p jovee-theme` and read

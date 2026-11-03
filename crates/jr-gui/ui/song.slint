@@ -160,11 +160,11 @@ export component SongView inherits Rectangle {
             VerticalLayout {
                 horizontal-stretch: 1;
                 spacing: Theme.sp1;
+                // not the display font: its capitals only would turn the flat in "Ab" into "AB"
                 Text {
                     text: root.title;
-                    font-family: Theme.display;
-                    font-size: 48px;
-                    letter-spacing: 1.4px;
+                    font-size: 44px;
+                    font-weight: 700;
                     color: Theme.ink;
                 }
                 Text {

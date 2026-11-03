@@ -51,18 +51,18 @@ fn at(marks: &[NoteMark], row: i32, fret: i32) -> &NoteMark {
 }
 
 #[test]
-fn titles_in_portuguese_spelled_as_in_the_key() {
-    assert_eq!(key_title(n("G")), "Sol maior");
-    assert_eq!(key_subtitle(n("G")), "Relativa: Mi menor");
-    assert_eq!(key_subtitle(n("Ab")), "Relativa: Fá menor");
+fn titles_name_the_key_as_the_neck_writes_it() {
+    assert_eq!(key_title(n("G")), "G maior");
+    assert_eq!(key_subtitle(n("G")), "Relativa: E menor");
+    assert_eq!(key_subtitle(n("Ab")), "Relativa: F menor");
 }
 
 #[test]
-fn the_title_says_the_flat_in_full_so_capitals_do_not_turn_it_into_a_b() {
-    // the display font has capitals only: "Láb maior" would read "LAB MAIOR"
-    assert_eq!(key_title(n("Bb")), "Si bemol maior");
-    assert_eq!(key_title(n("Ab")), "Lá bemol maior");
-    assert_eq!(key_title(n("D")), "Ré maior");
+fn the_title_writes_the_flat_as_a_lowercase_b() {
+    assert_eq!(key_title(n("Ab")), "Ab maior");
+    assert_eq!(key_title(n("Bb")), "Bb maior");
+    assert_eq!(key_title(n("F#")), "F# maior");
+    assert_eq!(key_subtitle(n("F")), "Relativa: D menor");
     assert_eq!(relative_short(n("C")), "Am");
 }
 
@@ -154,7 +154,7 @@ fn following_a_song_only_the_note_sounding_stands_out() {
 #[test]
 fn the_lead_of_the_mockup() {
     let p = page(&solo(), Some(2), true, Hand::Follow);
-    assert_eq!(p.title, "Sol maior · pentatônica");
+    assert_eq!(p.title, "G maior · pentatônica");
     assert_eq!(p.subtitle, "Guitarra Solo · a mão está na forma 1, casas 3 a 5");
     assert_eq!(p.tuning, "E A D G B E");
     assert_eq!(p.open_names, ["E", "A", "D", "G", "B", "E"]);
@@ -187,7 +187,7 @@ fn the_lead_of_the_mockup() {
 #[test]
 fn the_rhythm_of_the_mockup() {
     let p = page(&rhythm(), Some(0), false, Hand::Follow);
-    assert_eq!(p.title, "Sol maior");
+    assert_eq!(p.title, "G maior");
     assert_eq!((p.now.name.as_str(), p.now.detail.as_str()), ("G", "acorde · casa 3"));
     assert_eq!((p.phrase[0].name.as_str(), p.phrase[0].detail.as_str(), p.phrase[0].state), ("G", "casa 3", 1));
     assert_eq!((p.phrase[1].name.as_str(), p.phrase[1].detail.as_str(), p.phrase[1].state), ("C", "casa 3", 2));

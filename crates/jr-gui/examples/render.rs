@@ -87,7 +87,7 @@ fn base() -> Song {
     song(0, &STANDARD, &[em, g, c, d, g, em, c], &["Em", "G", "C", "D", "G", "Em", "C"])
 }
 
-/// The solo a half step up, in Ab: the longest title, "Lá bemol maior · pentatônica".
+/// The solo a half step up, in Ab: a flat in the title, "Ab maior · pentatônica".
 fn flat() -> Song {
     let up: &[&[(u8, u8)]] = &[&[(3, 4)], &[(3, 5)], &[(2, 4)], &[(2, 6)], &[(2, 4)], &[(3, 5)], &[(4, 6)]];
     Song { key: parse("Ab").unwrap(), ..song(1, &STANDARD, up, &[]) }
