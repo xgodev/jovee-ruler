@@ -1,7 +1,8 @@
 // The neck from the nut to fret 15 (or as far as a song goes), the lowest string on top as on the printed
 // ruler, with the slider's marks over the notes of the scale: square = tonic, diamond = tonic of the
 // relative minor, circle = pentatonic, triangle = the 4th and 7th. Outside the chosen shape the marks fade,
-// as the cassette darkens them. A song rings the note it is sounding, the only one lit.
+// as the cassette darkens them. A song rings the note it is sounding and, thinner, the one it plays next:
+// the only two lit.
 import { Theme } from "@jovee-theme/theme.slint";
 import { Look } from "theme.slint";
 
@@ -10,8 +11,9 @@ export struct NoteMark {
     fret: int,       // 0 = open
     name: string,
     mark: int,       // 0 tonic, 1 tonic of the relative minor, 2 pentatonic, 3 scale, 4 outside the scale
-    lit: bool,       // inside the shape on show, or sounding
+    lit: bool,       // inside the shape on show, or sounding, or next
     sounding: bool,  // the song is playing it now
+    next: bool,      // the song plays it next
 }
 
 component Dot inherits Rectangle {
@@ -142,6 +144,14 @@ export component Neck inherits Rectangle {
             height: self.width;
             border-radius: self.width / 2;
             border-width: 4px;
+            border-color: root.ring-color(n.mark);
+        }
+        // next: a thin ring, no halo
+        if n.next && !n.sounding: Rectangle {
+            width: 2 * root.r + 12px;
+            height: self.width;
+            border-radius: self.width / 2;
+            border-width: 2.5px;
             border-color: root.ring-color(n.mark);
         }
         if n.mark == 0: Rectangle {

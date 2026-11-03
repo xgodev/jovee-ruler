@@ -110,7 +110,7 @@ fn played_name(key: Pc, p: Pc) -> &'static str {
 
 /// The marks on a neck tuned to `open` (lowest string first), from the nut to `frets`. With the
 /// pentatonic on show the 4th and 7th are outside it. Notes outside what is on show are drawn only
-/// while they sound; a note sounding is lit wherever it is.
+/// while they sound or come next; a note sounding or next is lit wherever it is.
 pub fn neck(
     key: Pc,
     open: &[Pc],
@@ -118,6 +118,7 @@ pub fn neck(
     window: Option<(i32, i32)>,
     pentatonic: bool,
     sounding: &[Played],
+    next: &[Played],
 ) -> Vec<NoteMark> {
     let mut out = Vec::new();
     for (row, &string) in open.iter().enumerate() {
@@ -127,8 +128,10 @@ pub fn neck(
                 Mark::Scale if pentatonic => Mark::Outside,
                 m => m,
             };
-            let now = sounding.iter().any(|n| n.row == row as i32 && n.fret == fret);
-            if m == Mark::Outside && !now {
+            let here = |n: &Played| n.row == row as i32 && n.fret == fret;
+            let now = sounding.iter().any(here);
+            let then = next.iter().any(here);
+            if m == Mark::Outside && !now && !then {
                 continue;
             }
             out.push(NoteMark {
@@ -142,8 +145,9 @@ pub fn neck(
                     Mark::Scale => 3,
                     Mark::Outside => 4,
                 },
-                lit: now || window.is_none_or(|(a, b)| fret >= a && fret <= b),
+                lit: now || then || window.is_none_or(|(a, b)| fret >= a && fret <= b),
                 sounding: now,
+                next: then,
             });
         }
     }
@@ -285,15 +289,20 @@ pub fn song_page(song: &Song, moments: &[Moment], now: Option<usize>, pentatonic
     };
 
     let row = |n: &SongNote| open.len() as i32 - n.string as i32;
-    let sounding: Vec<Played> = now
-        .and_then(|i| moments.get(i))
-        .into_iter()
-        .flat_map(|m| &m.notes)
-        .map(|n| Played { row: row(n), fret: n.fret as i32 })
-        .collect();
-    // following the song the eye goes to one place: the note sounding; the scale and the shape stay dark
-    let mut notes = neck(key, &open, frets, window, pentatonic, &sounding);
-    notes.iter_mut().for_each(|m| m.lit = m.sounding);
+    let played = |i: Option<usize>| -> Vec<Played> {
+        i.and_then(|i| moments.get(i))
+            .into_iter()
+            .flat_map(|m| &m.notes)
+            .map(|n| Played { row: row(n), fret: n.fret as i32 })
+            .collect()
+    };
+    let sounding = played(now);
+    // before the first note, the first one comes next
+    let next = played(now.map_or(Some(0), |i| Some(i + 1)));
+    // following the song the eye goes to the note sounding and the one after it; the scale and the
+    // shape stay dark
+    let mut notes = neck(key, &open, frets, window, pentatonic, &sounding, &next);
+    notes.iter_mut().for_each(|m| m.lit = m.sounding || m.next);
 
     let now_note = match now.and_then(|i| moments.get(i)) {
         None => NowNote { empty: true, ..NowNote::default() },
